@@ -1,0 +1,23 @@
+#root {
+    padding-left: 63px;
+    padding-top: 20px;
+    font-size: 20px;
+    font-weight: 200;
+    border-right: 1px solid black;
+    height: calc(100vh - 79px);
+    width: 200px;
+    display: inline-block;
+    float: left;
+}
+
+.link {
+    cursor: pointer;
+}
+
+.activeLink {
+    color: #00ABE0;
+}
+
+.link:hover {
+    text-decoration: underline;
+}

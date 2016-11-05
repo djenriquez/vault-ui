@@ -76,7 +76,7 @@ export default class Login extends React.Component {
                     fullWidth={true}
                     className="col-xs-12"
                     defaultValue={this.state.vaultUrl}
-                    hintText="Enter Vault URL"
+                    hintText="Vault URL"
                     onKeyDown={this.submitVaultURL}
                     onChange={(e,v)=>this.setState({tempVaultUrl: v})}
                 />

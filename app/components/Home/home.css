@@ -1,0 +1,14 @@
+#content {
+    padding-left: 50px;
+    width: calc(100vw - 305px - 50px);
+    display: inline-block;
+}
+
+#welcomeHeadline {
+    font-size: 60px;
+    font-weight: 200;
+}
+
+.snackbar {
+    text-align: center;
+}
