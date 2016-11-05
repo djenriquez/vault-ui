@@ -7,6 +7,15 @@ html, body {
     height: 100%;
 }
 
+.show {
+        opacity: 1;
+        transition: all 1s ease-in;
+}
+
+.hide {
+    opacity: 0;
+}
+
 #root {
     height: 100vh;
 }
