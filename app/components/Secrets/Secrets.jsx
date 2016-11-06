@@ -81,19 +81,11 @@ class Secrets extends React.Component {
     renderNewKeyDialog() {
         const MISSING_KEY_ERROR = "Key cannot be empty.";
         const DUPLICATE_KEY_ERROR = `Key ${this.state.newKey.key} already exists.`;
-        const MISSING_VALUE_ERROR = "Key must have a corresponding value.";
 
         let validateAndSubmit = () => {
             if (this.state.newKey.key === '') {
                 this.setState({
                     newKeyErrorMessage: MISSING_KEY_ERROR
-                });
-                return;
-            }
-
-            if (this.state.newKey.value === '') {
-                this.setState({
-                    newKeyErrorMessage: MISSING_VALUE_ERROR
                 });
                 return;
             }
