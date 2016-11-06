@@ -6,6 +6,7 @@ import Settings from 'material-ui/svg-icons/action/settings';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import { browserHistory } from 'react-router';
+import axios from 'axios';
 
 export default class Login extends React.Component {
     constructor(props) {
@@ -40,12 +41,30 @@ export default class Login extends React.Component {
 
     validateAuthToken(e) {
         if (e.keyCode === 13) {
+            console.log(`Validating auth token: ${this.state.authToken}`);
             if (!window.localStorage.getItem("vaultUrl")) {
                 this.setState({errorMessage: "No Vault url specified.  Click the gear to edit your Vault url"});
                 return;
             }
-            window.localStorage.setItem("vaultAuthenticationToken",this.state.authToken);
-            window.location.href = '/';
+            axios.post(
+                `${window.localStorage.getItem("vaultUrl")}/v1/auth/github/login`, 
+                { "token": this.state.authToken },
+                { headers: {'Access-Control-Allow-Originh': '*', 'Content-Type': 'text/plain'}}
+                )
+            .then((data) => {
+                let accessToken = _.get(data, 'auth.client_token');
+                if(accessToken) {
+                    window.localStorage.setItem("vaultAccessToken",accessToken);
+                    console.log(`Fetched token: ${accessToken}`);
+                    window.location.href = '/';
+                } else {
+                    //No access token returned, error
+                }
+            })
+            .catch(() => {
+                //something went wrong
+            });
+            
         }
     }
 
@@ -110,3 +129,4 @@ export default class Login extends React.Component {
         );
     }
 }
+
