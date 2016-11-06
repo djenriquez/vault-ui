@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import Secret from './components/Secret/Secret.jsx';
 import IconButton from 'material-ui/IconButton';
 import { List, ListItem } from 'material-ui/List';
 import Edit from 'material-ui/svg-icons/editor/mode-edit';
@@ -74,7 +73,7 @@ class Secrets extends React.Component {
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({openEditModal: false})}
             >
-            <TextField name="editingText" defaultValue={secretToChange} fullWidth={true} onKeyUp={checkKey}/>
+            <TextField name="editingText" autoFocus defaultValue={secretToChange} fullWidth={true} onKeyUp={checkKey}/>
             </Dialog>
         );
     }
@@ -144,6 +143,12 @@ class Secrets extends React.Component {
             });
         }
 
+        let returnShortcut = (e,v) => {
+            if (e.keyCode === 13) {
+                validateAndSubmit();
+            }
+        }
+
         return (
             <Dialog
                 title={`New Key`}
@@ -152,8 +157,8 @@ class Secrets extends React.Component {
                 open={this.state.openNewKeyModal}
                 onRequestClose={() => this.setState({openNewKeyModal: false, newKeyErrorMessage: ''})}
             >
-            <TextField name="newKey" fullWidth={true} hintText="Key" onChange={(e,v) => setNewKey(e,v)}/>
-            <TextField name="newValue" fullWidth={true} hintText="Value" onChange={(e,v) => setNewKey(e,v)}/>
+            <TextField name="newKey" autoFocus fullWidth={true} hintText="Key" onKeyDown={returnShortcut} onChange={(e,v) => setNewKey(e,v)}/>
+            <TextField name="newValue" fullWidth={true} hintText="Value" onKeyDown={returnShortcut} onChange={(e,v) => setNewKey(e,v)}/>
             <div className={styles.error}>{this.state.newKeyErrorMessage}</div>
             </Dialog>
         );

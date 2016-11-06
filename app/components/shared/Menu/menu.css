@@ -16,6 +16,7 @@
 
 .activeLink {
     color: #00ABE0;
+    font-weight: bold;
 }
 
 .link:hover {
