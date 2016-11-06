@@ -6,8 +6,7 @@ const PORT = 8000;
 
 var app = express();
 
-app.use('/static', express.static('dist'));
-app.use(express.static('./src/server/public'));
+app.use('/assets', express.static('dist'));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -23,4 +22,8 @@ app.use((req, res, next) => {
 
 app.listen(PORT, () => {
     console.log(`Vault UI listening on: ${PORT}`);
+});
+
+app.get('*', function(req, res) {
+  res.render('index.html');
 });
