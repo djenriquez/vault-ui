@@ -65,6 +65,34 @@ export default class Home extends React.Component {
                     key: 'key3',
                     value: 'val3'
                 },
+                {
+                    key: 'key4',
+                    value: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+                },
+                {
+                    key: 'key5',
+                    value: 'AKIAIOSFODNN7EXAMPLE'
+                },
+                {
+                    key: 'key6',
+                    value: 'val3'
+                },
+                {
+                    key: 'key7',
+                    value: 'val3'
+                },
+                {
+                    key: 'key8',
+                    value: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+                },
+                {
+                    key: 'key9',
+                    value: 'AKIAIOSFODNN7EXAMPLE'
+                },
+                {
+                    key: 'key10',
+                    value: 'val3'
+                }
             ]
         })
     }

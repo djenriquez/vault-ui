@@ -35,9 +35,7 @@ export default class Login extends React.Component {
             });
         }
 
-        setTimeout(() => {
-            this.setState({ show: true}, 2000);
-        });
+        this.setState({ show: true});
     }
 
     validateAuthToken(e) {

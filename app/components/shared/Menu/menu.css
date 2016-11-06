@@ -4,10 +4,10 @@
     font-size: 20px;
     font-weight: 200;
     border-right: 1px solid black;
-    height: calc(100vh - 79px);
+    height: calc(100vh - 80px);
     width: 200px;
-    display: inline-block;
-    float: left;
+    position: fixed;
+    top: 60px;
 }
 
 .link {
@@ -19,5 +19,5 @@
 }
 
 .link:hover {
-    text-decoration: underline;
+    font-weight: bold;
 }

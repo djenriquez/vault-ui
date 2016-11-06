@@ -50,7 +50,7 @@ class Secrets extends React.Component {
 
     renderEditDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onClick={() => this.setState({ openEditModal: false })}/>
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })}/>
         ];
         let secretToChange = _.filter(this.props.secrets,x => x.key === this.state.editingKey)[0].value;
 
@@ -116,7 +116,7 @@ class Secrets extends React.Component {
         }
 
         const actions = [
-            <FlatButton label="Cancel" primary={true} onClick={() => this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' })}/>,
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' })}/>,
             <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit}/>
         ];
 

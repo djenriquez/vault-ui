@@ -3,10 +3,6 @@
     font-weight: 300;
 }
 
-html, body {
-    height: 100%;
-}
-
 .show {
         opacity: 1;
         transition: all 1s ease-in;
@@ -17,5 +13,5 @@ html, body {
 }
 
 #root {
-    height: 100vh;
+    height: calc(100vh - 20px);
 }
