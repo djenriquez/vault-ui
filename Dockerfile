@@ -1,6 +1,6 @@
 FROM node:slim
 
-MAINTAINER Team Lecretius
+MAINTAINER Team Lucretius
 
 ADD package.json /tmp/package.json
 RUN cd /tmp && npm install
