@@ -5,6 +5,7 @@ import Home from './components/Home/Home.jsx';
 import { Router, Route, Link, browserHistory } from 'react-router'
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 injectTapEventPlugin();
 
@@ -32,8 +33,12 @@ const checkAuthToken = (nextState, replace, callback) => {
     callback();
 }
 
+const muiTheme = getMuiTheme({
+  fontFamily: 'Source Sans Pro, sans-serif'
+});
+
 ReactDOM.render((
-    <MuiThemeProvider>
+    <MuiThemeProvider muiTheme={muiTheme}>
   <Router history={browserHistory}>
       <Route path="/login" component={Login}/>
       <Route path="/" component={Home} onEnter={checkAuthToken}>

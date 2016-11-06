@@ -3,6 +3,7 @@ import Header from '../shared/Header/Header.jsx';
 import Menu from '../shared/Menu/Menu.jsx';
 import styles from './home.css';
 import Secrets from '../Secrets/Secrets.jsx';
+import Health from '../Health/Health.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 
@@ -34,6 +35,22 @@ export default class Home extends React.Component {
                 secrets: secrets
             });
         });
+
+        document.addEventListener("addedKey", (e) => {
+            let secrets = this.state.secrets;
+            secrets.push({ key: e.detail.key, value: e.detail.value});
+            this.setState({
+                secrets: secrets
+            });
+        });
+
+        document.addEventListener("deleteKey", (e) => {
+            let newSecrets  = _.filter(this.state.secrets, x => x.key !== e.detail.key);
+            this.setState({
+                secrets: newSecrets
+            });
+        });
+
         this.setState({
             secrets: [
                 {
@@ -57,7 +74,7 @@ export default class Home extends React.Component {
             case '/secrets':
                 return <Secrets secrets={this.state.secrets}/>
             case '/health':
-                return <div>HEALTH</div>
+                return <Health/>
             default:
                 return (
                     <div>
