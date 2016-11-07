@@ -1,16 +1,17 @@
 import React, { PropTypes } from 'react';
 import IconButton from 'material-ui/IconButton';
+import FontIcon from 'material-ui/FontIcon';
 import { List, ListItem } from 'material-ui/List';
 import Edit from 'material-ui/svg-icons/editor/mode-edit';
 import Copy from 'material-ui/svg-icons/action/assignment';
-import Delete from 'material-ui/svg-icons/action/delete';
+import Checkbox from 'material-ui/Checkbox';
 import styles from './secrets.css';
 import _ from 'lodash';
 import copy from 'copy-to-clipboard';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
-import { green500, green400, red500, yellow500, white } from 'material-ui/styles/colors.js'
+import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 
 const copyEvent = new CustomEvent("snackbar", {
   detail: {
@@ -25,11 +26,14 @@ class Secrets extends React.Component {
           openEditModal: false,
           openNewKeyModal: false,
           newKeyErrorMessage: '',
-          editingKey: -1
+          openDeleteModal: false,
+          editingKey: -1,
+          deletingKey: ''
       }
       this.renderSecrets = this.renderSecrets.bind(this);
       this.renderEditDialog = this.renderEditDialog.bind(this);
       this.renderNewKeyDialog = this.renderNewKeyDialog.bind(this);
+      this.renderDeleteConfirmationDialog = this.renderDeleteConfirmationDialog.bind(this);
       this.copyText = this.copyText.bind(this);
       this.deleteKey = this.deleteKey.bind(this);
     }
@@ -45,6 +49,10 @@ class Secrets extends React.Component {
             key: key
           }
         }));
+        this.setState({
+            deletingKey: '',
+            openDeleteModal: false
+        });
     }
 
     renderEditDialog() {
@@ -76,6 +84,27 @@ class Secrets extends React.Component {
             <TextField name="editingText" autoFocus defaultValue={secretToChange} fullWidth={true} onKeyUp={checkKey}/>
             </Dialog>
         );
+    }
+
+    renderDeleteConfirmationDialog() {
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deletingKey: '' })}/>,
+            <FlatButton label="Delete" style={{color: white}} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => this.deleteKey(this.state.deletingKey)}/>
+        ];
+
+        return (
+            <Dialog
+                title={`Delete Confirmation`}
+                modal={false}
+                actions={actions}
+                open={this.state.openDeleteModal}
+                onRequestClose={() => this.setState({openDeleteModal: false, newKeyErrorMessage: ''})}
+            >
+
+            <p>You are about to permanently delete {this.state.deletingKey}.  Are you sure?</p>
+            <em>To disable this prompt, visit the settings page.</em>
+            </Dialog>
+        )
     }
 
     renderNewKeyDialog() {
@@ -160,14 +189,22 @@ class Secrets extends React.Component {
         return _.map(this.props.secrets, (secret) => {
             return (
                 <ListItem
+                    style={{marginLeft: -17}}
                     key={secret.key}
-                    onClick={() => this.setState({ openEditModal: true, editingKey: secret.key })}
+                    onTouchTap={() => this.setState({ openEditModal: true, editingKey: secret.key })}
                     primaryText={<div className={styles.key}>{secret.key}</div>}
                     secondaryText={<div className={styles.key}>{secret.value}</div>}
                     rightIconButton={<IconButton
                         tooltip="Delete"
-                        onTouchTap={() => this.deleteKey(secret.key)}>
-                            <Delete/>
+                        onTouchTap={() => {
+                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                                this.deleteKey(secret.key);
+                            } else {
+                                this.setState({ deletingKey: secret.key, openDeleteModal: true })
+                            }
+                        }}
+                            >
+                            <FontIcon className="fa fa-times-circle" color={red500}/>
                         </IconButton>}>
                 </ListItem>
             );
@@ -179,6 +216,7 @@ class Secrets extends React.Component {
             <div>
                 {this.state.openEditModal && this.renderEditDialog()}
                 {this.state.openNewKeyModal && this.renderNewKeyDialog()}
+                {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
                 <h1 id={styles.welcomeHeadline}>Secrets</h1>
                 <p>Here you can view, update, and delete keys stored in your Vault.  Just remember, <span className={styles.error}>deleting keys cannot be undone!</span></p>
                 <FlatButton

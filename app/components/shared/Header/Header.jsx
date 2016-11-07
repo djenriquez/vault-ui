@@ -20,7 +20,7 @@ class Header extends React.Component {
                 title={<span id={styles.title}>Vault</span>}
                 onTitleTouchTap={() => browserHistory.push('/')}
                 iconElementLeft={<IconButton href={'https://github.com/Lucretius/vault_ui'}><FontIcon className="fa fa-github"></FontIcon></IconButton>}
-                iconElementRight={<FlatButton onClick={logout} label="Logout" />}
+                iconElementRight={<FlatButton onTouchTap={logout} label="Logout" />}
               />
           </div>
         )
