@@ -4,6 +4,7 @@ import Menu from '../shared/Menu/Menu.jsx';
 import styles from './home.css';
 import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
+import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 import axios from 'axios';
@@ -21,6 +22,9 @@ export default class Home extends React.Component {
     }
 
     componentDidMount() {
+        if (!window.localStorage.getItem('showDeleteModal')) {
+            window.localStorage.setItem('showDeleteModal', 'true');
+        }
         document.addEventListener("snackbar", (e) => {
             this.setState({
                 snackbarMessage: e.detail.message,
@@ -77,7 +81,9 @@ export default class Home extends React.Component {
             case '/secrets':
                 return <Secrets secrets={this.state.secrets} />
             case '/health':
-                return <Health />
+                return <Health/>
+            case '/settings':
+                return <Settings/>
             default:
                 return (
                     <div>

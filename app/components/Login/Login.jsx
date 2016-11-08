@@ -36,6 +36,7 @@ export default class Login extends React.Component {
             });
         }
 
+
         this.setState({ show: true});
     }
 
@@ -125,7 +126,7 @@ export default class Login extends React.Component {
                             />
                         </div>
                         <div className="col-xs-1">
-                            <IconButton tooltip="Settings" onClick={() => this.setState({promptForVaultUrl: true})}>
+                            <IconButton tooltip="Settings" onTouchTap={() => this.setState({promptForVaultUrl: true})}>
                                 <Settings/>
                             </IconButton>
                         </div>
