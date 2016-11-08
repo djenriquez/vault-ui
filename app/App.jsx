@@ -25,8 +25,8 @@ injectTapEventPlugin();
   window.CustomEvent = CustomEvent;
 })();
 
-const checkAuthToken = (nextState, replace, callback) => {
-    let vaultAuthToken = window.localStorage.getItem('vaultAuthenticationToken');
+const checkAccessToken = (nextState, replace, callback) => {
+    let vaultAuthToken = window.localStorage.getItem('vaultAccessToken');
     if (!vaultAuthToken) {
         replace(`/login`)
     }
@@ -41,7 +41,7 @@ ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
   <Router history={browserHistory}>
       <Route path="/login" component={Login}/>
-      <Route path="/" component={Home} onEnter={checkAuthToken}>
+      <Route path="/" component={Home} onEnter={checkAccessToken}>
           <Route path="*" component={Home}/>
       </Route>
   </Router>

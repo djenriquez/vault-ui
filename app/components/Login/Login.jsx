@@ -6,6 +6,7 @@ import Settings from 'material-ui/svg-icons/action/settings';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import { browserHistory } from 'react-router';
+import axios from 'axios';
 
 export default class Login extends React.Component {
     constructor(props) {
@@ -41,12 +42,36 @@ export default class Login extends React.Component {
 
     validateAuthToken(e) {
         if (e.keyCode === 13) {
+            console.log(`Validating auth token: ${this.state.authToken}`);
             if (!window.localStorage.getItem("vaultUrl")) {
                 this.setState({errorMessage: "No Vault url specified.  Click the gear to edit your Vault url"});
                 return;
             }
-            window.localStorage.setItem("vaultAuthenticationToken",this.state.authToken);
-            window.location.href = '/';
+            axios.post(
+                    '/login', 
+                    { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": {"Type": "GITHUB", "Token": this.state.authToken} }
+                )
+            .then((resp) => {
+//                 { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
+//   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
+//   policies: [ 'default', 'insp-power-user' ],
+//   metadata: { org: 'Openmail', username: 'djenriquez' },
+//   lease_duration: 3600,
+//   renewable: true }
+                let accessToken = _.get(resp, 'data.client_token');
+                if(accessToken) {
+                    window.localStorage.setItem("vaultAccessToken",accessToken);
+                    console.log(`Fetched token: ${accessToken}`);
+                    window.location.href = '/';
+                } else {
+                    //No access token returned, error
+                }
+            })
+            .catch((err) => {
+                console.error(err.stack);
+                //something went wrong
+            });
+            
         }
     }
 
@@ -111,3 +136,4 @@ export default class Login extends React.Component {
         );
     }
 }
+

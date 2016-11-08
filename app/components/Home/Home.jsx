@@ -7,17 +7,18 @@ import Health from '../Health/Health.jsx';
 import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
+import axios from 'axios';
 
 export default class Home extends React.Component {
     constructor(props) {
-      super(props);
-      this.renderContent = this.renderContent.bind(this);
-      this.state = {
-          secrets: [],
-          snackbarMessage: '',
-          snackbarOpen: false,
-          snackbarType: 'OK'
-      }
+        super(props);
+        this.renderContent = this.renderContent.bind(this);
+        this.state = {
+            secrets: [],
+            snackbarMessage: '',
+            snackbarOpen: false,
+            snackbarType: 'OK'
+        }
     }
 
     componentDidMount() {
@@ -42,69 +43,43 @@ export default class Home extends React.Component {
 
         document.addEventListener("addedKey", (e) => {
             let secrets = this.state.secrets;
-            secrets.push({ key: e.detail.key, value: e.detail.value});
+            secrets.push({ key: e.detail.key, value: e.detail.value });
             this.setState({
                 secrets: secrets
             });
         });
 
         document.addEventListener("deleteKey", (e) => {
-            let newSecrets  = _.filter(this.state.secrets, x => x.key !== e.detail.key);
+            let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
             this.setState({
                 secrets: newSecrets
             });
         });
 
-        this.setState({
-            secrets: [
-                {
-                    key: 'fake_aws_secret',
-                    value: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
-                },
-                {
-                    key: 'fake_aws_id',
-                    value: 'AKIAIOSFODNN7EXAMPLE'
-                },
-                {
-                    key: 'key3',
-                    value: 'val3'
-                },
-                {
-                    key: 'key4',
-                    value: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
-                },
-                {
-                    key: 'key5',
-                    value: 'AKIAIOSFODNN7EXAMPLE'
-                },
-                {
-                    key: 'key6',
-                    value: 'val3'
-                },
-                {
-                    key: 'key7',
-                    value: 'val3'
-                },
-                {
-                    key: 'key8',
-                    value: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
-                },
-                {
-                    key: 'key9',
-                    value: 'AKIAIOSFODNN7EXAMPLE'
-                },
-                {
-                    key: 'key10',
-                    value: 'val3'
-                }
-            ]
-        })
+        var keys = [];
+        axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+            .then((resp) => {
+                console.log(resp.data.data);
+                keys = resp.data.data.keys;
+                
+
+                var secrets = _.map(keys, (key) => {
+                    return {
+                        key: key,
+                        value: ""
+                    }
+                });
+
+                this.setState({
+                    secrets: secrets
+                });
+            })
     }
 
     renderContent() {
-        switch(this.props.location.pathname) {
+        switch (this.props.location.pathname) {
             case '/secrets':
-                return <Secrets secrets={this.state.secrets}/>
+                return <Secrets secrets={this.state.secrets} />
             case '/health':
                 return <Health/>
             case '/settings':
@@ -121,7 +96,7 @@ export default class Home extends React.Component {
         }
     }
 
-    render () {
+    render() {
         let messageStyle = { backgroundColor: green500 };
         if (this.state.snackbarType == 'warn') {
             messageStyle = { backgroundColor: yellow500 };
@@ -136,10 +111,10 @@ export default class Home extends React.Component {
                 open={this.state.snackbarOpen}
                 message={this.state.snackbarMessage}
                 autoHideDuration={2000}
-                onRequestClose={() => this.setState({snackbarOpen: false})}
-            />
-            <Header/>
-            <Menu pathname={this.props.location.pathname}/>
+                onRequestClose={() => this.setState({ snackbarOpen: false })}
+                />
+            <Header />
+            <Menu pathname={this.props.location.pathname} />
             <div id={styles.content}>
                 {this.renderContent()}
             </div>
