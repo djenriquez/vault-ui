@@ -50,12 +50,14 @@ var login = function (req, res) {
  "lease_id": "",
  "renewable": false
  }
-*/ 
+*/
 var listSecrets = function (req, res) {
-    let endpoint = '/v1/secret?list=true';
+
+    let namespace = decodeURI(req.query['namespace']);
+    let endpoint = `/v1/secret${namespace}?list=true`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
-    let config = { headers : { 'X-Vault-Token': decodeURI(req.query['token']) } }
-    console.log(`${vaultAddr}${endpoint}`);
+    let config = { headers: { 'X-Vault-Token': decodeURI(req.query['token']) } }
+
     axios.get(`${vaultAddr}${endpoint}`, config)
         .then((resp) => {
             res.json(resp.data);
@@ -73,7 +75,7 @@ var listSecrets = function (req, res) {
 var getSecret = function (req, res) {
     let endpoint = `/v1/secret/${decodeURI(req.query['secret'])}`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
-    let config = { headers : { 'X-Vault-Token': req.query['token'] } }
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
     axios.get(`${vaultAddr}${endpoint}`, config)
         .then((resp) => {
@@ -84,10 +86,32 @@ var getSecret = function (req, res) {
         });
 }
 
+var writeSecret = function (req, res) {
+
+    let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
+
+    let secretValue = _.get(req, "body.SecretValue")
+    let vaultAddr = _.get(req, 'body.VaultUrl');
+
+    let body = {
+        value: secretValue
+    };
+
+    axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body, config)
+        .then((resp) => {
+            res.json(resp.data.auth);
+        })
+        .catch((err) => {
+            console.error(err.stack);
+        });
+}
+
 module.exports = (function () {
     return {
         login: login,
         listSecrets: listSecrets,
-        getSecret: getSecret
+        getSecret: getSecret,
+        writeSecret: writeSecret
     }
 })();

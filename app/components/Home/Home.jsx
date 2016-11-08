@@ -14,10 +14,10 @@ export default class Home extends React.Component {
         super(props);
         this.renderContent = this.renderContent.bind(this);
         this.state = {
-            secrets: [],
             snackbarMessage: '',
             snackbarOpen: false,
-            snackbarType: 'OK'
+            snackbarType: 'OK',
+            namespace: '/'
         }
     }
 
@@ -33,57 +33,38 @@ export default class Home extends React.Component {
             });
         });
 
-        document.addEventListener("changedKey", (e) => {
-            let secrets = this.state.secrets;
-            _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
-            this.setState({
-                secrets: secrets
-            });
-        });
+        // document.addEventListener("changedKey", (e) => {
+        //     let secrets = this.state.secrets;
+        //     _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
+        //     this.setState({
+        //         secrets: secrets
+        //     });
+        // });
 
-        document.addEventListener("addedKey", (e) => {
-            let secrets = this.state.secrets;
-            secrets.push({ key: e.detail.key, value: e.detail.value });
-            this.setState({
-                secrets: secrets
-            });
-        });
+        // document.addEventListener("addedKey", (e) => {
+        //     let secrets = this.state.secrets;
+        //     secrets.push({ key: e.detail.key, value: e.detail.value });
+        //     this.setState({
+        //         secrets: secrets
+        //     });
+        // });
 
-        document.addEventListener("deleteKey", (e) => {
-            let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
-            this.setState({
-                secrets: newSecrets
-            });
-        });
-
-        var keys = [];
-        axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
-            .then((resp) => {
-                console.log(resp.data.data);
-                keys = resp.data.data.keys;
-                
-
-                var secrets = _.map(keys, (key) => {
-                    return {
-                        key: key,
-                        value: ""
-                    }
-                });
-
-                this.setState({
-                    secrets: secrets
-                });
-            })
+        // document.addEventListener("deleteKey", (e) => {
+        //     let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
+        //     this.setState({
+        //         secrets: newSecrets
+        //     });
+        // });
     }
 
     renderContent() {
         switch (this.props.location.pathname) {
             case '/secrets':
-                return <Secrets secrets={this.state.secrets} />
+                return <Secrets />
             case '/health':
-                return <Health/>
+                return <Health />
             case '/settings':
-                return <Settings/>
+                return <Settings />
             default:
                 return (
                     <div>
