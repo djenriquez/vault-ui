@@ -30,6 +30,9 @@ var login = function (req, res) {
             body = {
                 token: creds.Token
             };
+            break;
+        default:
+            res.status(400).send("Invalid auth method");
     }
     axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body)
         .then((resp) => {
@@ -37,6 +40,7 @@ var login = function (req, res) {
         })
         .catch((err) => {
             console.error(err.stack);
+            res.status(err.response.status).send("Authorization failed");
         });
 };
 

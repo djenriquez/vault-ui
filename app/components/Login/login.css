@@ -15,3 +15,7 @@
 #root {
     height: calc(100vh - 20px);
 }
+
+.error {
+    color:  rgb(244, 67, 54);
+}
