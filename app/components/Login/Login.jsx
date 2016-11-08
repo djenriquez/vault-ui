@@ -149,6 +149,7 @@ export default class Login extends React.Component {
                     onChange={(e,v)=>this.setState({tempVaultUrl: v})}
                 />
             <SelectField
+                style={{paddingLeft: 8}}
                 value={this.state.loginMethodType}
                 onChange={handleSelectFieldChange.bind(this)}
                 floatingLabelText="Login Method">
