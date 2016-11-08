@@ -1,11 +1,14 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import favicon from 'serve-favicon';
+var express = require('express');
+var bodyParser = require('body-parser');
+var path = require('path');
+var axios = require('axios');
+var _ = require('lodash');
+var routeHandler = require('./src/routeHandler');
 
 const PORT = 8000;
 
 var app = express();
-
+app.set('view engine','.html');
 app.use('/assets', express.static('dist'));
 
 // parse application/x-www-form-urlencoded
@@ -24,6 +27,21 @@ app.listen(PORT, () => {
     console.log(`Vault UI listening on: ${PORT}`);
 });
 
+
+app.post('/login', (req,res) => {
+    routeHandler.login(req, res);
+});
+
+app.get('/listsecrets', (req, res) => {
+    routeHandler.listSecrets(req, res);
+});
+
+app.get('/secret', (req, res) => {
+    routeHandler.getSecret(req, res);
+})
+
+app.get('/')
+
 app.get('*', function(req, res) {
-  res.render('index.html');
+  res.sendFile(path.join(__dirname,'/index.html'));
 });

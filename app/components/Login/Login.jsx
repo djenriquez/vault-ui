@@ -47,12 +47,17 @@ export default class Login extends React.Component {
                 return;
             }
             axios.post(
-                `${window.localStorage.getItem("vaultUrl")}/v1/auth/github/login`, 
-                { "token": this.state.authToken },
-                { headers: {'Access-Control-Allow-Originh': '*', 'Content-Type': 'text/plain'}}
+                    '/login', 
+                    { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": {"Type": "GITHUB", "Token": this.state.authToken} }
                 )
-            .then((data) => {
-                let accessToken = _.get(data, 'auth.client_token');
+            .then((resp) => {
+//                 { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
+//   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
+//   policies: [ 'default', 'insp-power-user' ],
+//   metadata: { org: 'Openmail', username: 'djenriquez' },
+//   lease_duration: 3600,
+//   renewable: true }
+                let accessToken = _.get(resp, 'data.client_token');
                 if(accessToken) {
                     window.localStorage.setItem("vaultAccessToken",accessToken);
                     console.log(`Fetched token: ${accessToken}`);
@@ -61,7 +66,8 @@ export default class Login extends React.Component {
                     //No access token returned, error
                 }
             })
-            .catch(() => {
+            .catch((err) => {
+                console.error(err.stack);
                 //something went wrong
             });
             
