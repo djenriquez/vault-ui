@@ -9,6 +9,7 @@ module.exports = (function () {
         login: login.login,
         listSecrets: secrets.listSecrets,
         getSecret: secrets.getSecret,
-        writeSecret: secrets.writeSecret
+        writeSecret: secrets.writeSecret,
+        deleteSecret: secrets.deleteSecret
     }
 })();

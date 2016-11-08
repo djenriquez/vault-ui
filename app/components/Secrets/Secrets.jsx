@@ -61,6 +61,25 @@ class Secrets extends React.Component {
                 key: key
             }
         }));
+
+        let fullKey = `${this.namespace}${key}`;
+        axios.delete(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+            .then((resp) => {
+                if (resp.status !== 204) {
+                    console.error(resp.status);
+                } else {
+                    let secrets = this.state.secrets;
+                    let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete.key == key; });
+                    secrets = _.pull(secrets, secretToDelete);
+                    this.setState({
+                        secrets: secrets
+                    });
+                }
+            })
+            .catch((err) => {
+                console.error(err.stack);
+            });
+
         this.setState({
             deletingKey: '',
             openDeleteModal: false
@@ -85,7 +104,7 @@ class Secrets extends React.Component {
                 axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": e.target.value })
                     .then((resp) => {
                         if (resp.status === 200) {
-    
+
                         } else {
                             // errored
                         }
@@ -163,7 +182,8 @@ class Secrets extends React.Component {
                 .then((resp) => {
                     if (resp.status === 200) {
                         let secrets = this.state.secrets;
-                        secrets.push({key: this.state.newKey.key, value: this.state.newKey.value});
+                        let key = this.state.newKey.key.includes('/') ? `${this.state.newKey.key.split('/')[0]}/` : this.state.newKey.key;
+                        secrets.push({ key: key, value: this.state.newKey.value });
                         this.setState({
                             secrets: secrets
                         });
@@ -271,6 +291,26 @@ class Secrets extends React.Component {
         }
     }
 
+    showDelete(key) {
+        if (key[key.length - 1] === '/') {
+            return (<IconButton />);
+        } else {
+            return (
+                <IconButton
+                    tooltip="Delete"
+                    onTouchTap={() => {
+                        if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                            this.deleteKey(key);
+                        } else {
+                            this.setState({ deletingKey: key, openDeleteModal: true })
+                        }
+                    } }
+                    >
+                    <FontIcon className="fa fa-times-circle" color={red500} />
+                </IconButton>);
+        }
+    }
+
     renderSecrets() {
         return _.map(this.state.secrets, (secret) => {
             return (
@@ -280,18 +320,7 @@ class Secrets extends React.Component {
                     onTouchTap={() => { this.clickSecret(secret.key) } }
                     primaryText={<div className={styles.key}>{secret.key}</div>}
                     //secondaryText={<div className={styles.key}>{secret.value}</div>}
-                    rightIconButton={<IconButton
-                        tooltip="Delete"
-                        onTouchTap={() => {
-                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
-                                this.deleteKey(secret.key);
-                            } else {
-                                this.setState({ deletingKey: secret.key, openDeleteModal: true })
-                            }
-                        } }
-                        >
-                        <FontIcon className="fa fa-times-circle" color={red500} />
-                    </IconButton>}>
+                    rightIconButton={this.showDelete(secret.key)}>
                 </ListItem>
             );
         });

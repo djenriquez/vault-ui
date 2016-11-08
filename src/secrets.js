@@ -73,3 +73,17 @@ exports.writeSecret = function (req, res) {
             console.error(err.stack);
         });
 }
+
+exports.deleteSecret = function (req, res) {
+    let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
+    let vaultAddr = decodeURI(req.query['vaultaddr']);
+    
+    axios.delete(`${vaultAddr}${endpoint}`, config)
+    .then((resp) => {
+        res.sendStatus(resp.status);
+    })
+    .catch((err) => {
+        console.error(err.stack);
+    })
+}

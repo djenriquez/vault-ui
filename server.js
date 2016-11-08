@@ -45,6 +45,10 @@ app.post('/secret', function (req, res) {
     routeHandler.writeSecret(req, res);
 });
 
+app.delete('/secret', function (req, res) {
+    routeHandler.deleteSecret(req, res);
+})
+
 app.get('/');
 
 app.get('*', function (req, res) {
