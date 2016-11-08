@@ -40,6 +40,10 @@ app.get('/secret', (req, res) => {
     routeHandler.getSecret(req, res);
 })
 
+app.post('/secret', (req, res) => {
+    routeHandler.writeSecret(req, res);
+});
+
 app.get('/')
 
 app.get('*', function(req, res) {

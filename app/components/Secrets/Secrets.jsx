@@ -30,7 +30,8 @@ class Secrets extends React.Component {
             openDeleteModal: false,
             editingKey: -1,
             deletingKey: '',
-            secrets: []
+            secrets: [],
+            currentSecret: ''
         };
 
         this.namespace = '/';
@@ -70,7 +71,6 @@ class Secrets extends React.Component {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />
         ];
-        let secretToChange = _.filter(this.state.secrets, x => x.key === this.state.editingKey)[0].value;
 
         let checkKey = (e, v) => {
             if (e.keyCode === 13) {
@@ -80,6 +80,16 @@ class Secrets extends React.Component {
                         value: e.target.value
                     }
                 }));
+
+                let fullKey = `${this.namespace}${this.state.editingKey}`;
+                axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": e.target.value })
+                    .then((resp) => {
+
+                    })
+                    .catch((err) => {
+                        console.error(err.stack);
+                    })
+
                 this.setState({ openEditModal: false });
             }
         }
@@ -92,7 +102,7 @@ class Secrets extends React.Component {
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 >
-                <TextField name="editingText" autoFocus defaultValue={secretToChange} fullWidth={true} onKeyUp={checkKey} />
+                <TextField name="editingText" autoFocus defaultValue={this.state.currentSecret} fullWidth={true} onKeyUp={checkKey} />
             </Dialog>
         );
     }
@@ -143,6 +153,16 @@ class Secrets extends React.Component {
                     value: this.state.newKey.value,
                 }
             }));
+
+            let fullKey = `${this.namespace}${this.state.newKey.key}`;
+            axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newKey.value })
+                .then((resp) => {
+
+                })
+                .catch((err) => {
+                    console.error(err.stack);
+                })
+
             this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' });
         }
 
@@ -204,14 +224,16 @@ class Secrets extends React.Component {
 
                 var secrets = _.map(keys, (key) => {
                     return {
-                        key: key,
-                        value: ""
+                        key: key
                     }
                 });
 
                 this.setState({
                     secrets: secrets
                 });
+            })
+            .catch((err) => {
+                console.error(err.stack);
             });
     }
 
@@ -220,10 +242,19 @@ class Secrets extends React.Component {
             this.namespace = `${this.namespace}${key}`;
             this.getSecrets();
         } else {
-            this.setState({
-                openEditModal: true,
-                editingKey: key
-            });
+            let fullKey = `${this.namespace}${key}`;
+            axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+                .then((resp) => {
+                    this.setState({
+                        openEditModal: true,
+                        editingKey: key,
+                        currentSecret: resp.data.value
+                    });
+                })
+                .catch((err) => {
+                    console.error(err.stack);
+                });
+
         }
     }
 
@@ -235,7 +266,7 @@ class Secrets extends React.Component {
                     key={secret.key}
                     onTouchTap={() => { this.clickSecret(secret.key) } }
                     primaryText={<div className={styles.key}>{secret.key}</div>}
-                    secondaryText={<div className={styles.key}>{secret.value}</div>}
+                    //secondaryText={<div className={styles.key}>{secret.value}</div>}
                     rightIconButton={<IconButton
                         tooltip="Delete"
                         onTouchTap={() => {
