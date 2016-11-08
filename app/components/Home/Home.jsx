@@ -17,7 +17,8 @@ export default class Home extends React.Component {
             secrets: [],
             snackbarMessage: '',
             snackbarOpen: false,
-            snackbarType: 'OK'
+            snackbarType: 'OK',
+            namespace: '/'
         }
     }
 
@@ -55,25 +56,6 @@ export default class Home extends React.Component {
                 secrets: newSecrets
             });
         });
-
-        var keys = [];
-        axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
-            .then((resp) => {
-                console.log(resp.data.data);
-                keys = resp.data.data.keys;
-                
-
-                var secrets = _.map(keys, (key) => {
-                    return {
-                        key: key,
-                        value: ""
-                    }
-                });
-
-                this.setState({
-                    secrets: secrets
-                });
-            })
     }
 
     renderContent() {
@@ -81,9 +63,9 @@ export default class Home extends React.Component {
             case '/secrets':
                 return <Secrets secrets={this.state.secrets} />
             case '/health':
-                return <Health/>
+                return <Health />
             case '/settings':
-                return <Settings/>
+                return <Settings />
             default:
                 return (
                     <div>
