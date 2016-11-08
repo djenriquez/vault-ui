@@ -84,7 +84,11 @@ class Secrets extends React.Component {
                 let fullKey = `${this.namespace}${this.state.editingKey}`;
                 axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": e.target.value })
                     .then((resp) => {
-
+                        if (resp.status === 200) {
+    
+                        } else {
+                            // errored
+                        }
                     })
                     .catch((err) => {
                         console.error(err.stack);
@@ -157,7 +161,15 @@ class Secrets extends React.Component {
             let fullKey = `${this.namespace}${this.state.newKey.key}`;
             axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newKey.value })
                 .then((resp) => {
-
+                    if (resp.status === 200) {
+                        let secrets = this.state.secrets;
+                        secrets.push({key: this.state.newKey.key, value: this.state.newKey.value});
+                        this.setState({
+                            secrets: secrets
+                        });
+                    } else {
+                        // errored
+                    }
                 })
                 .catch((err) => {
                     console.error(err.stack);
