@@ -3,7 +3,7 @@ FROM node:slim
 MAINTAINER Team Lucretius
 
 ADD package.json /tmp/package.json
-RUN cd /tmp && npm install
+RUN cd /tmp && npm install --silent
 RUN mkdir -p /app/ && cp -a /tmp/node_modules /app/
 
 RUN npm install --silent -g webpack
