@@ -102,7 +102,6 @@ export default class Login extends React.Component {
                 let accessToken = _.get(resp, 'data.client_token');
                 if(accessToken) {
                     window.localStorage.setItem("vaultAccessToken",accessToken);
-                    console.log(`Fetched token: ${accessToken}`);
                     window.location.href = '/';
                 } else {
                     this.setState({errorMessage: "Auth token validation failed."})
@@ -136,7 +135,6 @@ export default class Login extends React.Component {
                 let accessToken = _.get(resp, 'data.client_token');
                 if(accessToken) {
                     window.localStorage.setItem("vaultAccessToken",accessToken);
-                    console.log(`Fetched token: ${accessToken}`);
                     window.location.href = '/';
                 } else {
                     this.setState({errorMessage: "Auth token validation failed."})

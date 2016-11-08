@@ -263,7 +263,6 @@ class Secrets extends React.Component {
                         editingKey: key,
                         currentSecret: val
                     });
-                    console.log(val);
                 })
                 .catch((err) => {
                     console.error(err.stack);
