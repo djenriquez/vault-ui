@@ -14,6 +14,7 @@ export default class Login extends React.Component {
     constructor(props) {
       super(props);
       this.validateAuthToken = this.validateAuthToken.bind(this);
+      this.validateToken = this.validateToken.bind(this);
       this.submitVaultURL = this.submitVaultURL.bind(this);
       this.renderSettingsDialog = this.renderSettingsDialog.bind(this);
       this.renderSelectedLoginOption = this.renderSelectedLoginOption.bind(this);
@@ -80,9 +81,8 @@ export default class Login extends React.Component {
         }
     }
 
-    validateAuthToken(e) {
+    validateToken(e) {
         if (e.keyCode === 13) {
-            console.log(`Validating auth token: ${this.state.authToken}`);
             if (!window.localStorage.getItem("vaultUrl")) {
                 this.setState({errorMessage: "No Vault url specified.  Click the gear to edit your Vault url"});
                 return;
@@ -93,12 +93,46 @@ export default class Login extends React.Component {
             }
             axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": {"Type": this.state.loginMethodType, "Token": this.state.authToken} })
             .then((resp) => {
-//                 { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
-//   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
-//   policies: [ 'default', 'insp-power-user' ],
-//   metadata: { org: 'Openmail', username: 'djenriquez' },
-//   lease_duration: 3600,
-//   renewable: true }
+                //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
+                //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
+                //   policies: [ 'default', 'insp-power-user' ],
+                //   metadata: { org: 'Openmail', username: 'djenriquez' },
+                //   lease_duration: 3600,
+                //   renewable: true }
+                let accessToken = _.get(resp, 'data.client_token');
+                if(accessToken) {
+                    window.localStorage.setItem("vaultAccessToken",accessToken);
+                    console.log(`Fetched token: ${accessToken}`);
+                    window.location.href = '/';
+                } else {
+                    this.setState({errorMessage: "Auth token validation failed."})
+                }
+            })
+            .catch((err) => {
+                console.error(err.stack);
+                this.setState({errorMessage: err.response.data})
+            });
+        }
+    }
+
+    validateAuthToken(e) {
+        if (e.keyCode === 13) {
+            if (!window.localStorage.getItem("vaultUrl")) {
+                this.setState({errorMessage: "No Vault url specified.  Click the gear to edit your Vault url"});
+                return;
+            }
+            if (!this.state.authToken) {
+                this.setState({errorMessage: "No auth token provided."});
+                return;
+            }
+            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": {"Type": this.state.loginMethodType, "Token": this.state.authToken} })
+            .then((resp) => {
+                //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
+                //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
+                //   policies: [ 'default', 'insp-power-user' ],
+                //   metadata: { org: 'Openmail', username: 'djenriquez' },
+                //   lease_duration: 3600,
+                //   renewable: true }
                 let accessToken = _.get(resp, 'data.client_token');
                 if(accessToken) {
                     window.localStorage.setItem("vaultAccessToken",accessToken);
@@ -181,7 +215,7 @@ export default class Login extends React.Component {
                         className="col-xs-12"
                         errorText={this.state.errorMessage}
                         hintText="Enter token"
-                        onKeyDown={this.validateAuthToken}
+                        onKeyDown={this.validateToken}
                         onChange={(e,v)=>this.setState({authToken: v})}
                     />
                 );

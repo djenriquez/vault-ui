@@ -257,11 +257,13 @@ class Secrets extends React.Component {
             let fullKey = `${this.namespace}${key}`;
             axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
                 .then((resp) => {
+                    let val = typeof resp.data.value == 'object' ? JSON.stringify(resp.data.value) : resp.data.value;
                     this.setState({
                         openEditModal: true,
                         editingKey: key,
-                        currentSecret: resp.data.value
+                        currentSecret: val
                     });
+                    console.log(val);
                 })
                 .catch((err) => {
                     console.error(err.stack);

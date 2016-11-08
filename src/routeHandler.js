@@ -23,6 +23,7 @@ var login = function (req, res) {
 
     let endpoint = '';
     let body = {}
+    let config = {}
 
     switch (creds.Type.toLowerCase()) {
         case 'github':
@@ -31,12 +32,34 @@ var login = function (req, res) {
                 token: creds.Token
             };
             break;
+        case 'usernamepassword':
+            endpoint = `/v1/auth/userpass/login/${creds.Username}`;
+            body = {
+                password: creds.Password
+            };
+            break;
+        case 'token':
+            endpoint = `/v1/auth/token/lookup`
+            body = {
+                token: creds.Token
+            };
+            config = {
+                headers: { "X-Vault-Token": creds.Token }
+            };
+            break;
         default:
             res.status(400).send("Invalid auth method");
     }
-    axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body)
+    axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body, config)
         .then((resp) => {
-            res.json(resp.data.auth);
+            if (creds.Type.toLowerCase() === 'token') {
+                res.json({
+                    client_token: resp.data.data.id,
+                    lease_duration: resp.data.lease_duration
+                });
+            } else {
+                res.json(resp.data.auth);
+            }
         })
         .catch((err) => {
             console.error(err.stack);
@@ -97,6 +120,10 @@ var writeSecret = function (req, res) {
 
     let secretValue = _.get(req, "body.SecretValue")
     let vaultAddr = _.get(req, 'body.VaultUrl');
+
+    try {
+        secretValue = JSON.parse(secretValue)
+    } catch(e) { }
 
     let body = {
         value: secretValue
