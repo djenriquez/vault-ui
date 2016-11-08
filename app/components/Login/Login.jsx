@@ -4,6 +4,8 @@ import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
 import Settings from 'material-ui/svg-icons/action/settings';
 import Dialog from 'material-ui/Dialog';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
 import { browserHistory } from 'react-router';
 import axios from 'axios';
@@ -14,13 +16,18 @@ export default class Login extends React.Component {
       this.validateAuthToken = this.validateAuthToken.bind(this);
       this.submitVaultURL = this.submitVaultURL.bind(this);
       this.renderSettingsDialog = this.renderSettingsDialog.bind(this);
+      this.renderSelectedLoginOption = this.renderSelectedLoginOption.bind(this);
+      this.validateUsernamePassword = this.validateUsernamePassword.bind(this);
       this.state = {
           show: false,
           promptForVaultUrl: false,
           authToken: "",
           vaultUrl: "",
           tempVaultUrl: "",
-          errorMessage: ""
+          errorMessage: "",
+          username: "",
+          password: "",
+          loginMethodType: "GITHUB"
       };
     }
 
@@ -40,6 +47,39 @@ export default class Login extends React.Component {
         this.setState({ show: true});
     }
 
+    validateUsernamePassword(e) {
+        if (e.keyCode === 13) {
+            if (!window.localStorage.getItem("vaultUrl")) {
+                this.setState({errorMessage: "No Vault url specified.  Click the gear to edit your Vault url"});
+                return;
+            }
+            if (!this.state.username) {
+                this.setState({errorMessage: "No username provided."});
+                return;
+            }
+
+            if (!this.state.password) {
+                this.setState({errorMessage: "No password provided."});
+                return;
+            }
+            axios.post('/login', {
+                "VaultUrl": window.localStorage.getItem("vaultUrl"),
+                "Creds": {
+                    "Type": this.state.loginMethodType,
+                    "Username": this.state.username,
+                    "password": this.state.password
+                }
+            })
+            .then((resp) => {
+                //DJ fill in the blanks here
+            })
+            .catch((err) => {
+                console.error(err);
+                this.setState({errorMessage: err.response.data})
+            });
+        }
+    }
+
     validateAuthToken(e) {
         if (e.keyCode === 13) {
             console.log(`Validating auth token: ${this.state.authToken}`);
@@ -47,7 +87,11 @@ export default class Login extends React.Component {
                 this.setState({errorMessage: "No Vault url specified.  Click the gear to edit your Vault url"});
                 return;
             }
-            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": {"Type": "GITHUB", "Token": this.state.authToken} })
+            if (!this.state.authToken) {
+                this.setState({errorMessage: "No auth token provided."});
+                return;
+            }
+            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": {"Type": this.state.loginMethodType, "Token": this.state.authToken} })
             .then((resp) => {
 //                 { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
 //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
@@ -61,14 +105,13 @@ export default class Login extends React.Component {
                     console.log(`Fetched token: ${accessToken}`);
                     window.location.href = '/';
                 } else {
-                    //No access token returned, error
+                    this.setState({errorMessage: "Auth token validation failed."})
                 }
             })
             .catch((err) => {
                 console.error(err.stack);
-                //something went wrong
+                this.setState({errorMessage: err.response.data})
             });
-            
         }
     }
 
@@ -84,8 +127,12 @@ export default class Login extends React.Component {
 
     renderSettingsDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ promptForVaultUrl: false })}/>
+            <FlatButton label="Close" primary={true} onTouchTap={() => this.setState({ promptForVaultUrl: false })}/>
         ]
+        function handleSelectFieldChange(e,i,v) {
+            this.setState({ loginMethodType: v, errorMessage: ""});
+        }
+
         return (
             <Dialog
                 title="Settings"
@@ -101,8 +148,65 @@ export default class Login extends React.Component {
                     onKeyDown={this.submitVaultURL}
                     onChange={(e,v)=>this.setState({tempVaultUrl: v})}
                 />
+            <SelectField
+                style={{paddingLeft: 8}}
+                value={this.state.loginMethodType}
+                onChange={handleSelectFieldChange.bind(this)}
+                floatingLabelText="Login Method">
+                <MenuItem value={"GITHUB"} primaryText="Github"/>
+                <MenuItem value={"TOKEN"} primaryText="Token"/>
+                <MenuItem value={"USERNAMEPASSWORD"} primaryText="Username & Password"/>
+            </SelectField>
             </Dialog>
         )
+    }
+
+    renderSelectedLoginOption() {
+        switch (this.state.loginMethodType) {
+            case "GITHUB":
+                return (
+                    <TextField
+                        fullWidth={true}
+                        className="col-xs-12"
+                        errorText={this.state.errorMessage}
+                        hintText="Enter Github token"
+                        onKeyDown={this.validateAuthToken}
+                        onChange={(e,v)=>this.setState({authToken: v})}
+                    />
+                );
+            case "TOKEN":
+                return (
+                    <TextField
+                        fullWidth={true}
+                        className="col-xs-12"
+                        errorText={this.state.errorMessage}
+                        hintText="Enter token"
+                        onKeyDown={this.validateAuthToken}
+                        onChange={(e,v)=>this.setState({authToken: v})}
+                    />
+                );
+            case "USERNAMEPASSWORD":
+                return (
+                    <div>
+                        <TextField
+                            fullWidth={true}
+                            className="col-xs-12"
+                            hintText="Enter username"
+                            onKeyDown={this.validateUsernamePassword}
+                            onChange={(e,v)=>this.setState({username: v})}
+                        />
+                        <TextField
+                            fullWidth={true}
+                            className="col-xs-12"
+                            type="password"
+                            hintText="Enter password"
+                            onKeyDown={this.validateUsernamePassword}
+                            onChange={(e,v)=>this.setState({password: v})}
+                        />
+                    <div className={styles.error}>{this.state.errorMessage}</div>
+                    </div>
+                )
+        }
     }
 
     render () {
@@ -113,14 +217,7 @@ export default class Login extends React.Component {
                     <div className="col-xs-12" id={styles.title}><img height="40" src="https://www.vaultproject.io/assets/images/favicon-16466d1a.png"></img>AULT</div>
                     <div className="row">
                         <div className="col-xs-11">
-                            <TextField
-                                fullWidth={true}
-                                className="col-xs-12"
-                                errorText={this.state.errorMessage}
-                                hintText="Enter authentication token"
-                                onKeyDown={this.validateAuthToken}
-                                onChange={(e,v)=>this.setState({authToken: v})}
-                            />
+                            {this.renderSelectedLoginOption()}
                         </div>
                         <div className="col-xs-1">
                             <IconButton tooltip="Settings" onTouchTap={() => this.setState({promptForVaultUrl: true})}>
@@ -133,4 +230,3 @@ export default class Login extends React.Component {
         );
     }
 }
-
