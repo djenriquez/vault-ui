@@ -14,7 +14,6 @@ export default class Home extends React.Component {
         super(props);
         this.renderContent = this.renderContent.bind(this);
         this.state = {
-            secrets: [],
             snackbarMessage: '',
             snackbarOpen: false,
             snackbarType: 'OK',
@@ -34,34 +33,34 @@ export default class Home extends React.Component {
             });
         });
 
-        document.addEventListener("changedKey", (e) => {
-            let secrets = this.state.secrets;
-            _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
-            this.setState({
-                secrets: secrets
-            });
-        });
+        // document.addEventListener("changedKey", (e) => {
+        //     let secrets = this.state.secrets;
+        //     _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
+        //     this.setState({
+        //         secrets: secrets
+        //     });
+        // });
 
-        document.addEventListener("addedKey", (e) => {
-            let secrets = this.state.secrets;
-            secrets.push({ key: e.detail.key, value: e.detail.value });
-            this.setState({
-                secrets: secrets
-            });
-        });
+        // document.addEventListener("addedKey", (e) => {
+        //     let secrets = this.state.secrets;
+        //     secrets.push({ key: e.detail.key, value: e.detail.value });
+        //     this.setState({
+        //         secrets: secrets
+        //     });
+        // });
 
-        document.addEventListener("deleteKey", (e) => {
-            let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
-            this.setState({
-                secrets: newSecrets
-            });
-        });
+        // document.addEventListener("deleteKey", (e) => {
+        //     let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
+        //     this.setState({
+        //         secrets: newSecrets
+        //     });
+        // });
     }
 
     renderContent() {
         switch (this.props.location.pathname) {
             case '/secrets':
-                return <Secrets secrets={this.state.secrets} />
+                return <Secrets />
             case '/health':
                 return <Health />
             case '/settings':

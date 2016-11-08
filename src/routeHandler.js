@@ -98,9 +98,6 @@ var writeSecret = function (req, res) {
         value: secretValue
     };
 
-    console.log(`${_.get(req, "body.VaultUrl")}${endpoint}`);
-    console.log(secretValue);
-
     axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body, config)
         .then((resp) => {
             res.json(resp.data.auth);
