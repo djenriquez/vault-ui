@@ -27,6 +27,7 @@ exports.listSecrets = function (req, res) {
         })
         .catch((err) => {
             console.error(err.stack);
+            res.status(err.response.status).send(err.response);
         });
 }
 /* Returned body
@@ -46,6 +47,7 @@ exports.getSecret = function (req, res) {
         })
         .catch((err) => {
             console.error(err.stack);
+            res.status(err.response.status).send(err.response);
         });
 }
 
@@ -71,6 +73,7 @@ exports.writeSecret = function (req, res) {
         })
         .catch((err) => {
             console.error(err.stack);
+            res.status(err.response.status).send(err.response);
         });
 }
 
@@ -85,5 +88,7 @@ exports.deleteSecret = function (req, res) {
     })
     .catch((err) => {
         console.error(err.stack);
+        res.status(err.response.status).send(err.response);
     })
 }
+
