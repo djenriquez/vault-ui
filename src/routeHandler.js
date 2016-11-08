@@ -2,7 +2,7 @@
 
 var secrets = require('./secrets');
 var login = require('./login');
-
+var policies = require('./policies');
 
 module.exports = (function () {
     return {
@@ -10,6 +10,9 @@ module.exports = (function () {
         listSecrets: secrets.listSecrets,
         getSecret: secrets.getSecret,
         writeSecret: secrets.writeSecret,
-        deleteSecret: secrets.deleteSecret
+        deleteSecret: secrets.deleteSecret,
+        listPolicies: policies.listPolicies,
+        getPolicy: policies.getPolicy,
+        updatePolicy: policies.updatePolicy
     }
 })();

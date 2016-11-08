@@ -1,0 +1,20 @@
+/* Copied from secrets.css */
+welcomeHeadline {
+    font-size: 60px;
+    font-weight: 200;
+}
+
+.actionButtons {
+    position: absolute;
+    right: 0;
+}
+
+.key{
+    max-width: 600px;
+    word-wrap: break-word;
+}
+
+
+.error {
+    color: red;
+}
