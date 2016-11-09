@@ -49,16 +49,20 @@ app.delete('/secret', function (req, res) {
     routeHandler.deleteSecret(req, res);
 });
 
-app.get('/listpolicies', function(req, res) {
+app.get('/listpolicies', function (req, res) {
     routeHandler.listPolicies(req, res);
 });
 
-app.get('/policy', function(req, res) {
+app.get('/policy', function (req, res) {
     routeHandler.getPolicy(req, res);
 });
 
-app.put('/policy', function(req, res) {
+app.put('/policy', function (req, res) {
     routeHandler.updatePolicy(req, res);
+});
+
+app.delete('/policy', function (req, res) {
+    routeHandler.deletePolicy(req, res);
 });
 
 app.get('/');

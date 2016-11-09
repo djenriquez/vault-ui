@@ -66,3 +66,18 @@ exports.updatePolicy = function (req, res) {
             res.status(err.response.status).send(err.response);
         });
 }
+
+exports.deletePolicy = function (req, res) {
+    let policyName = decodeURI(req.query['policy']);
+    let endpoint = `/v1/sys/policy/${policyName}`;
+    let vaultAddr = decodeURI(req.query['vaultaddr']);
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
+
+    axios.delete(`${vaultAddr}${endpoint}`, config)
+    .then((resp) => {
+        res.sendStatus(resp.status);
+    })
+    .catch((err) => {
+        console.error(err.stack);
+    })
+}

@@ -170,13 +170,6 @@ class Secrets extends React.Component {
                 return;
             }
 
-            document.dispatchEvent(new CustomEvent("addedKey", {
-                detail: {
-                    key: this.state.newKey.key,
-                    value: this.state.newKey.value,
-                }
-            }));
-
             let fullKey = `${this.namespace}${this.state.newKey.key}`;
             axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newKey.value })
                 .then((resp) => {

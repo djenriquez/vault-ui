@@ -7,6 +7,8 @@ import { green500, green400, red500, red300, yellow500, white } from 'material-u
 import { List, ListItem } from 'material-ui/List';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
+import IconButton from 'material-ui/IconButton';
+import FontIcon from 'material-ui/FontIcon';
 
 export default class Policy extends React.Component {
     constructor(props) {
@@ -32,7 +34,7 @@ export default class Policy extends React.Component {
             'clickPolicy',
             'showDelete',
             'renderPolicies',
-            'policyChanged'
+            'deletePolicy'
         )
     }
 
@@ -83,6 +85,10 @@ export default class Policy extends React.Component {
             <FlatButton label="Submit" primary={true} onTouchTap={() => this.updatePolicy()} />
         ];
 
+        let policyChanged = (e, v, ) => {
+            this.state.currentPolicy = e.target.value;
+        };
+
         return (
             <Dialog
                 title={`Editing ${this.state.editingPolicy}`}
@@ -92,21 +98,101 @@ export default class Policy extends React.Component {
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
                 >
-                <TextField style={{ height: '5000px' }} onChange={this.policyChanged} name="editingText" multiLine={true} autoFocus defaultValue={this.state.currentPolicy} fullWidth={true} />
+                <TextField style={{ height: '5000px' }} onChange={(e, v) => policyChanged(e, v)} name="editingText" multiLine={true} autoFocus defaultValue={this.state.currentPolicy} fullWidth={true} />
             </Dialog>
         );
     }
 
-    policyChanged(e) {
-        this.state.currentPolicy = e.target.value;
-    }
-
     renderNewPolicyDialog() {
+        const MISSING_POLICY_ERROR = "Policy cannot be empty.";
+        const DUPLICATE_POLICY_ERROR = `Policy ${this.state.newPolicy.name} already exists.`;
 
+        let validateAndSubmit = () => {
+            if (this.state.newPolicy.name === '') {
+                this.setState({
+                    newPolicyErrorMessage: MISSING_POLICY_ERROR
+                });
+                return;
+            }
+
+            if (_.filter(this.state.policies, x => x.name === this.state.newPolicy.name).length > 0) {
+                this.setState({
+                    newPolicyErrorMessage: DUPLICATE_POLICY_ERROR
+                });
+                return;
+            }
+
+            axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(this.state.newPolicy.name)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
+                .then((resp) => {
+                    if (resp.status === 200) {
+                        let policies = this.state.policies;
+                        policies.push({ name: this.state.newPolicy.name });
+                        this.setState({
+                            policies: policies
+                        });
+                    } else {
+                        // errored
+                    }
+                })
+                .catch((err) => {
+                    console.error(err.stack);
+                })
+
+            this.setState({ openNewPolicyModal: false });
+        }
+
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })} />,
+            <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit} />
+        ];
+
+        let setNewPolicy = (e, v) => {
+            let currentPolicy = this.state.newPolicy;
+            if (e.target.name === "newName") {
+                currentPolicy.name = v;
+            } else if (e.target.name === "newRules") {
+                currentPolicy.rules = v;
+            }
+            this.setState({
+                newPolicy: currentPolicy
+            });
+        }
+
+
+        return (
+            <Dialog
+                title={`New Policy`}
+                modal={false}
+                actions={actions}
+                open={this.state.openNewPolicyModal}
+                onRequestClose={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })}
+                >
+                <TextField name="newName" autoFocus fullWidth={true} hintText="Name" onChange={(e, v) => setNewPolicy(e, v)} />
+                <TextField name="newRules" multiLine={true} style={{ height: '5000px' }} fullWidth={true} hintText="Rules" onChange={(e, v) => setNewPolicy(e, v)} />
+                <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
+            </Dialog>
+        );
     }
 
     renderDeleteConfirmationDialog() {
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deletingPolicy: '' })} />,
+            <FlatButton label="Delete" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => this.deletePolicy(this.state.deletingPolicy)} />
+        ];
 
+        return (
+            <Dialog
+                title={`Delete Confirmation`}
+                modal={false}
+                actions={actions}
+                open={this.state.openDeleteModal}
+                onRequestClose={() => this.setState({ openDeleteModal: false, newPolicyErrorMessage: '' })}
+                >
+
+                <p>You are about to permanently delete {this.state.deletingPolicy}.  Are you sure?</p>
+                <em>To disable this prompt, visit the settings page.</em>
+            </Dialog>
+        )
     }
 
     clickPolicy(policyName) {
@@ -118,7 +204,7 @@ export default class Policy extends React.Component {
                     rules = JSON.parse(rules)
                 } catch (e) { }
 
-                let val = typeof rules == 'object' ? JSON.stringify(rules, null, 2) : rules;
+                let val = typeof rules == 'object' ? JSON.stringify(rules, null, 4) : rules;
 
                 this.setState({
                     openEditModal: true,
@@ -131,8 +217,44 @@ export default class Policy extends React.Component {
             });
     }
 
-    showDelete(policyName) {
+    deletePolicy(policyName) {
+        axios.delete(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+            .then((resp) => {
+                if (resp.status !== 204) {
+                    console.error(resp.status);
+                } else {
+                    let policies = this.state.policies;
+                    let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName }); å
+                    policies = _.pull(policies, policyToDelete);
+                    this.setState({
+                        secrets: policies
+                    });
+                }
+            })
+            .catch((err) => {
+                console.error(err.stack);
+            });
 
+        this.setState({
+            deletingPolicy: '',
+            openDeleteModal: false
+        });
+    }
+
+    showDelete(policyName) {
+        return (
+            <IconButton
+                tooltip="Delete"
+                onTouchTap={() => {
+                    if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                        this.deletePolicy(policyName);
+                    } else {
+                        this.setState({ deletingPolicy: policyName, openDeleteModal: true })
+                    }
+                } }
+                >
+                <FontIcon className="fa fa-times-circle" color={red500} />
+            </IconButton>);
     }
 
     renderPolicies() {
@@ -158,11 +280,11 @@ export default class Policy extends React.Component {
                 <h1 id={styles.welcomeHeadline}>Policies</h1>
                 <p>Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span></p>
                 <FlatButton
-                    label="Add Key"
+                    label="Add Policy"
                     backgroundColor={green500}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({ openNewKeyModal: true, newKey: { key: '', value: '' } })} />
+                    onTouchTap={() => this.setState({ openNewPolicyModal: true, newPolicy: { name: '', value: '' } })} />
                 <List>
                     {this.renderPolicies()}
                 </List>

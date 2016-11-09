@@ -13,6 +13,7 @@ module.exports = (function () {
         deleteSecret: secrets.deleteSecret,
         listPolicies: policies.listPolicies,
         getPolicy: policies.getPolicy,
-        updatePolicy: policies.updatePolicy
+        updatePolicy: policies.updatePolicy,
+        deletePolicy: policies.deletePolicy
     }
 })();
