@@ -43,16 +43,11 @@ export default class Policy extends React.Component {
     }
 
     updatePolicy() {
-        let policyName = `${this.state.editingPolicy}`;
+        let policyName = this.state.editingPolicy;
 
         axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
             .then((resp) => {
-                if (resp.status === 200) {
-
-                } else {
-                    // errored
-                }
-
+                // Custom future logic on success
             })
             .catch((err) => {
                 console.error(err.stack);

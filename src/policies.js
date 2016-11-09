@@ -61,7 +61,6 @@ exports.updatePolicy = function (req, res) {
             res.json(resp.data);
         })
         .catch((err) => {
-            //console.error(err);
             console.error(err.stack);
             res.status(err.response.status).send(err.response);
         });
