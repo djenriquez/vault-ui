@@ -11,13 +11,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Lucretius/vault_ui.git"
+    "url": "git+https://github.com/djenriquez/vault-ui.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Lucretius/vault_ui/issues"
+    "url": "https://github.com/djenriquez/vault-ui/issues"
   },
   "babel": {
     "presets": [
@@ -26,7 +26,7 @@
       "stage-2"
     ]
   },
-  "homepage": "https://github.com/Lucretius/vault_ui#readme",
+  "homepage": "https://github.com/djenriquez/vault-ui#readme",
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.2",
