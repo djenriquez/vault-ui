@@ -7,7 +7,7 @@ import { browserHistory } from 'react-router';
 import styles from './header.css';
 
 var logout = () => {
-    window.localStorage.removeItem('vaultAuthenticationToken');
+    window.localStorage.removeItem('vaultAccessToken');
     browserHistory.push('/login');
 }
 

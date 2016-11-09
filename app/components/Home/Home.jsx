@@ -4,6 +4,7 @@ import Menu from '../shared/Menu/Menu.jsx';
 import styles from './home.css';
 import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
+import Policies from '../Policies/Policies.jsx';
 import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
@@ -65,6 +66,8 @@ export default class Home extends React.Component {
                 return <Health />
             case '/settings':
                 return <Settings />
+            case '/policies':
+                return <Policies />
             default:
                 return (
                     <div>
