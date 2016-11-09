@@ -10,8 +10,7 @@ env:
 build:
   ci:
     - docker build -t ${PROJECT}:ci .
-  post_ci:
-    - . docker-push.sh
+    # run tests here
 
 integrations:
   hub:
