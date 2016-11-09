@@ -24,14 +24,14 @@ class Menu extends React.Component {
                     <p className={`${styles.link}  ${this.applyActiveLink('/policies')}`} onClick={() => browserHistory.push('/policies')}>Policies</p>
                 </div>
                 <div>
-                    <p className={`${styles.link}  ${this.applyActiveLink('/health')}`} onClick={() => browserHistory.push('/health')}>Health</p>
-                </div>
-                <div>
                     <p className={`${styles.link}  ${this.applyActiveLink('/settings')}`} onClick={() => browserHistory.push('/settings')}>Settings</p>
                 </div>
             </div>
         );
     }
 }
+/*<div>
+    <p className={`${styles.link}  ${this.applyActiveLink('/health')}`} onClick={() => browserHistory.push('/health')}>Health</p>
+</div>*/
 
 export default Menu;
