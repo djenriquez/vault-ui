@@ -314,9 +314,13 @@ class Secrets extends React.Component {
     }
 
     renderNamespace() {
-        if (this.state.namespace === '/') {
-            return <span></span>;
-        }
+        // if (this.state.namespace === '/') {
+        //     return (
+        //         <div style={{ display: 'inline-block' }} key={'/'}>
+        //             <span className={styles.link}
+        //                 onTouchTap={() => this.clickSecret("/", true)}>ROOT</span>
+        //         </div>);
+        // }
         let namespaceParts = this.state.namespace.split('/');
         return (
             _.map(namespaceParts, (dir, index) => {
@@ -333,7 +337,7 @@ class Secrets extends React.Component {
                 return (
                     <div style={{ display: 'inline-block' }} key={index}>
                         <span className={styles.link}
-                            onTouchTap={() => this.clickSecret(link, true)}>{dir}</span>
+                            onTouchTap={() => this.clickSecret(link, true)}>{dir.toUpperCase()}</span>
                         {index !== namespaceParts.length - 1 && <span>/</span>}
                     </div>
                 );
@@ -355,7 +359,7 @@ class Secrets extends React.Component {
                     hoverColor={green400}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.setState({ openNewKeyModal: true, newKey: { key: '', value: '' } })} />
-                <div className={this.state.namespace === '/' ? '' : styles.namespace}>{this.renderNamespace()}</div>
+                <div className={styles.namespace}>{this.renderNamespace()}</div>
                 <List>
                     {this.renderSecrets()}
                 </List>
