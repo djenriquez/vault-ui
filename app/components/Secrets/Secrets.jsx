@@ -249,10 +249,9 @@ class Secrets extends React.Component {
     }
 
     getSecrets() {
-        var keys = [];
         axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&namespace=${encodeURI(this.namespace)}`)
             .then((resp) => {
-                keys = resp.data.data.keys;
+                let keys = resp.data.data.keys;
 
                 var secrets = _.map(keys, (key) => {
                     return {

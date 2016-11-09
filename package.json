@@ -19,7 +19,7 @@
   "bugs": {
     "url": "https://github.com/Lucretius/vault_ui/issues"
   },
-    "babel": {
+  "babel": {
     "presets": [
       "es2015",
       "react",
@@ -48,6 +48,7 @@
     "body-parser": "^1.15.2",
     "copy-to-clipboard": "^3.0.5",
     "express": "^4.14.0",
+    "hcl-to-json": "0.0.4",
     "lodash": "^4.16.6",
     "material-ui": "^0.16.1",
     "react": "^15.3.2",

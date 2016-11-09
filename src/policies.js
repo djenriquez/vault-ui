@@ -2,15 +2,16 @@
 
 var axios = require('axios');
 var _ = require('lodash');
+var hcltojson = require('hcl-to-json');
 
-exports.listPolicies = function (req, resp) {
+exports.listPolicies = function (req, res) {
     let endpoint = `/v1/sys/policy`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
     axios.get(`${vaultAddr}${endpoint}`, config)
         .then((resp) => {
-            res.json(resp.data.data);
+            res.json(resp.data);
         })
         .catch((err) => {
             console.error(err.stack);
@@ -18,7 +19,7 @@ exports.listPolicies = function (req, resp) {
         });
 }
 
-exports.getPolicy = function (req, resp) {
+exports.getPolicy = function (req, res) {
     let policyName = decodeURI(req.query['policy']);
     let endpoint = `/v1/sys/policy/${policyName}`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
@@ -26,7 +27,7 @@ exports.getPolicy = function (req, resp) {
 
     axios.get(`${vaultAddr}${endpoint}`, config)
         .then((resp) => {
-            res.json(resp.data.data);
+            res.json(resp.data);
         })
         .catch((err) => {
             console.error(err.stack);
@@ -34,26 +35,33 @@ exports.getPolicy = function (req, resp) {
         });
 }
 
-// {
-//     "policy:" {
-//         ...
-//     }
-// }
-exports.updatePolicy = function (req, resp) {
+exports.updatePolicy = function (req, res) {
     let policyName = decodeURI(req.query['policy']);
     let endpoint = `/v1/sys/policy/${policyName}`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
+    //API requires an escaped JSON
+    let policy = _.get(req, "body.Policy");
+
+    // Attempt to parse into JSON incase a stringified JSON was sent
+    try {
+        policy = JSON.parse(policy)
+    } catch(e) { }
+
+    //If the user passed in an HCL document, convert to stringified JSON as required by the API
+    let rules = typeof policy == 'object' ? JSON.stringify(policy) : JSON.stringify(hcltojson(policy));
+
     let body = {
-        value: _.get(req, "body.Policy")
+        rules: rules
     };
 
-    axios.put(`${vaultAddr}${endpoint}`, config)
+    axios.put(`${vaultAddr}${endpoint}`, body, config)
         .then((resp) => {
-            res.json(resp.data.data);
+            res.json(resp.data);
         })
         .catch((err) => {
+            //console.error(err);
             console.error(err.stack);
             res.status(err.response.status).send(err.response);
         });
