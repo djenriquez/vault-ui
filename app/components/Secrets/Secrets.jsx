@@ -177,8 +177,7 @@ class Secrets extends React.Component {
                         let key = this.state.newKey.key.includes('/') ? `${this.state.newKey.key.split('/')[0]}/` : this.state.newKey.key;
                         secrets.push({ key: key, value: this.state.newKey.value });
                         this.setState({
-                            secrets: secrets,
-                            namespace: fullKey
+                            secrets: secrets
                         });
                     } else {
                         // errored
