@@ -1,0 +1,18 @@
+language: node_js
+
+node_js:
+  - 5.10
+
+env:
+  global:
+    - PROJECT=${REPO_NAME}
+
+build:
+  ci:
+    - docker build -t ${PROJECT}:ci .
+    # run tests here
+
+integrations:
+  hub:
+    - integrationName: "Docker Hub"
+      type: docker
