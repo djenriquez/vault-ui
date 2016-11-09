@@ -31,13 +31,13 @@ class Secrets extends React.Component {
             editingKey: -1,
             deletingKey: '',
             secrets: [],
-            currentSecret: ''
+            currentSecret: '',
+            namespace: '/'
         };
-
-        this.namespace = '/';
 
         this.getSecrets = this.getSecrets.bind(this);
         this.renderSecrets = this.renderSecrets.bind(this);
+        this.renderNamespace = this.renderNamespace.bind(this);
         this.clickSecret = this.clickSecret.bind(this);
         this.renderEditDialog = this.renderEditDialog.bind(this);
         this.renderNewKeyDialog = this.renderNewKeyDialog.bind(this);
@@ -47,7 +47,7 @@ class Secrets extends React.Component {
     }
 
     componentDidMount() {
-        this.getSecrets();
+        this.getSecrets("/");
     }
 
     copyText(value) {
@@ -56,7 +56,8 @@ class Secrets extends React.Component {
     }
 
     deleteKey(key) {
-        let fullKey = `${this.namespace}${key}`;
+
+        let fullKey = `${this.state.namespace}${key}`;
         axios.delete(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
             .then((resp) => {
                 if (resp.status !== 204) {
@@ -87,7 +88,7 @@ class Secrets extends React.Component {
         ];
 
         let updatePolicy = () => {
-            let fullKey = `${this.namespace}${this.state.editingKey}`;
+            let fullKey = `${this.state.namespace}${this.state.editingKey}`;
             axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newSecret })
                 .then((resp) => {
                     if (resp.status === 200) {
@@ -103,6 +104,7 @@ class Secrets extends React.Component {
             this.setState({ openEditModal: false });
         }
 
+
         let secretChanged = (e, v) => {
             this.state.newSecret = e.target.value;
         }
@@ -117,11 +119,11 @@ class Secrets extends React.Component {
                 autoScrollBodyContent={true}
                 >
                 <TextField
-                    onChange={(e, v) => secretChanged(e, v)} 
-                    name="editingText" 
-                    autoFocus 
-                    multiLine={true} 
-                    defaultValue={this.state.currentSecret} 
+                    onChange={(e, v) => secretChanged(e, v)}
+                    name="editingText"
+                    autoFocus
+                    multiLine={true}
+                    defaultValue={this.state.currentSecret}
                     fullWidth={true} />
             </Dialog>
         );
@@ -167,7 +169,7 @@ class Secrets extends React.Component {
                 return;
             }
 
-            let fullKey = `${this.namespace}${this.state.newKey.key}`;
+            let fullKey = `${this.state.namespace}${this.state.newKey.key}`;
             axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newKey.value })
                 .then((resp) => {
                     if (resp.status === 200) {
@@ -175,7 +177,8 @@ class Secrets extends React.Component {
                         let key = this.state.newKey.key.includes('/') ? `${this.state.newKey.key.split('/')[0]}/` : this.state.newKey.key;
                         secrets.push({ key: key, value: this.state.newKey.value });
                         this.setState({
-                            secrets: secrets
+                            secrets: secrets,
+                            namespace: fullKey
                         });
                     } else {
                         // errored
@@ -215,20 +218,21 @@ class Secrets extends React.Component {
                 autoScrollBodyContent={true}
                 >
                 <TextField name="newKey" autoFocus fullWidth={true} hintText="Key" onChange={(e, v) => setNewKey(e, v)} />
-                <TextField 
-                    name="newValue" 
-                    multiLine={true} 
-                    fullWidth={true} 
-                    style={{ height: '5000px' }} 
-                    hintText="Value" 
+                <TextField
+                    name="newValue"
+                    multiLine={true}
+                    fullWidth={true}
+                    style={{ height: '5000px' }}
+                    hintText="Value"
                     onChange={(e, v) => setNewKey(e, v)} />
                 <div className={styles.error}>{this.state.newKeyErrorMessage}</div>
             </Dialog>
         );
     }
 
-    getSecrets() {
-        axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&namespace=${encodeURI(this.namespace)}`)
+    getSecrets(namespace) {
+        var keys = [];
+        axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&namespace=${encodeURI(namespace)}`)
             .then((resp) => {
                 let keys = resp.data.data.keys;
 
@@ -239,6 +243,7 @@ class Secrets extends React.Component {
                 });
 
                 this.setState({
+                    namespace: namespace,
                     secrets: secrets
                 });
             })
@@ -247,12 +252,16 @@ class Secrets extends React.Component {
             });
     }
 
-    clickSecret(key) {
-        if (key[key.length - 1] === '/') {
-            this.namespace = `${this.namespace}${key}`;
-            this.getSecrets();
+    clickSecret(key, isFullPath) {
+        let isDir = key[key.length - 1] === '/';
+        if (isDir) {
+            if (isFullPath) {
+                this.getSecrets(`${key}`);
+            } else {
+                this.getSecrets(`${this.state.namespace}${key}`);
+            }
         } else {
-            let fullKey = `${this.namespace}${key}`;
+            let fullKey = `${this.state.namespace}${key}`;
             axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
                 .then((resp) => {
                     let val = typeof resp.data.value == 'object' ? JSON.stringify(resp.data.value) : resp.data.value;
@@ -304,6 +313,38 @@ class Secrets extends React.Component {
         });
     }
 
+    renderNamespace() {
+        // if (this.state.namespace === '/') {
+        //     return (
+        //         <div style={{ display: 'inline-block' }} key={'/'}>
+        //             <span className={styles.link}
+        //                 onTouchTap={() => this.clickSecret("/", true)}>ROOT</span>
+        //         </div>);
+        // }
+        let namespaceParts = this.state.namespace.split('/');
+        return (
+            _.map(namespaceParts, (dir, index) => {
+                if (index === 0) {
+                    return (
+                        <div style={{ display: 'inline-block' }} key={index}>
+                            <span className={styles.link}
+                                onTouchTap={() => this.clickSecret("/", true)}>ROOT</span>
+                            {index !== namespaceParts.length - 1 && <span>/</span>}
+                        </div>
+                    );
+                }
+                var link = [].concat(namespaceParts).slice(0, index + 1).join('/') + '/';
+                return (
+                    <div style={{ display: 'inline-block' }} key={index}>
+                        <span className={styles.link}
+                            onTouchTap={() => this.clickSecret(link, true)}>{dir.toUpperCase()}</span>
+                        {index !== namespaceParts.length - 1 && <span>/</span>}
+                    </div>
+                );
+            })
+        );
+    }
+
     render() {
         return (
             <div>
@@ -318,6 +359,7 @@ class Secrets extends React.Component {
                     hoverColor={green400}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.setState({ openNewKeyModal: true, newKey: { key: '', value: '' } })} />
+                <div className={styles.namespace}>{this.renderNamespace()}</div>
                 <List>
                     {this.renderSecrets()}
                 </List>
