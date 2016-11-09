@@ -1,10 +1,11 @@
 # Vault-UI
+[![](https://images.microbadger.com/badges/image/djenriquez/vault-ui.svg)](https://microbadger.com/images/djenriquez/vault-ui)
 A beautiful way to manage your secrets in Vault
 
 # Configuration
 Configuration is accessed by clicking on the configuration cog on the login page.
 ## Vault Endpoint
-On the Login page, users can enter in the endpoint to Vault.
+Users can enter in the full endpoint to Vault, including scheme.
 ## Authentication
 There are currently three supported authentication backends. [Github](https://www.vaultproject.io/docs/auth/github.html), [Username and Password](https://www.vaultproject.io/docs/auth/userpass.html), and [Token](https://www.vaultproject.io/docs/auth/token.html). 
 
