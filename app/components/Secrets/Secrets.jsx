@@ -56,12 +56,6 @@ class Secrets extends React.Component {
     }
 
     deleteKey(key) {
-        document.dispatchEvent(new CustomEvent("deleteKey", {
-            detail: {
-                key: key
-            }
-        }));
-
         let fullKey = `${this.namespace}${key}`;
         axios.delete(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
             .then((resp) => {
@@ -88,33 +82,29 @@ class Secrets extends React.Component {
 
     renderEditDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
+            <FlatButton label="Submit" primary={true} onTouchTap={() => this.updatePolicy()} />
         ];
 
-        let checkKey = (e, v) => {
-            if (e.keyCode === 13) {
-                document.dispatchEvent(new CustomEvent("changedKey", {
-                    detail: {
-                        key: this.state.editingKey,
-                        value: e.target.value
+        let updatePolicy = () => {
+            let fullKey = `${this.namespace}${this.state.editingKey}`;
+            axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newSecret })
+                .then((resp) => {
+                    if (resp.status === 200) {
+
+                    } else {
+                        // errored
                     }
-                }));
+                })
+                .catch((err) => {
+                    console.error(err.stack);
+                })
 
-                let fullKey = `${this.namespace}${this.state.editingKey}`;
-                axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": e.target.value })
-                    .then((resp) => {
-                        if (resp.status === 200) {
+            this.setState({ openEditModal: false });
+        }
 
-                        } else {
-                            // errored
-                        }
-                    })
-                    .catch((err) => {
-                        console.error(err.stack);
-                    })
-
-                this.setState({ openEditModal: false });
-            }
+        let secretChanged = (e, v) => {
+            this.state.newSecret = e.target.value;
         }
 
         return (
@@ -124,8 +114,15 @@ class Secrets extends React.Component {
                 actions={actions}
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({ openEditModal: false })}
+                autoScrollBodyContent={true}
                 >
-                <TextField name="editingText" autoFocus defaultValue={this.state.currentSecret} fullWidth={true} onKeyUp={checkKey} />
+                <TextField
+                    onChange={(e, v) => secretChanged(e, v)} 
+                    name="editingText" 
+                    autoFocus 
+                    multiLine={true} 
+                    defaultValue={this.state.currentSecret} 
+                    fullWidth={true} />
             </Dialog>
         );
     }
@@ -170,13 +167,6 @@ class Secrets extends React.Component {
                 return;
             }
 
-            document.dispatchEvent(new CustomEvent("addedKey", {
-                detail: {
-                    key: this.state.newKey.key,
-                    value: this.state.newKey.value,
-                }
-            }));
-
             let fullKey = `${this.namespace}${this.state.newKey.key}`;
             axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newKey.value })
                 .then((resp) => {
@@ -203,18 +193,6 @@ class Secrets extends React.Component {
             <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit} />
         ];
 
-        let checkKey = (e, v) => {
-            if (e.keyCode === 13) {
-                document.dispatchEvent(new CustomEvent("changedKey", {
-                    detail: {
-                        key: this.state.editingKey,
-                        value: e.target.value
-                    }
-                }));
-                this.setState({ openNewKeyModal: false });
-            }
-        }
-
         let setNewKey = (e, v) => {
             let currentKey = this.state.newKey;
             if (e.target.name === "newKey") {
@@ -227,12 +205,6 @@ class Secrets extends React.Component {
             });
         }
 
-        let returnShortcut = (e, v) => {
-            if (e.keyCode === 13) {
-                validateAndSubmit();
-            }
-        }
-
         return (
             <Dialog
                 title={`New Key`}
@@ -240,19 +212,25 @@ class Secrets extends React.Component {
                 actions={actions}
                 open={this.state.openNewKeyModal}
                 onRequestClose={() => this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' })}
+                autoScrollBodyContent={true}
                 >
-                <TextField name="newKey" autoFocus fullWidth={true} hintText="Key" onKeyDown={returnShortcut} onChange={(e, v) => setNewKey(e, v)} />
-                <TextField name="newValue" fullWidth={true} hintText="Value" onKeyDown={returnShortcut} onChange={(e, v) => setNewKey(e, v)} />
+                <TextField name="newKey" autoFocus fullWidth={true} hintText="Key" onChange={(e, v) => setNewKey(e, v)} />
+                <TextField 
+                    name="newValue" 
+                    multiLine={true} 
+                    fullWidth={true} 
+                    style={{ height: '5000px' }} 
+                    hintText="Value" 
+                    onChange={(e, v) => setNewKey(e, v)} />
                 <div className={styles.error}>{this.state.newKeyErrorMessage}</div>
             </Dialog>
         );
     }
 
     getSecrets() {
-        var keys = [];
         axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&namespace=${encodeURI(this.namespace)}`)
             .then((resp) => {
-                keys = resp.data.data.keys;
+                let keys = resp.data.data.keys;
 
                 var secrets = _.map(keys, (key) => {
                     return {
