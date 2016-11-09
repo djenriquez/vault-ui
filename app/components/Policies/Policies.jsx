@@ -98,7 +98,13 @@ export default class Policy extends React.Component {
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
                 >
-                <TextField style={{ height: '5000px' }} onChange={(e, v) => policyChanged(e, v)} name="editingText" multiLine={true} autoFocus defaultValue={this.state.currentPolicy} fullWidth={true} />
+                <TextField 
+                    style={{ height: '5000px' }} 
+                    onChange={(e, v) => policyChanged(e, v)} 
+                    name="editingText" multiLine={true} 
+                    autoFocus 
+                    defaultValue={this.state.currentPolicy} 
+                    fullWidth={true} />
             </Dialog>
         );
     }
@@ -166,9 +172,17 @@ export default class Policy extends React.Component {
                 actions={actions}
                 open={this.state.openNewPolicyModal}
                 onRequestClose={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })}
+                autoScrollBodyContent={true}
+                autoDetectWindowHeight={true}
                 >
                 <TextField name="newName" autoFocus fullWidth={true} hintText="Name" onChange={(e, v) => setNewPolicy(e, v)} />
-                <TextField name="newRules" multiLine={true} style={{ height: '5000px' }} fullWidth={true} hintText="Rules" onChange={(e, v) => setNewPolicy(e, v)} />
+                <TextField 
+                    name="newRules" 
+                    multiLine={true} 
+                    style={{ height: '5000px' }} 
+                    fullWidth={true} 
+                    hintText="Rules" 
+                    onChange={(e, v) => setNewPolicy(e, v)} />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
         );
