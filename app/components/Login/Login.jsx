@@ -16,6 +16,7 @@ export default class Login extends React.Component {
       this.validateAuthToken = this.validateAuthToken.bind(this);
       this.validateToken = this.validateToken.bind(this);
       this.submitVaultURL = this.submitVaultURL.bind(this);
+      this.submitVaultURLEnter = this.submitVaultURLEnter.bind(this);
       this.renderSettingsDialog = this.renderSettingsDialog.bind(this);
       this.renderSelectedLoginOption = this.renderSelectedLoginOption.bind(this);
       this.validateUsernamePassword = this.validateUsernamePassword.bind(this);
@@ -157,6 +158,12 @@ export default class Login extends React.Component {
         }
     }
 
+    submitVaultURLEnter(e) {
+        if (e.keyCode === 13) {
+            this.submitVaultURL()
+        }
+    }
+
     renderSettingsDialog() {
         const actions = [
             <div>
@@ -180,6 +187,7 @@ export default class Login extends React.Component {
                     className="col-xs-12"
                     defaultValue={this.state.vaultUrl}
                     hintText="Vault URL"
+                    onKeyDown={this.submitVaultURLEnter}
                     onChange={(e,v)=>this.setState({tempVaultUrl: v})}
                 />
             <SelectField
