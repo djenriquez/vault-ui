@@ -10,7 +10,7 @@ class Settings extends React.Component {
 
         this.state = {
             rootKey: window.localStorage.getItem('secretsRootKey') || '',
-            useRootKey: window.localStorage.getItem('useRootKey') || true
+            useRootKey: window.localStorage.getItem('useRootKey') === 'true' || false
         }
         _.bindAll(this,
             'setDeleteDialogPreference',
