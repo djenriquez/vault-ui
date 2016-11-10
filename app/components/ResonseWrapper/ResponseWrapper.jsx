@@ -14,15 +14,25 @@ class ResponseWrapper extends React.Component {
         return (
             <div>
                 <h1 id={styles.pageHeader}>Response Wrapper</h1>
-                <RadioButtonGroup defaultSelected='object'>
+                <RadioButtonGroup name='secretSelect' defaultSelected='object'>
                     <RadioButton
                         value='object'
-                        label='Wrap a Value' />
+                        label='Wrap Value' />
 
                     <RadioButton
                         value='secret'
-                        label='Wrap a Secret' />
+                        label='Wrap Secret' />
+
+                    <RadioButton
+                        value='unwrap_secret'
+                        label='Unwrap Secret'/>
+                    
+                    <RadioButton
+                        value='unwrap_object'
+                        label='Unwrap Value'/>
                 </RadioButtonGroup>
+
+
             </div>
         )
     }
