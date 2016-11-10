@@ -32,7 +32,7 @@ class Secrets extends React.Component {
             focusSecret: '',
             secrets: [],
             namespace: '/',
-            useRootKey: window.localStorage.getItem("useRootKey") || false,
+            useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || ''
         };
 
@@ -88,7 +88,10 @@ class Secrets extends React.Component {
 
     updateSecret(isNewKey) {
         let fullKey = `${this.state.namespace}${this.state.focusKey}`;
-        axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Value": this.state.focusSecret })
+        //Check if the secret is a json object, if so stringify it. This is needed to properly escape characters.
+        let secret =  typeof this.state.focusSecret == 'object' ? JSON.stringify(this.state.focusSecret) : this.state.focusSecret;
+
+        axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Value": secret })
             .then((resp) => {
                 if (isNewKey) {
                     let secrets = this.state.secrets;
@@ -97,8 +100,6 @@ class Secrets extends React.Component {
                     this.setState({
                         secrets: secrets
                     });
-                } else {
-
                 }
             })
             .catch((err) => {
@@ -107,10 +108,13 @@ class Secrets extends React.Component {
     }
 
     secretChanged(e, v) {
-        if (this.state.useRootKey == "true") {
-            this.state.focusSecret = `{ "${this.state.rootKey}": "${e.target.value}" }`;
+        if (this.state.useRootKey) {
+            //If root key is in place, set as json object to properly escape special characters
+            let tmp = {};
+            tmp = _.set(tmp,`${this.state.rootKey}`, v);
+            this.state.focusSecret = tmp;
         } else {
-            this.state.focusSecret = e.target.value;
+            this.state.focusSecret = v;
         }
     }
 
@@ -248,7 +252,7 @@ class Secrets extends React.Component {
             let fullKey = `${this.state.namespace}${key}`;
             axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
                 .then((resp) => {
-                    let val = this.state.useRootKey == "true" ? _.get(resp, `data.${this.state.rootKey}`) : resp.data;
+                    let val = this.state.useRootKey ? _.get(resp, `data.${this.state.rootKey}`) : resp.data;
                     val = typeof val == 'object' ? JSON.stringify(val) : val;
                     this.setState({
                         openEditModal: true,
