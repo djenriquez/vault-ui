@@ -18,9 +18,8 @@ There are currently three supported authentication backends. [Github](https://ww
 ![Auth Backend](images/AuthConfig.png)
 
 ## Secrets
-Secrets will be saved under the root key `value`. Secrets displayed will the value displayed for this key. For example:
-If you write a value "world" to the secret key "hello", Vault will store this as `{ "value": "world" }` to the key `secret/hello`. Keys are also read by searching the key `value` in the JSON object returned by the HTTP GET for that secret.
-
+By default, secrets will display as their raw JSON value represented by the `data` field in the HTTP GET response metadata. However, users can apply a "Root Key" bias to the secrets through the settings page. The "Root Key" will be used when reading, creating and updating secrets such that the value displayed in the UI is the value stored at the "Root Key". For example, if the secret at `secret/hello` is `{ "value": "world" }`, applying the "Root Key" `value` will update the UI such that the secret will display as simply "world" instead of `{ "value": "world" }`.
+<img src="images/RootKey.png" height="240">
 ## Policies
 Policies can be entered in as JSON or as HCL. If entered in as HCL, it will be converted to JSON as required for the PUT command in Vault's API. However, existing policies that are in HCL will continue to be displayed in HCL.
 
