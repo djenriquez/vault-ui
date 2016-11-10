@@ -190,7 +190,6 @@ class Secrets extends React.Component {
                 });
                 return;
             }
-            console.log('Validated fine');
             this.updateSecret(true);
             this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' });
         }
