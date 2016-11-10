@@ -9,7 +9,7 @@ class Settings extends React.Component {
         super(props);
 
         this.state = {
-            rootKey: window.localStorage.getItem('secretsRootKey') || 'value',
+            rootKey: window.localStorage.getItem('secretsRootKey') || '',
             useRootKey: window.localStorage.getItem('useRootKey') || true
         }
         _.bindAll(this,
@@ -60,7 +60,7 @@ class Settings extends React.Component {
                         fullWidth={true}
                         className="col-xs-12"
                         defaultValue={this.state.rootKey}
-                        hintText="Vault URL"
+                        hintText="Root Key"
                         onChange={this.setRootKey}
                         />
                 </div>
