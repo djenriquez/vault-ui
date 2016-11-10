@@ -16,6 +16,7 @@ export default class Login extends React.Component {
       this.validateAuthToken = this.validateAuthToken.bind(this);
       this.validateToken = this.validateToken.bind(this);
       this.submitVaultURL = this.submitVaultURL.bind(this);
+      this.submitVaultURLEnter = this.submitVaultURLEnter.bind(this);
       this.renderSettingsDialog = this.renderSettingsDialog.bind(this);
       this.renderSelectedLoginOption = this.renderSelectedLoginOption.bind(this);
       this.validateUsernamePassword = this.validateUsernamePassword.bind(this);
@@ -147,8 +148,14 @@ export default class Login extends React.Component {
         }
     }
 
+    submitVaultURLEnter(e) {
+        if (e.keyCode === 13) {
+            this.submitVaultURL()
+        }
+    }
+
     submitVaultURL(e) {
-        if (e.keyCode === 13 && this.state.tempVaultUrl) {
+        if (this.state.tempVaultUrl) {
             window.localStorage.setItem("vaultUrl", this.state.tempVaultUrl);
             this.setState({
                 vaultUrl: this.state.tempVaultUrl,
@@ -159,7 +166,10 @@ export default class Login extends React.Component {
 
     renderSettingsDialog() {
         const actions = [
-            <FlatButton label="Close" primary={true} onTouchTap={() => this.setState({ promptForVaultUrl: false })}/>
+            <div>
+                <FlatButton label="Close" primary={true} onTouchTap={() => this.setState({ promptForVaultUrl: false })}/>
+                <FlatButton label="Submit" secondary={true} onTouchTap={this.submitVaultURL}/>
+            </div>
         ]
         function handleSelectFieldChange(e,i,v) {
             this.setState({ loginMethodType: v, errorMessage: ""});
@@ -177,7 +187,7 @@ export default class Login extends React.Component {
                     className="col-xs-12"
                     defaultValue={this.state.vaultUrl}
                     hintText="Vault URL"
-                    onKeyDown={this.submitVaultURL}
+                    onKeyDown={this.submitVaultURLEnter}
                     onChange={(e,v)=>this.setState({tempVaultUrl: v})}
                 />
             <SelectField
