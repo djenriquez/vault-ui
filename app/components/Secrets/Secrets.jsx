@@ -32,7 +32,8 @@ class Secrets extends React.Component {
             deletingKey: '',
             secrets: [],
             currentSecret: '',
-            namespace: '/'
+            namespace: '/',
+            useRootKey: window.localStorage.getItem("useRootKey") || false
         };
 
         this.getSecrets = this.getSecrets.bind(this);
@@ -84,12 +85,15 @@ class Secrets extends React.Component {
     renderEditDialog() {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
-            <FlatButton label="Submit" primary={true} onTouchTap={() => this.updatePolicy()} />
+            <FlatButton label="Submit" primary={true} onTouchTap={() => updateSecret()} />
         ];
 
-        let updatePolicy = () => {
+        let updateSecret = () => {
             let fullKey = `${this.state.namespace}${this.state.editingKey}`;
-            axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "SecretValue": this.state.newSecret })
+
+            console.log(this.state.newSecret);
+
+            axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Value": this.state.newSecret })
                 .then((resp) => {
                     if (resp.status === 200) {
 
@@ -106,7 +110,13 @@ class Secrets extends React.Component {
 
 
         let secretChanged = (e, v) => {
-            this.state.newSecret = e.target.value;
+            if(this.state.useRootKey == "true"){
+                let rootKey = window.localStorage.getItem("secretsRootKey");
+                this.state.newSecret = `{ "${rootKey}": "${e.target.value}" }`;
+            } else {
+                this.state.newSecret = e.target.value
+            }
+            
         }
 
         return (
@@ -263,7 +273,14 @@ class Secrets extends React.Component {
             let fullKey = `${this.state.namespace}${key}`;
             axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
                 .then((resp) => {
-                    let val = typeof resp.data.value == 'object' ? JSON.stringify(resp.data.value) : resp.data.value;
+                    let val = "";
+                    if (this.state.useRootKey == "true") {
+                        let rootKey = window.localStorage.getItem("secretsRootKey");
+                        val = _.get(resp, `data.${rootKey}`);
+                    } else {
+                        val = resp.data;
+                    }
+                    val = typeof val == 'object' ? JSON.stringify(val) : val;
                     this.setState({
                         openEditModal: true,
                         editingKey: key,

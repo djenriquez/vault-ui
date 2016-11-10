@@ -2,22 +2,40 @@ import React, { PropTypes } from 'react';
 import TextField from 'material-ui/TextField';
 import Checkbox from 'material-ui/Checkbox';
 import styles from './settings.css';
+import _ from 'lodash';
 
 class Settings extends React.Component {
     constructor(props) {
-      super(props);
-      this.setDeleteDialogPreference = this.setDeleteDialogPreference.bind(this);
+        super(props);
+
+        this.state = {
+            rootKey: window.localStorage.getItem('secretsRootKey') || 'value',
+            useRootKey: window.localStorage.getItem('useRootKey') || true
+        }
+        _.bindAll(this,
+            'setDeleteDialogPreference',
+            'setRootKeyPreference',
+            'setRootKey'
+        );
     }
 
     setDeleteDialogPreference(e, isChecked) {
-        if (isChecked) {
-            window.localStorage.setItem('showDeleteModal','true');
-        } else {
-            window.localStorage.setItem('showDeleteModal', 'false')
-        }
+        window.localStorage.setItem('showDeleteModal', isChecked);
     }
 
-    render () {
+    setRootKeyPreference(e, isChecked) {
+        window.localStorage.setItem('useRootKey', isChecked);
+        this.setState({
+            useRootKey: isChecked
+        });
+    }
+
+    setRootKey(e, rootKey) {
+        window.localStorage.setItem('secretsRootKey', rootKey)
+        this.setState({ rootKey: rootKey });
+    }
+
+    render() {
         return (
             <div>
                 <h1 id={styles.welcomeHeadline}>Settings</h1>
@@ -25,10 +43,27 @@ class Settings extends React.Component {
                 <p>You are currently connected to the Vault cluster on
                     <span className={styles.code}>{window.localStorage.getItem('vaultUrl')}</span>.
                 To switch this, you will need to logout.</p>
-            <Checkbox
-                label="Warn Dialog Before Delete"
-                onCheck={this.setDeleteDialogPreference}
-                defaultChecked={window.localStorage.getItem('showDeleteModal') === 'true'}/>
+                <div>
+                    <h2>General</h2>
+                    <Checkbox
+                        label="Warn Dialog Before Delete"
+                        onCheck={this.setDeleteDialogPreference}
+                        defaultChecked={window.localStorage.getItem('showDeleteModal') === 'true'} />
+                </div>
+                <div>
+                    <h2>Secrets</h2>
+                    <Checkbox
+                        label="Use Root Key"
+                        onCheck={this.setRootKeyPreference}
+                        defaultChecked={window.localStorage.getItem('useRootKey') === 'true'} />
+                    <TextField
+                        fullWidth={true}
+                        className="col-xs-12"
+                        defaultValue={this.state.rootKey}
+                        hintText="Vault URL"
+                        onChange={this.setRootKey}
+                        />
+                </div>
             </div>
         )
     }

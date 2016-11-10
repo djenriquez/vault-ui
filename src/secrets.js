@@ -56,16 +56,12 @@ exports.writeSecret = function (req, res) {
     let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
-    let secretValue = _.get(req, "body.SecretValue")
+    let body = _.get(req, "body.Value")
     let vaultAddr = _.get(req, 'body.VaultUrl');
 
     try {
         secretValue = JSON.parse(secretValue)
     } catch(e) { }
-
-    let body = {
-        value: secretValue
-    };
 
     axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body, config)
         .then((resp) => {
