@@ -133,7 +133,7 @@ class Secrets extends React.Component {
 
         return (
             <Dialog
-                title={`Editing ${this.state.editingKey}`}
+                title={`Editing ${this.state.namespace}${this.state.focusKey}`}
                 modal={false}
                 actions={actions}
                 open={this.state.openEditModal}
