@@ -7,19 +7,31 @@ import Health from '../Health/Health.jsx';
 import Policies from '../Policies/Policies.jsx';
 import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
+import Dialog from 'material-ui/Dialog';
+import FlatButton from 'material-ui/FlatButton';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 import axios from 'axios';
+import { browserHistory } from 'react-router';
+
+var logoutCheck;
 
 export default class Home extends React.Component {
     constructor(props) {
         super(props);
         this.renderContent = this.renderContent.bind(this);
+        this.renderLogoutDialog = this.renderLogoutDialog.bind(this);
         this.state = {
             snackbarMessage: '',
             snackbarOpen: false,
             snackbarType: 'OK',
-            namespace: '/'
+            namespace: '/',
+            logoutOpen: false,
+            logoutPromptSeen: false
         }
+    }
+
+    componentWillUnmount() {
+        clearInterval(logoutCheck)
     }
 
     componentDidMount() {
@@ -33,6 +45,19 @@ export default class Home extends React.Component {
                 snackbarOpen: true
             });
         });
+
+        logoutCheck = window.setInterval(() => {
+            if (window.localStorage.getItem('vaultAccessTokenExpiration') - (1000 * 60 * 2) < Date.now()) {
+                if (!this.state.logoutPromptSeen) {
+                    this.setState({
+                        logoutOpen: true
+                    });
+                }
+            }
+            if (window.localStorage.getItem('vaultAccessTokenExpiration') < Date.now()) {
+                browserHistory.push('/login');
+            }
+        },1000*5);
 
         // document.addEventListener("changedKey", (e) => {
         //     let secrets = this.state.secrets;
@@ -56,6 +81,24 @@ export default class Home extends React.Component {
         //         secrets: newSecrets
         //     });
         // });
+    }
+
+    renderLogoutDialog() {
+        const actions = [
+            <FlatButton label="OK" primary={true} onTouchTap={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })} />
+        ];
+
+        return (
+            <Dialog
+                title={`Logout`}
+                modal={true}
+                actions={actions}
+                open={this.state.logoutOpen}
+                onRequestClose={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })}
+                >
+                <div className={styles.error}>Your token will expire in 2 minutes.  You'll want to finish up what you are working on!</div>
+            </Dialog>
+        );
     }
 
     renderContent() {
@@ -97,6 +140,7 @@ export default class Home extends React.Component {
                 autoHideDuration={2000}
                 onRequestClose={() => this.setState({ snackbarOpen: false })}
                 />
+                {this.state.logoutOpen && this.renderLogoutDialog()}
             <Header />
             <Menu pathname={this.props.location.pathname} />
             <div id={styles.content}>

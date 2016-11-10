@@ -73,6 +73,7 @@ export default class Login extends React.Component {
                 }
             })
             .then((resp) => {
+                window.localStorage.setItem('vaultAccessTokenExpiration', Date.now()+(_.get(resp, 'data.lease_duration')*1000))
                 //DJ fill in the blanks here
             })
             .catch((err) => {
@@ -103,6 +104,8 @@ export default class Login extends React.Component {
                 let accessToken = _.get(resp, 'data.client_token');
                 if(accessToken) {
                     window.localStorage.setItem("vaultAccessToken",accessToken);
+                    let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now()+_.get(resp, 'data.lease_duration')*1000
+                    window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
                     window.location.href = '/';
                 } else {
                     this.setState({errorMessage: "Auth token validation failed."})
@@ -136,6 +139,7 @@ export default class Login extends React.Component {
                 let accessToken = _.get(resp, 'data.client_token');
                 if(accessToken) {
                     window.localStorage.setItem("vaultAccessToken",accessToken);
+                    window.localStorage.setItem('vaultAccessTokenExpiration', Date.now()+(_.get(resp, 'data.lease_duration')*1000))
                     window.location.href = '/';
                 } else {
                     this.setState({errorMessage: "Auth token validation failed."})
