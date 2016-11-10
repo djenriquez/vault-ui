@@ -1,13 +1,16 @@
 import React, { PropTypes } from 'react'
-import Header from '../shared/Header/Header.jsx';
-import Menu from '../shared/Menu/Menu.jsx';
-import styles from './home.css';
-import Secrets from '../Secrets/Secrets.jsx';
-import Health from '../Health/Health.jsx';
-import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 import axios from 'axios';
+
+import Header from '../shared/Header/Header.jsx';
+import Menu from '../shared/Menu/Menu.jsx';
+import Secrets from '../Secrets/Secrets.jsx';
+import Health from '../Health/Health.jsx';
+import Settings from '../Settings/Settings.jsx';
+import ResponseWrapper from '../ResonseWrapper/ResponseWrapper.jsx';
+
+import styles from './home.css';
 
 export default class Home extends React.Component {
     constructor(props) {
@@ -65,6 +68,8 @@ export default class Home extends React.Component {
                 return <Health />
             case '/settings':
                 return <Settings />
+            case '/responsewrapper':
+                return <ResponseWrapper />
             default:
                 return (
                     <div>
@@ -73,7 +78,6 @@ export default class Home extends React.Component {
                         Use the menu on the left to navigate around.</p>
                     </div>
                 );
-
         }
     }
 

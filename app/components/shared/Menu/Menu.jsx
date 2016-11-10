@@ -26,6 +26,9 @@ class Menu extends React.Component {
                 <div>
                     <p className={`${styles.link}  ${this.applyActiveLink('/settings')}`} onClick={() => browserHistory.push('/settings')}>Settings</p>
                 </div>
+                <div>
+                    <p className={`${styles.link}  ${this.applyActiveLink('/responsewrapper')}`} onClick={() => browserHistory.push('/responsewrapper')}>Response Wrapper</p>
+                </div>
             </div>
         );
     }
