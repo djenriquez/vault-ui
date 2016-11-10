@@ -148,6 +148,12 @@ export default class Login extends React.Component {
         }
     }
 
+    submitVaultURLEnter(e) {
+        if (e.keyCode === 13) {
+            this.submitVaultURL()
+        }
+    }
+
     submitVaultURL(e) {
         if (this.state.tempVaultUrl) {
             window.localStorage.setItem("vaultUrl", this.state.tempVaultUrl);
@@ -155,12 +161,6 @@ export default class Login extends React.Component {
                 vaultUrl: this.state.tempVaultUrl,
                 promptForVaultUrl: false
             });
-        }
-    }
-
-    submitVaultURLEnter(e) {
-        if (e.keyCode === 13) {
-            this.submitVaultURL()
         }
     }
 
