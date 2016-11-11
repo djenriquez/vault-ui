@@ -26,7 +26,7 @@ class Secrets extends React.Component {
         this.state = {
             openEditModal: false,
             openNewKeyModal: false,
-            newKeyErrorMessage: '',
+            errorMessage: '',
             openDeleteModal: false,
             focusKey: '',
             focusSecret: '',
@@ -89,7 +89,7 @@ class Secrets extends React.Component {
     updateSecret(isNewKey) {
         let fullKey = `${this.state.namespace}${this.state.focusKey}`;
         //Check if the secret is a json object, if so stringify it. This is needed to properly escape characters.
-        let secret =  typeof this.state.focusSecret == 'object' ? JSON.stringify(this.state.focusSecret) : this.state.focusSecret;
+        let secret = typeof this.state.focusSecret == 'object' ? JSON.stringify(this.state.focusSecret) : this.state.focusSecret;
 
         axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Value": secret })
             .then((resp) => {
@@ -111,14 +111,28 @@ class Secrets extends React.Component {
         if (this.state.useRootKey) {
             //If root key is in place, set as json object to properly escape special characters
             let tmp = {};
-            tmp = _.set(tmp,`${this.state.rootKey}`, v);
+            tmp = _.set(tmp, `${this.state.rootKey}`, v);
             this.state.focusSecret = tmp;
         } else {
             this.state.focusSecret = v;
+
         }
     }
 
-
+    checkValidJson() {
+        try {
+            JSON.parse(this.state.focusSecret);
+            this.setState({
+                errorMessage: ''
+            })
+            return true;
+        } catch (e) {
+            this.setState({
+                errorMessage: `Invalid JSON`
+            })
+            return false;
+        }
+    }
 
     renderEditDialog() {
         const actions = [
@@ -127,6 +141,7 @@ class Secrets extends React.Component {
         ];
 
         let submitUpdate = () => {
+            if (!this.checkValidJson()) return;
             this.updateSecret(false);
             this.setState({ openEditModal: false });
         }
@@ -147,6 +162,7 @@ class Secrets extends React.Component {
                     multiLine={true}
                     defaultValue={this.state.focusSecret}
                     fullWidth={true} />
+                <div className={styles.error}>{this.state.errorMessage}</div>
             </Dialog>
         );
     }
@@ -163,7 +179,7 @@ class Secrets extends React.Component {
                 modal={false}
                 actions={actions}
                 open={this.state.openDeleteModal}
-                onRequestClose={() => this.setState({ openDeleteModal: false, newKeyErrorMessage: '' })}
+                onRequestClose={() => this.setState({ openDeleteModal: false, errorMessage: '' })}
                 >
 
                 <p>You are about to permanently delete {this.state.deletingKey}.  Are you sure?</p>
@@ -179,23 +195,23 @@ class Secrets extends React.Component {
         let validateAndSubmit = (e, v) => {
             if (this.state.focusKey === '') {
                 this.setState({
-                    newKeyErrorMessage: MISSING_KEY_ERROR
+                    errorMessage: MISSING_KEY_ERROR
                 });
                 return;
             }
 
             if (_.filter(this.state.secrets, x => x.key === this.state.focusKey).length > 0) {
                 this.setState({
-                    newKeyErrorMessage: DUPLICATE_KEY_ERROR
+                    errorMessage: DUPLICATE_KEY_ERROR
                 });
                 return;
             }
             this.updateSecret(true);
-            this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' });
+            this.setState({ openNewKeyModal: false, errorMessage: '' });
         }
 
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' })} />,
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewKeyModal: false, errorMessage: '' })} />,
             <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit} />
         ];
 
@@ -205,7 +221,7 @@ class Secrets extends React.Component {
                 modal={false}
                 actions={actions}
                 open={this.state.openNewKeyModal}
-                onRequestClose={() => this.setState({ openNewKeyModal: false, newKeyErrorMessage: '' })}
+                onRequestClose={() => this.setState({ openNewKeyModal: false, errorMessage: '' })}
                 autoScrollBodyContent={true}
                 >
                 <TextField name="newKey" autoFocus fullWidth={true} hintText="Key" onChange={(e, v) => this.setState({ focusKey: v })} />
@@ -215,7 +231,7 @@ class Secrets extends React.Component {
                     fullWidth={true}
                     hintText="Value"
                     onChange={this.secretChanged} />
-                <div className={styles.error}>{this.state.newKeyErrorMessage}</div>
+                <div className={styles.error}>{this.state.errorMessage}</div>
             </Dialog>
         );
     }
