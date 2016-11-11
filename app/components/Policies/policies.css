@@ -16,5 +16,6 @@
 
 
 .error {
-    color: red;
+    color: #f44336;
+    margin: 20px 0;
 }

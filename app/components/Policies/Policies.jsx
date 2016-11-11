@@ -21,7 +21,9 @@ export default class Policy extends React.Component {
             editingPolicy: -1,
             deletingPolicy: '',
             policies: [],
-            currentPolicy: ''
+            currentPolicy: '',
+            errorMessage: '',
+            forbidden: false
         };
 
         _.bindAll(
@@ -48,9 +50,15 @@ export default class Policy extends React.Component {
         axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
             .then((resp) => {
                 // Custom future logic on success
+                this.setState({
+                    errorMessage: ''
+                });
             })
             .catch((err) => {
                 console.error(err.stack);
+                this.setState({
+                    errorMessage: err.response.data
+                });
             })
 
         this.setState({ openEditModal: false });
@@ -66,11 +74,16 @@ export default class Policy extends React.Component {
                 });
 
                 this.setState({
-                    policies: policies
-                })
+                    policies: policies,
+                    errorMessage: ''
+                });
             })
             .catch((err) => {
-                console.error(err);
+                console.error(err.response.data);
+                this.setState({
+                    errorMessage: err.response.data,
+                    forbidden: true
+                });
             });
     }
 
@@ -93,12 +106,12 @@ export default class Policy extends React.Component {
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
                 >
-                <TextField 
-                    style={{ height: '5000px' }} 
-                    onChange={(e, v) => policyChanged(e, v)} 
-                    name="editingText" multiLine={true} 
-                    autoFocus 
-                    defaultValue={this.state.currentPolicy} 
+                <TextField
+                    style={{ height: '5000px' }}
+                    onChange={(e, v) => policyChanged(e, v)}
+                    name="editingText" multiLine={true}
+                    autoFocus
+                    defaultValue={this.state.currentPolicy}
                     fullWidth={true} />
             </Dialog>
         );
@@ -129,7 +142,8 @@ export default class Policy extends React.Component {
                         let policies = this.state.policies;
                         policies.push({ name: this.state.newPolicy.name });
                         this.setState({
-                            policies: policies
+                            policies: policies,
+                            errorMessage: ''
                         });
                     } else {
                         // errored
@@ -137,6 +151,9 @@ export default class Policy extends React.Component {
                 })
                 .catch((err) => {
                     console.error(err.stack);
+                    this.setState({
+                        errorMessage: err.response.data
+                    });
                 })
 
             this.setState({ openNewPolicyModal: false });
@@ -171,12 +188,12 @@ export default class Policy extends React.Component {
                 autoDetectWindowHeight={true}
                 >
                 <TextField name="newName" autoFocus fullWidth={true} hintText="Name" onChange={(e, v) => setNewPolicy(e, v)} />
-                <TextField 
-                    name="newRules" 
-                    multiLine={true} 
-                    style={{ height: '5000px' }} 
-                    fullWidth={true} 
-                    hintText="Rules" 
+                <TextField
+                    name="newRules"
+                    multiLine={true}
+                    style={{ height: '5000px' }}
+                    fullWidth={true}
+                    hintText="Rules"
                     onChange={(e, v) => setNewPolicy(e, v)} />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
@@ -231,17 +248,24 @@ export default class Policy extends React.Component {
             .then((resp) => {
                 if (resp.status !== 204) {
                     console.error(resp.status);
+                    this.setState({
+                        errorMessage: 'An error occurred.'
+                    });
                 } else {
                     let policies = this.state.policies;
                     let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName }); å
                     policies = _.pull(policies, policyToDelete);
                     this.setState({
-                        secrets: policies
+                        secrets: policies,
+                        errorMessage: ''
                     });
                 }
             })
             .catch((err) => {
                 console.error(err.stack);
+                this.setState({
+                    errorMessage: err.response.data
+                });
             });
 
         this.setState({
@@ -288,12 +312,18 @@ export default class Policy extends React.Component {
                 {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
                 <h1 id={styles.welcomeHeadline}>Policies</h1>
                 <p>Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span></p>
-                <FlatButton
+                {!this.state.forbidden && <FlatButton
                     label="Add Policy"
                     backgroundColor={green500}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({ openNewPolicyModal: true, newPolicy: { name: '', value: '' } })} />
+                    onTouchTap={() => this.setState({ openNewPolicyModal: true, newPolicy: { name: '', value: '' } })} />}
+                {this.state.errorMessage &&
+                    <div className={styles.error}>
+                        <FontIcon className="fa fa-exclamation-triangle" color={red500} style={{marginRight: 10}}/>
+                        {this.state.errorMessage}
+                    </div>
+                }
                 <List>
                     {this.renderPolicies()}
                 </List>
