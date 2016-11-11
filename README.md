@@ -1,6 +1,6 @@
 # Vault-UI
 [![](https://images.microbadger.com/badges/image/djenriquez/vault-ui.svg)](https://microbadger.com/images/djenriquez/vault-ui)
-[![Run Status](https://api.shippable.com/projects/581a2fc51ae1890f00d3dd6c/badge?branch=master)](https://app.shippable.com/projects/581a2fc51ae1890f00d3dd6c)
+[![Run Status](https://api.shippable.com/projects/581e7826fbc68c0f00deb0ca/badge?branch=master)](https://app.shippable.com/projects/581e7826fbc68c0f00deb0ca)
 
 A beautiful way to manage your secrets in Vault
 ![Landing Page](images/Landing.jpg)
