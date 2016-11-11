@@ -28,6 +28,8 @@ class Secrets extends React.Component {
             openNewKeyModal: false,
             errorMessage: '',
             openDeleteModal: false,
+            disableSubmit: false,
+            disableTextField: false,
             focusKey: '',
             focusSecret: '',
             secrets: [],
@@ -137,7 +139,7 @@ class Secrets extends React.Component {
     renderEditDialog() {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
-            <FlatButton label="Submit" primary={true} onTouchTap={() => submitUpdate()} />
+            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
         ];
 
         let submitUpdate = () => {
@@ -158,6 +160,7 @@ class Secrets extends React.Component {
                 <TextField
                     onChange={this.secretChanged}
                     name="editingText"
+                    disabled={this.state.disableTextField}
                     autoFocus
                     multiLine={true}
                     defaultValue={this.state.focusSecret}
@@ -182,7 +185,7 @@ class Secrets extends React.Component {
                 onRequestClose={() => this.setState({ openDeleteModal: false, errorMessage: '' })}
                 >
 
-                <p>You are about to permanently delete {this.state.deletingKey}.  Are you sure?</p>
+                <p>You are about to permanently delete {this.state.namespace}{this.state.deletingKey}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
             </Dialog>
         )
@@ -268,12 +271,25 @@ class Secrets extends React.Component {
             axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
                 .then((resp) => {
                     let val = this.state.useRootKey ? _.get(resp, `data.${this.state.rootKey}`) : resp.data;
-                    val = typeof val == 'object' ? JSON.stringify(val) : val;
-                    this.setState({
-                        openEditModal: true,
-                        focusKey: key,
-                        focusSecret: val
-                    });
+                    if (val === undefined) {
+                        this.setState({ 
+                            errorMessage: `No value exists under the root key '${this.state.rootKey}'.`, 
+                            focusSecret: '',
+                            disableSubmit: true,
+                            openEditModal: true,
+                            disableTextField: true
+                        });
+                    } else {
+                        val = typeof val == 'object' ? JSON.stringify(val) : val;
+                        this.setState({
+                            errorMessage: '',
+                            disableSubmit: false,
+                            disableTextField: false,
+                            openEditModal: true,
+                            focusKey: key,
+                            focusSecret: val
+                        });
+                    }
                 })
                 .catch((err) => {
                     console.error(err.stack);
@@ -355,7 +371,7 @@ class Secrets extends React.Component {
                     backgroundColor={green500}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '' })} />
+                    onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '', errorMessage: '' })} />
                 <div className={styles.namespace}>{this.renderNamespace()}</div>
                 <List>
                     {this.renderSecrets()}
