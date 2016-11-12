@@ -14,6 +14,8 @@ module.exports = (function () {
         listPolicies: policies.listPolicies,
         getPolicy: policies.getPolicy,
         updatePolicy: policies.updatePolicy,
-        deletePolicy: policies.deletePolicy
-    }
+        deletePolicy: policies.deletePolicy,
+        setGithubTeam: policies.setGithubTeam,
+        getGithubTeam: policies.getGithubTeam
+    };
 })();

@@ -65,6 +65,14 @@ app.delete('/policy', function (req, res) {
     routeHandler.deletePolicy(req, res);
 });
 
+app.get('/githubteam', function(req, res) {
+    routeHandler.getGithubTeam(req, res);
+});
+
+app.put('/githubteam', function(req, res) {
+    routeHandler.setGithubTeam(req, res);
+});
+
 app.get('/');
 
 app.get('*', function (req, res) {
