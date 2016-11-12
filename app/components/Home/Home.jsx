@@ -47,14 +47,16 @@ export default class Home extends React.Component {
         });
 
         logoutCheck = window.setInterval(() => {
-            if (window.localStorage.getItem('vaultAccessTokenExpiration') - (1000 * 60 * 2) < Date.now()) {
+            let tokenExpireDate = window.localStorage.getItem('vaultAccessTokenExpiration');
+            let TWO_MINUTES = 1000 * 60 * 2;
+            if (tokenExpireDate - TWO_MINUTES < Date.now()) {
                 if (!this.state.logoutPromptSeen) {
                     this.setState({
                         logoutOpen: true
                     });
                 }
             }
-            if (window.localStorage.getItem('vaultAccessTokenExpiration') < Date.now()) {
+            if (tokenExpireDate < Date.now()) {
                 browserHistory.push('/login');
             }
         },1000*5);
