@@ -4,7 +4,7 @@ import Menu from '../shared/Menu/Menu.jsx';
 import styles from './home.css';
 import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
-import Policies from '../Policies/Policies.jsx';
+import Policies from '../Policies/Home.jsx';
 import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
