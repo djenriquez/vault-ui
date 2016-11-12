@@ -11,21 +11,29 @@ import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
 import Checkbox from 'material-ui/Checkbox';
 
-export default class Manage extends React.Component {
+export default class Github extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            organization: '',
+            organization: props.organization,
             teamName: '',
             policies: [],
-            checkedPolicy: ''
+            checkedPolicy: '',
+            submitBtnColor: 'lightgrey',
+            submitBtnDisabled: true,
+            errorMessage: '',
+            selected: props.selected === 'Github'
         };
+
+        console.log(`HELLO ${props.organization}`);
 
         _.bindAll(
             this,
             'listPolicies',
             'renderPolicies',
-            'policyChecked'
+            'policyChecked',
+            'teamNameChanged',
+            'submitGithubPolicy'
         );
 
     }
@@ -53,22 +61,30 @@ export default class Manage extends React.Component {
             });
     }
 
-    policyChecked(policyName, e, v) {
+    teamNameChanged(e, v) {
+        this.setState({
+                teamName: v,
+                submitBtnDisabled: !(this.state.checkedPolicy && this.state.organization && v),
+                submitBtnColor: (this.state.checkedPolicy && this.state.organization && v) ? green500 : 'lightgrey'
+            });
+    }
 
+    policyChecked(policyName, e, isChecked) {
         let policies = this.state.policies;
-
-        _.forEach(policies, (policy)=> {
+        _.forEach(policies, (policy) => {
             policy.checked = false;
         });
 
         let policyToCheck = _.find(policies, (policyToCheck) => { return policyToCheck.name == policyName; });
-
-        policyToCheck.checked = true;
+        policyToCheck.checked = isChecked;
 
         this.setState({
             policies: policies,
-            checkedPolicy: policyToCheck.name
+            checkedPolicy: isChecked ? policyToCheck.name : '',
+            submitBtnDisabled: !(isChecked && this.state.organization && this.state.teamName),
+            submitBtnColor: (isChecked && this.state.organization && this.state.teamName) ? green500 : 'lightgrey'
         });
+
     }
 
     renderPolicies() {
@@ -81,7 +97,6 @@ export default class Manage extends React.Component {
                         />}
                     style={{ marginLeft: -17 }}
                     key={policy.name}
-                    onTouchTap={() => { this.clickPolicy(policy.name) } }
                     primaryText={<div className={policy.name}>{policy.name}</div>}
                     >
                 </ListItem>
@@ -90,6 +105,9 @@ export default class Manage extends React.Component {
     }
 
 
+    submitGithubPolicy() {
+
+    }
 
     render() {
         return (
@@ -101,9 +119,16 @@ export default class Manage extends React.Component {
                     fullWidth={false}
                     className="col-xs-12"
                     hintText="Team Name"
-                    onChange={(e, v) => { this.setState({ teamName: v }) } }
+                    onChange={this.teamNameChanged}
                     />
                 {this.renderPolicies()}
+                <FlatButton
+                    label="Apply"
+                    backgroundColor={this.state.submitBtnColor}
+                    hoverColor={green400}
+                    disabled={this.state.submitBtnDisabled}
+                    labelStyle={{ color: white }}
+                    onTouchTap={() => this.submitGithubPolicy()} />
             </div>
         );
     }

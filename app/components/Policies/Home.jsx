@@ -18,8 +18,64 @@ export default class Home extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            currentTab: 'Manage'
+            currentTab: 'Manage',
+            requestOrganization: false,
+            organization: window.localStorage.getItem('githubOrganization') || ''
         }
+
+        _.bindAll(
+            this,
+            'requestOrganization',
+            'renderOrganizationDialog'
+        );
+    }
+
+    requestOrganization() {
+        this.setState({
+            requestOrganization: this.state.organization ? false : true
+        })
+    }
+
+    renderOrganizationDialog() {
+        const actions = [
+            <div>
+                <FlatButton label="Close" primary={true} onTouchTap={(e) => closeDialog(e)} />
+                <FlatButton label="Submit" secondary={true} onTouchTap={(e) => submitOrg(e)} />
+            </div>
+        ];
+
+        let submitOrg = (e) => {
+            console.log('Submit clicked!');
+            this.setState({
+                organization: this.state.tmpOrganization,
+                requestOrganization: false
+            });
+        };
+
+        let closeDialog = (e) => {
+            console.log('Close clicked!');
+            this.setState({
+                requestOrganization: false
+            });
+        };
+
+        return (
+            <Dialog
+                title="Organization"
+                actions={actions}
+                modal={true}
+                open={this.state.requestOrganization}
+                >
+                <TextField
+                    id="organization"
+                    fullWidth={true}
+                    className="col-xs-12"
+                    defaultValue={this.state.organization}
+                    onChange={(e, v) => this.setState({ tmpOrganization: v})}
+                    />
+                <div className={styles.error}>{this.state.errorMessage}</div>
+            </Dialog>
+        )
     }
 
     render() {
@@ -33,8 +89,9 @@ export default class Home extends React.Component {
                     <Tab label="Manage" value="Manage" >
                         <Manage />
                     </Tab>
-                    <Tab label="Github" value="Github" >
-                        <Github />
+                    <Tab label="Github" value="Github" onActive={this.requestOrganization} >
+                        <Github id="gh" />
+                        {gh.state.requestOrganization && this.renderOrganizationDialog()}
                     </Tab>
                     <Tab label="EC2" value="EC2" >
                         <EC2 />
