@@ -27,13 +27,16 @@ class Secrets extends React.Component {
             openEditModal: false,
             openNewKeyModal: false,
             newKeyErrorMessage: '',
+            errorMessage: '',
             openDeleteModal: false,
             focusKey: '',
             focusSecret: '',
             secrets: [],
             namespace: '/',
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
-            rootKey: window.localStorage.getItem("secretsRootKey") || ''
+            rootKey: window.localStorage.getItem("secretsRootKey") || '',
+            forbidden: false,
+            buttonColor: 'lightgrey'
         };
 
         _.bindAll(
@@ -231,11 +234,18 @@ class Secrets extends React.Component {
 
                 this.setState({
                     namespace: namespace,
-                    secrets: secrets
+                    secrets: secrets,
+                    forbidden: false,
+                    buttonColor: green500
                 });
             })
             .catch((err) => {
-                console.error(err.stack);
+                console.error(err.response.data);
+                this.setState({
+                    errorMessage: err.response.data,
+                    forbidden: true,
+                    buttonColor: 'lightgrey'
+                });
             });
     }
 
@@ -336,7 +346,8 @@ class Secrets extends React.Component {
                 <p>Here you can view, update, and delete keys stored in your Vault.  Just remember, <span className={styles.error}>deleting keys cannot be undone!</span></p>
                 <FlatButton
                     label="Add Key"
-                    backgroundColor={green500}
+                    backgroundColor={this.state.buttonColor}
+                    disabled={this.state.forbidden}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '' })} />

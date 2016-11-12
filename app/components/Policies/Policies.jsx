@@ -23,7 +23,8 @@ export default class Policy extends React.Component {
             policies: [],
             currentPolicy: '',
             errorMessage: '',
-            forbidden: false
+            forbidden: false,
+            buttonColor: 'lightgrey'
         };
 
         _.bindAll(
@@ -75,14 +76,16 @@ export default class Policy extends React.Component {
 
                 this.setState({
                     policies: policies,
-                    errorMessage: ''
+                    errorMessage: '',
+                    buttonColor: green500
                 });
             })
             .catch((err) => {
                 console.error(err.response.data);
                 this.setState({
                     errorMessage: err.response.data,
-                    forbidden: true
+                    forbidden: true,
+                    buttonColor: 'lightgrey'
                 });
             });
     }
@@ -138,16 +141,12 @@ export default class Policy extends React.Component {
 
             axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(this.state.newPolicy.name)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
                 .then((resp) => {
-                    if (resp.status === 200) {
-                        let policies = this.state.policies;
-                        policies.push({ name: this.state.newPolicy.name });
-                        this.setState({
-                            policies: policies,
-                            errorMessage: ''
-                        });
-                    } else {
-                        // errored
-                    }
+                    let policies = this.state.policies;
+                    policies.push({ name: this.state.newPolicy.name });
+                    this.setState({
+                        policies: policies,
+                        errorMessage: ''
+                    });
                 })
                 .catch((err) => {
                     console.error(err.stack);
@@ -312,15 +311,16 @@ export default class Policy extends React.Component {
                 {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
                 <h1 id={styles.welcomeHeadline}>Policies</h1>
                 <p>Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span></p>
-                {!this.state.forbidden && <FlatButton
+                {<FlatButton
                     label="Add Policy"
-                    backgroundColor={green500}
+                    disabled={this.state.forbidden}
+                    backgroundColor={this.state.buttonColor}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.setState({ openNewPolicyModal: true, newPolicy: { name: '', value: '' } })} />}
                 {this.state.errorMessage &&
                     <div className={styles.error}>
-                        <FontIcon className="fa fa-exclamation-triangle" color={red500} style={{marginRight: 10}}/>
+                        <FontIcon className="fa fa-exclamation-triangle" color={red500} style={{ marginRight: 10 }} />
                         {this.state.errorMessage}
                     </div>
                 }
