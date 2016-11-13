@@ -15,7 +15,8 @@ export default class Github extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            organization: props.organization,
+            requestOrganization: false,
+            organization: window.localStorage.getItem('githubOrganization') || '',
             teamName: '',
             policies: [],
             checkedPolicy: '',
@@ -25,21 +26,71 @@ export default class Github extends React.Component {
             selected: props.selected === 'Github'
         };
 
-        console.log(`HELLO ${props.organization}`);
-
         _.bindAll(
             this,
             'listPolicies',
             'renderPolicies',
             'policyChecked',
             'teamNameChanged',
-            'submitGithubPolicy'
+            'submitGithubPolicy',
+            'requestOrganization',
+            'renderOrganizationDialog'
         );
 
     }
 
     componentWillMount() {
+        this.requestOrganization();
         this.listPolicies();
+    }
+
+    requestOrganization() {
+        this.setState({
+            requestOrganization: this.state.organization ? false : true
+        })
+    }
+
+    renderOrganizationDialog() {
+        const actions = [
+            <div>
+                <FlatButton label="Close" primary={true} onTouchTap={(e) => closeDialog(e)} />
+                <FlatButton label="Submit" secondary={true} onTouchTap={(e) => submitOrg(e)} />
+            </div>
+        ];
+
+        let submitOrg = (e) => {
+            console.log('Submit clicked!');
+            window.localStorage.setItem('githubOrganization', this.state.tmpOrganization)
+            this.setState({
+                organization: this.state.tmpOrganization,
+                requestOrganization: false
+            });
+        };
+
+        let closeDialog = (e) => {
+            console.log('Close clicked!');
+            this.setState({
+                requestOrganization: false
+            });
+        };
+
+        return (
+            <Dialog
+                title="Organization"
+                actions={actions}
+                modal={true}
+                open={this.state.requestOrganization}
+                >
+                <TextField
+                    id="organization"
+                    fullWidth={true}
+                    className="col-xs-12"
+                    defaultValue={this.state.organization}
+                    onChange={(e, v) => this.setState({ tmpOrganization: v })}
+                    />
+                <div className={styles.error}>{this.state.errorMessage}</div>
+            </Dialog>
+        )
     }
 
     listPolicies() {
@@ -63,10 +114,10 @@ export default class Github extends React.Component {
 
     teamNameChanged(e, v) {
         this.setState({
-                teamName: v,
-                submitBtnDisabled: !(this.state.checkedPolicy && this.state.organization && v),
-                submitBtnColor: (this.state.checkedPolicy && this.state.organization && v) ? green500 : 'lightgrey'
-            });
+            teamName: v,
+            submitBtnDisabled: !(this.state.checkedPolicy && this.state.organization && v),
+            submitBtnColor: (this.state.checkedPolicy && this.state.organization && v) ? green500 : 'lightgrey'
+        });
     }
 
     policyChecked(policyName, e, isChecked) {
@@ -113,8 +164,12 @@ export default class Github extends React.Component {
         return (
             <div>
                 <h2>Github</h2>
+                {this.renderOrganizationDialog()}
                 <p>Here you can view, update, and delete policies assigned to teams in your Github org.</p>
-                <h3>Current Organization: <span className={styles.orgName}>{this.state.organization.toUpperCase()}</span></h3>
+                <div className="row middle-xs" key="org">
+                    <p>Current Organization: <span className={styles.orgName}>{<FlatButton label={this.state.organization.toUpperCase()} primary={true} onTouchTap={() => this.setState({ requestOrganization: true })} />}</span></p>
+                    
+                </div>
                 <TextField
                     fullWidth={false}
                     className="col-xs-12"
