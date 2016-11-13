@@ -12,6 +12,7 @@
 
 .link {
     cursor: pointer;
+    user-select: none;
 }
 
 .activeLink {
@@ -21,4 +22,10 @@
 
 .link:hover {
     font-weight: bold;
+}
+
+.sublink {
+    font-size: 16px;
+    margin-left: 10px;
+    user-select: none;
 }

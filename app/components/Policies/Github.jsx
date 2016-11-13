@@ -122,13 +122,13 @@ export default class Github extends React.Component {
                     onChange={this.teamNameChanged}
                     />
                 {this.renderPolicies()}
-                <FlatButton
+                {this.state.policies.length > 0 && <FlatButton
                     label="Apply"
                     backgroundColor={this.state.submitBtnColor}
                     hoverColor={green400}
                     disabled={this.state.submitBtnDisabled}
                     labelStyle={{ color: white }}
-                    onTouchTap={() => this.submitGithubPolicy()} />
+                    onTouchTap={() => this.submitGithubPolicy()} />}
             </div>
         );
     }

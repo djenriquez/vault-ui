@@ -6,6 +6,9 @@ class Menu extends React.Component {
     constructor(props) {
         super(props);
         this.applyActiveLink = this.applyActiveLink.bind(this);
+        this.state = {
+            togglePoliciesSubMenu: false
+        }
     }
 
     applyActiveLink(name) {
@@ -21,8 +24,21 @@ class Menu extends React.Component {
                     <p className={`${styles.link} ${this.applyActiveLink('/secrets')}`} onClick={() => browserHistory.push('/secrets')}>Secrets</p>
                 </div>
                 <div>
-                    <p className={`${styles.link}  ${this.applyActiveLink('/policies')}`} onClick={() => browserHistory.push('/policies')}>Policies</p>
+                    <p className={`${styles.link}`} onClick={() => this.setState({ togglePoliciesSubMenu: !this.state.togglePoliciesSubMenu})}>Policies</p>
                 </div>
+                {this.state.togglePoliciesSubMenu &&
+                    <div className={this.state.togglePoliciesSubMenu ? styles.hide : styles.show}>
+                        <div>
+                            <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/manage')}`} onClick={() => browserHistory.push('/policies/manage')}>Manage</p>
+                        </div>
+                        <div>
+                            <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/github')}`} onClick={() => browserHistory.push('/policies/github')}>Github</p>
+                        </div>
+                        <div>
+                            <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/ec2')}`} onClick={() => browserHistory.push('/policies/ec2')}>EC2</p>
+                        </div>
+                    </div>
+                }
                 <div>
                     <p className={`${styles.link}  ${this.applyActiveLink('/settings')}`} onClick={() => browserHistory.push('/settings')}>Settings</p>
                 </div>

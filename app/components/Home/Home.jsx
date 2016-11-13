@@ -109,8 +109,11 @@ export default class Home extends React.Component {
                 return <Health />
             case '/settings':
                 return <Settings />
-            case '/policies':
-                return <Policies />
+            case '/policies/manage':
+            case '/policies/github':
+            case '/policies/ec2':
+                let subPath = _.last(this.props.location.pathname.split('/'));
+                return <Policies subPath={subPath}/>
             default:
                 return (
                     <div>
