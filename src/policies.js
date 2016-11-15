@@ -81,7 +81,7 @@ exports.deletePolicy = function (req, res) {
         })
 }
 
-exports.setGithubTeam = function (req, res) {
+exports.setGithubTeamPolicy = function (req, res) {
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
@@ -93,7 +93,7 @@ exports.setGithubTeam = function (req, res) {
         value: policy
     };
 
-    axios.put(`${vaultAddr}${endpoint}`, body, config)
+    axios.post(`${vaultAddr}${endpoint}`, body, config)
         .then((resp) => {
             res.json(resp.data);
         })
@@ -103,7 +103,7 @@ exports.setGithubTeam = function (req, res) {
         });
 }
 
-exports.getGithubTeam = function (req, res) {
+exports.getGithubTeamPolicy = function (req, res) {
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 

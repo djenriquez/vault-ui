@@ -19,12 +19,14 @@ export default class Github extends React.Component {
             organization: window.localStorage.getItem('githubOrganization') || '',
             teamName: '',
             policies: [],
-            checkedPolicy: '',
+            checkedPolicies: [],
             submitBtnColor: 'lightgrey',
             submitBtnDisabled: true,
             errorMessage: '',
             selected: props.selected === 'Github'
         };
+
+        this.processTeamNameDebounced = _.debounce(this.processTeamName, 400);
 
         _.bindAll(
             this,
@@ -34,7 +36,9 @@ export default class Github extends React.Component {
             'teamNameChanged',
             'submitGithubPolicy',
             'requestOrganization',
-            'renderOrganizationDialog'
+            'renderOrganizationDialog',
+            'getTeamPolicy',
+            'processTeamName'
         );
 
     }
@@ -59,7 +63,6 @@ export default class Github extends React.Component {
         ];
 
         let submitOrg = (e) => {
-            console.log('Submit clicked!');
             window.localStorage.setItem('githubOrganization', this.state.tmpOrganization)
             this.setState({
                 organization: this.state.tmpOrganization,
@@ -68,7 +71,6 @@ export default class Github extends React.Component {
         };
 
         let closeDialog = (e) => {
-            console.log('Close clicked!');
             this.setState({
                 requestOrganization: false
             });
@@ -112,28 +114,73 @@ export default class Github extends React.Component {
             });
     }
 
+    submitGithubPolicy() {
+        axios.post(`/githubteampolicy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&team=${this.state.teamName}`, { "Policy": this.state.checkedPolicies })
+            .catch((err) => {
+
+            });
+    }
+
+    getTeamPolicy(teamName) {
+        axios.get(`/githubteampolicy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&team=${teamName}`)
+            .then((resp) => {
+                let policyNames = _.get(resp, "data.data.value").split(',');
+
+                _.forEach(this.state.policies, (policy) => {
+                    policy.checked = (policyNames.indexOf(policy.name) > -1);
+                });
+                this.setState({
+                    policies: this.state.policies
+                });
+            })
+            .catch((err) => {
+
+            });
+    }
+
     teamNameChanged(e, v) {
+        if (v === '') {
+            _.forEach(this.state.policies, (policy) => {
+                policy.checked = false;
+            });
+
+            this.setState({
+                policies: this.state.policies
+            });
+        } else {
+            this.state.teamName = v;
+            this.processTeamNameDebounced();
+        }
+
+    }
+
+    processTeamName() {
+        this.getTeamPolicy(this.state.teamName);
         this.setState({
-            teamName: v,
-            submitBtnDisabled: !(this.state.checkedPolicy && this.state.organization && v),
-            submitBtnColor: (this.state.checkedPolicy && this.state.organization && v) ? green500 : 'lightgrey'
+            teamName: this.state.teamName,
+            submitBtnDisabled: !(this.state.checkedPolicies && this.state.organization && this.state.teamName),
+            submitBtnColor: (this.state.checkedPolicies && this.state.organization && this.state.teamName) ? green500 : 'lightgrey'
         });
     }
 
     policyChecked(policyName, e, isChecked) {
         let policies = this.state.policies;
-        _.forEach(policies, (policy) => {
-            policy.checked = false;
-        });
 
         let policyToCheck = _.find(policies, (policyToCheck) => { return policyToCheck.name == policyName; });
-        policyToCheck.checked = isChecked;
+        if (policyToCheck !== undefined)
+            policyToCheck.checked = isChecked;
+
+        let checkedPolicies = _.map(_.filter(policies, (policy) => {
+            return policy.checked;
+        }), (policy) => {
+            return policy.name;
+        }).toString();
 
         this.setState({
             policies: policies,
-            checkedPolicy: isChecked ? policyToCheck.name : '',
-            submitBtnDisabled: !(isChecked && this.state.organization && this.state.teamName),
-            submitBtnColor: (isChecked && this.state.organization && this.state.teamName) ? green500 : 'lightgrey'
+            checkedPolicies: checkedPolicies,
+            submitBtnDisabled: !(checkedPolicies && this.state.organization && this.state.teamName),
+            submitBtnColor: (checkedPolicies && this.state.organization && this.state.teamName) ? green500 : 'lightgrey'
         });
 
     }
@@ -155,11 +202,6 @@ export default class Github extends React.Component {
         });
     }
 
-
-    submitGithubPolicy() {
-
-    }
-
     render() {
         return (
             <div>
@@ -168,14 +210,16 @@ export default class Github extends React.Component {
                 <p>Here you can view, update, and delete policies assigned to teams in your Github org.</p>
                 <div className="row middle-xs" key="org">
                     <p>Current Organization: <span className={styles.orgName}>{<FlatButton label={this.state.organization.toUpperCase()} primary={true} onTouchTap={() => this.setState({ requestOrganization: true })} />}</span></p>
-                    
+
                 </div>
-                <TextField
-                    fullWidth={false}
-                    className="col-xs-12"
-                    hintText="Team Name"
-                    onChange={this.teamNameChanged}
-                    />
+                <div className="row" key="team">
+                    <TextField
+                        fullWidth={false}
+                        className="col-xs-12"
+                        hintText="Team Name"
+                        onChange={this.teamNameChanged}
+                        />
+                </div>
                 {this.renderPolicies()}
                 {this.state.policies.length > 0 && <FlatButton
                     label="Apply"

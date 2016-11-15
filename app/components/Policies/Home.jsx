@@ -38,7 +38,6 @@ export default class Home extends React.Component {
         ];
 
         let submitOrg = (e) => {
-            console.log('Submit clicked!');
             this.setState({
                 organization: this.state.tmpOrganization,
                 requestOrganization: false
@@ -46,7 +45,6 @@ export default class Home extends React.Component {
         };
 
         let closeDialog = (e) => {
-            console.log('Close clicked!');
             this.setState({
                 requestOrganization: false
             });
