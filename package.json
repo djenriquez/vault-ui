@@ -44,6 +44,7 @@
     "nodemon": "^1.11.0"
   },
   "dependencies": {
+    "autoprefixer": "^6.5.3",
     "axios": "^0.15.2",
     "body-parser": "^1.15.2",
     "copy-to-clipboard": "^3.0.5",

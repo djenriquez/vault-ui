@@ -51,7 +51,7 @@ exports.updatePolicy = function (req, res) {
     // Attempt to parse into JSON incase a stringified JSON was sent
     try {
         policy = JSON.parse(policy)
-    } catch(e) { }
+    } catch (e) { }
 
     //If the user passed in an HCL document, convert to stringified JSON as required by the API
     let rules = typeof policy == 'object' ? JSON.stringify(policy) : JSON.stringify(hcltojson(policy));
@@ -77,10 +77,49 @@ exports.deletePolicy = function (req, res) {
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
     axios.delete(`${vaultAddr}${endpoint}`, config)
-    .then((resp) => {
-        res.sendStatus(resp.status);
-    })
-    .catch((err) => {
-        console.error(err.stack);
-    })
+        .then((resp) => {
+            res.sendStatus(resp.status);
+        })
+        .catch((err) => {
+            console.error(err.stack);
+        })
+}
+
+exports.setGithubTeamPolicy = function (req, res) {
+    let vaultAddr = decodeURI(req.query['vaultaddr']);
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
+
+    let teamName = decodeURI(req.query['team']);
+    let endpoint = `/v1/auth/github/map/teams/${teamName}`;
+    let policy = _.get(req, "body.Policy");
+
+    let body = {
+        value: policy
+    };
+
+    axios.post(`${vaultAddr}${endpoint}`, body, config)
+        .then((resp) => {
+            res.json(resp.data);
+        })
+        .catch((err) => {
+            console.error(err.stack);
+            res.status(err.response.status).send(err.response);
+        });
+}
+
+exports.getGithubTeamPolicy = function (req, res) {
+    let vaultAddr = decodeURI(req.query['vaultaddr']);
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
+
+    let teamName = decodeURI(req.query['team']);
+    let endpoint = `/v1/auth/github/map/teams/${teamName}`;
+
+    axios.get(`${vaultAddr}${endpoint}`, config)
+        .then((resp) => {
+            res.json(resp.data);
+        })
+        .catch((err) => {
+            console.error(err.stack);
+            res.status(err.response.status).send(err.response);
+        });
 }

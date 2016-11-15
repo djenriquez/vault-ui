@@ -4,7 +4,7 @@ import Menu from '../shared/Menu/Menu.jsx';
 import styles from './home.css';
 import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
-import Policies from '../Policies/Policies.jsx';
+import Policies from '../Policies/Home.jsx';
 import Settings from '../Settings/Settings.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
@@ -60,29 +60,6 @@ export default class Home extends React.Component {
                 browserHistory.push('/login');
             }
         },1000*5);
-
-        // document.addEventListener("changedKey", (e) => {
-        //     let secrets = this.state.secrets;
-        //     _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
-        //     this.setState({
-        //         secrets: secrets
-        //     });
-        // });
-
-        // document.addEventListener("addedKey", (e) => {
-        //     let secrets = this.state.secrets;
-        //     secrets.push({ key: e.detail.key, value: e.detail.value });
-        //     this.setState({
-        //         secrets: secrets
-        //     });
-        // });
-
-        // document.addEventListener("deleteKey", (e) => {
-        //     let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
-        //     this.setState({
-        //         secrets: newSecrets
-        //     });
-        // });
     }
 
     renderLogoutDialog() {
@@ -111,8 +88,11 @@ export default class Home extends React.Component {
                 return <Health />
             case '/settings':
                 return <Settings />
-            case '/policies':
-                return <Policies />
+            case '/policies/manage':
+            case '/policies/github':
+            case '/policies/ec2':
+                let subPath = _.last(this.props.location.pathname.split('/'));
+                return <Policies subPath={subPath}/>
             default:
                 return (
                     <div>

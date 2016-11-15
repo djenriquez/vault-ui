@@ -10,7 +10,7 @@ import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
 
-export default class Policy extends React.Component {
+export default class Manage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -309,7 +309,7 @@ export default class Policy extends React.Component {
                 {this.state.openEditModal && this.renderEditDialog()}
                 {this.state.openNewPolicyModal && this.renderNewPolicyDialog()}
                 {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
-                <h1 id={styles.welcomeHeadline}>Policies</h1>
+                <h2>Manage Policies</h2>
                 <p>Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span></p>
                 {<FlatButton
                     label="Add Policy"
