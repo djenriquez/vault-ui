@@ -15,7 +15,11 @@ exports.listPolicies = function (req, res) {
         })
         .catch((err) => {
             console.error(err.stack);
-            res.status(err.response.status).send(err.response);
+            if (err.response.status === 403) {
+                res.status(err.response.status).send("You are not authorized to access these resources.");
+            } else {
+                res.status(err.response.status).send(err.message);
+            }
         });
 }
 
