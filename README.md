@@ -32,6 +32,16 @@ docker run -d \
 djenriquez/vault-ui
 ```
 
+### Skip TLS Verification
+In the case that you need to skip TLS verification, say for self-signed certs, you can run Vault-UI with the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`:
+```
+docker run -d \
+-p 8000:8000 \
+-e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+--name vault-ui \
+djenriquez/vault-ui
+```
+
 ## Development
 ```sh
 npm install
