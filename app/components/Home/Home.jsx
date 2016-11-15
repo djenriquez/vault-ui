@@ -60,29 +60,6 @@ export default class Home extends React.Component {
                 browserHistory.push('/login');
             }
         },1000*5);
-
-        // document.addEventListener("changedKey", (e) => {
-        //     let secrets = this.state.secrets;
-        //     _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
-        //     this.setState({
-        //         secrets: secrets
-        //     });
-        // });
-
-        // document.addEventListener("addedKey", (e) => {
-        //     let secrets = this.state.secrets;
-        //     secrets.push({ key: e.detail.key, value: e.detail.value });
-        //     this.setState({
-        //         secrets: secrets
-        //     });
-        // });
-
-        // document.addEventListener("deleteKey", (e) => {
-        //     let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
-        //     this.setState({
-        //         secrets: newSecrets
-        //     });
-        // });
     }
 
     renderLogoutDialog() {
