@@ -25,7 +25,7 @@ export default class Login extends React.Component {
             username: "",
             password: "",
             loginMethodType: window.localStorage.getItem("loginMethodType") || "GITHUB",
-            tmpLoginMethodType: "",
+            tmpLoginMethodType: window.localStorage.getItem("loginMethodType") || "GITHUB",
             settingsChanged: false
         };
 
@@ -43,6 +43,11 @@ export default class Login extends React.Component {
 
     componentDidMount() {
         this.setState({ show: true });
+        if (!this.state.vaultUrl) {
+            this.setState({
+                openSettings: true
+            });
+        }
     }
 
     validateUsernamePassword(e) {
@@ -152,6 +157,9 @@ export default class Login extends React.Component {
         if (this.state.settingsChanged) {
             if (!this.state.tmpVaultUrl) {
                 this.setState({ errorMessage: 'Please enter a Vault URL' });
+            }
+            else if (!this.state.tmpLoginMethodType) {
+                this.setState({ errorMessage: 'Please select an authentication backend' });
             } else {
                 window.localStorage.setItem("vaultUrl", this.state.tmpVaultUrl);
                 window.localStorage.setItem("loginMethodType", this.state.tmpLoginMethodType);
@@ -182,7 +190,7 @@ export default class Login extends React.Component {
             </div>
         ]
 
-        let handleSelectFieldChange = (e, i, v)  => {
+        let handleSelectFieldChange = (e, i, v) => {
             this.setState({ tmpLoginMethodType: v, settingsChanged: true });
         }
 
