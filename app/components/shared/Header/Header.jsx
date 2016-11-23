@@ -18,8 +18,11 @@ class Header extends React.Component {
             <AppBar
                 style={{backgroundColor: '#000000'}}
                 title={<span id={styles.title}>Vault</span>}
-                onTitleTouchTap={() => browserHistory.push('/')}
-                iconElementLeft={<IconButton href={'https://github.com/Lucretius/vault_ui'}><FontIcon className="fa fa-github"></FontIcon></IconButton>}
+                onTitleTouchTap={() =>{
+                    window.localStorage.removeItem('vaultAccessTokenExpiration')
+                    browserHistory.push('/');
+                }}
+                iconElementLeft={<IconButton href={'https://github.com/djenriquez/vault-ui'}><FontIcon className="fa fa-github"></FontIcon></IconButton>}
                 iconElementRight={<FlatButton onTouchTap={logout} label="Logout" />}
               />
           </div>

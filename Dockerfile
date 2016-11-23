@@ -1,6 +1,6 @@
 FROM node:slim
 
-MAINTAINER Team Lucretius
+MAINTAINER Vault-UI Contributors
 
 ADD package.json /tmp/package.json
 RUN cd /tmp && npm install --silent

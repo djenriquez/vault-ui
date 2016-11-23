@@ -1,0 +1,25 @@
+/* Copied from secrets.css */
+#welcomeHeadline {
+    font-size: 60px;
+    font-weight: 200;
+}
+
+.actionButtons {
+    position: absolute;
+    right: 0;
+}
+
+.key{
+    max-width: 600px;
+    word-wrap: break-word;
+}
+
+.error {
+    color: #f44336;
+    margin: 20px 0;
+}
+
+.orgName {
+    color: dodgerblue;
+    font-weight: 1000;
+}

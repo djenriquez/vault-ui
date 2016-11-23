@@ -7,21 +7,34 @@ import Header from '../shared/Header/Header.jsx';
 import Menu from '../shared/Menu/Menu.jsx';
 import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
+import Policies from '../Policies/Home.jsx';
 import Settings from '../Settings/Settings.jsx';
 import ResponseWrapper from '../ResonseWrapper/ResponseWrapper.jsx';
 
 import styles from './home.css';
+import Dialog from 'material-ui/Dialog';
+import FlatButton from 'material-ui/FlatButton';
+import { browserHistory } from 'react-router';
+
+var logoutCheck;
 
 export default class Home extends React.Component {
     constructor(props) {
         super(props);
         this.renderContent = this.renderContent.bind(this);
+        this.renderLogoutDialog = this.renderLogoutDialog.bind(this);
         this.state = {
             snackbarMessage: '',
             snackbarOpen: false,
             snackbarType: 'OK',
-            namespace: '/'
+            namespace: '/',
+            logoutOpen: false,
+            logoutPromptSeen: false
         }
+    }
+
+    componentWillUnmount() {
+        clearInterval(logoutCheck)
     }
 
     componentDidMount() {
@@ -36,28 +49,38 @@ export default class Home extends React.Component {
             });
         });
 
-        // document.addEventListener("changedKey", (e) => {
-        //     let secrets = this.state.secrets;
-        //     _.find(secrets, x => x.key === e.detail.key).value = e.detail.value
-        //     this.setState({
-        //         secrets: secrets
-        //     });
-        // });
+        logoutCheck = window.setInterval(() => {
+            let tokenExpireDate = window.localStorage.getItem('vaultAccessTokenExpiration');
+            let TWO_MINUTES = 1000 * 60 * 2;
+            if (tokenExpireDate - TWO_MINUTES < Date.now()) {
+                if (!this.state.logoutPromptSeen) {
+                    this.setState({
+                        logoutOpen: true
+                    });
+                }
+            }
+            if (tokenExpireDate < Date.now()) {
+                browserHistory.push('/login');
+            }
+        },1000*5);
+    }
 
-        // document.addEventListener("addedKey", (e) => {
-        //     let secrets = this.state.secrets;
-        //     secrets.push({ key: e.detail.key, value: e.detail.value });
-        //     this.setState({
-        //         secrets: secrets
-        //     });
-        // });
+    renderLogoutDialog() {
+        const actions = [
+            <FlatButton label="OK" primary={true} onTouchTap={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })} />
+        ];
 
-        // document.addEventListener("deleteKey", (e) => {
-        //     let newSecrets = _.filter(this.state.secrets, x => x.key !== e.detail.key);
-        //     this.setState({
-        //         secrets: newSecrets
-        //     });
-        // });
+        return (
+            <Dialog
+                title={`Logout`}
+                modal={true}
+                actions={actions}
+                open={this.state.logoutOpen}
+                onRequestClose={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })}
+                >
+                <div className={styles.error}>Your token will expire in 2 minutes.  You'll want to finish up what you are working on!</div>
+            </Dialog>
+        );
     }
 
     renderContent() {
@@ -70,6 +93,11 @@ export default class Home extends React.Component {
                 return <Settings />
             case '/responsewrapper':
                 return <ResponseWrapper />
+            case '/policies/manage':
+            case '/policies/github':
+            case '/policies/ec2':
+                let subPath = _.last(this.props.location.pathname.split('/'));
+                return <Policies subPath={subPath}/>
             default:
                 return (
                     <div>
@@ -98,6 +126,7 @@ export default class Home extends React.Component {
                 autoHideDuration={2000}
                 onRequestClose={() => this.setState({ snackbarOpen: false })}
                 />
+                {this.state.logoutOpen && this.renderLogoutDialog()}
             <Header />
             <Menu pathname={this.props.location.pathname} />
             <div id={styles.content}>
