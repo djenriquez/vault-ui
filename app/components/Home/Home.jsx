@@ -9,7 +9,7 @@ import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
 import Policies from '../Policies/Home.jsx';
 import Settings from '../Settings/Settings.jsx';
-import ResponseWrapper from '../ResonseWrapper/ResponseWrapper.jsx';
+import ResponseWrapper from '../ResponseWrapper/ResponseWrapper.jsx';
 
 import styles from './home.css';
 import Dialog from 'material-ui/Dialog';
