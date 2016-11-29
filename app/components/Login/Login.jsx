@@ -228,6 +228,7 @@ export default class Login extends React.Component {
                     floatingLabelText="Login Method">
                     <MenuItem value={"GITHUB"} primaryText="Github" />
                     <MenuItem value={"TOKEN"} primaryText="Token" />
+                    <MenuItem value={"LDAP"} primaryText="LDAP" />
                     <MenuItem value={"USERNAMEPASSWORD"} primaryText="Username & Password" />
                 </SelectField>
                 <div className={styles.error}>{this.state.errorMessage}</div>
@@ -258,6 +259,27 @@ export default class Login extends React.Component {
                         onKeyDown={this.validateToken}
                         onChange={(e, v) => this.setState({ authToken: v })}
                         />
+                );
+            case "LDAP":
+                return (
+                  <div>
+                      <TextField
+                          fullWidth={true}
+                          className="col-xs-12"
+                          hintText="Enter LDAP username"
+                          onKeyDown={this.validateUsernamePassword}
+                          onChange={(e, v) => this.setState({ username: v })}
+                          />
+                      <TextField
+                          fullWidth={true}
+                          className="col-xs-12"
+                          type="password"
+                          hintText="Enter LDAP password"
+                          onKeyDown={this.validateUsernamePassword}
+                          onChange={(e, v) => this.setState({ password: v })}
+                          />
+                      <div className={styles.error}>{this.state.errorMessage}</div>
+                  </div>
                 );
             case "USERNAMEPASSWORD":
                 return (

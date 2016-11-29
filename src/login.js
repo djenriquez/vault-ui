@@ -43,6 +43,12 @@ exports.login = function (req, res) {
                 password: creds.Password
             };
             break;
+        case 'ldap':
+            endpoint = `/v1/auth/ldap/login/${username}`;
+            body = {
+                password: creds.Password
+            };
+            break;
         case 'token':
             endpoint = `/v1/auth/token/lookup`
             body = {
