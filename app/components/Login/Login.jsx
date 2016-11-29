@@ -70,12 +70,25 @@ export default class Login extends React.Component {
                 "Creds": {
                     "Type": this.state.loginMethodType,
                     "Username": this.state.username,
-                    "password": this.state.password
+                    "Password": this.state.password
                 }
             })
                 .then((resp) => {
-                    window.localStorage.setItem('vaultAccessTokenExpiration', Date.now() + (_.get(resp, 'data.lease_duration') * 1000))
-                    //DJ fill in the blanks here
+                    //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
+                    //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
+                    //   policies: [ 'default', 'insp-power-user' ],
+                    //   metadata: { org: 'Openmail', username: 'djenriquez' },
+                    //   lease_duration: 3600,
+                    //   renewable: true }
+                    let accessToken = _.get(resp, 'data.client_token');
+                    if (accessToken) {
+                        window.localStorage.setItem("vaultAccessToken", accessToken);
+                        let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now() + _.get(resp, 'data.lease_duration') * 1000
+                        window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
+                        window.location.href = '/';
+                    } else {
+                        this.setState({ errorMessage: "Unable to obtain auth token." })
+                    }
                 })
                 .catch((err) => {
                     console.error(err);
