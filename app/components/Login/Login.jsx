@@ -74,21 +74,7 @@ export default class Login extends React.Component {
                 }
             })
                 .then((resp) => {
-                    //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
-                    //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
-                    //   policies: [ 'default', 'insp-power-user' ],
-                    //   metadata: { org: 'Openmail', username: 'djenriquez' },
-                    //   lease_duration: 3600,
-                    //   renewable: true }
-                    let accessToken = _.get(resp, 'data.client_token');
-                    if (accessToken) {
-                        window.localStorage.setItem("vaultAccessToken", accessToken);
-                        let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now() + _.get(resp, 'data.lease_duration') * 1000
-                        window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
-                        window.location.href = '/';
-                    } else {
-                        this.setState({ errorMessage: "Unable to obtain auth token." })
-                    }
+                    this.setAccessToken(resp);
                 })
                 .catch((err) => {
                     console.error(err);
@@ -109,21 +95,7 @@ export default class Login extends React.Component {
             }
             axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
                 .then((resp) => {
-                    //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
-                    //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
-                    //   policies: [ 'default', 'insp-power-user' ],
-                    //   metadata: { org: 'Openmail', username: 'djenriquez' },
-                    //   lease_duration: 3600,
-                    //   renewable: true }
-                    let accessToken = _.get(resp, 'data.client_token');
-                    if (accessToken) {
-                        window.localStorage.setItem("vaultAccessToken", accessToken);
-                        let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now() + _.get(resp, 'data.lease_duration') * 1000
-                        window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
-                        window.location.href = '/';
-                    } else {
-                        this.setState({ errorMessage: "Auth token validation failed." })
-                    }
+                    this.setAccessToken(resp);
                 })
                 .catch((err) => {
                     console.error(err.stack);
@@ -144,25 +116,30 @@ export default class Login extends React.Component {
             }
             axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
                 .then((resp) => {
-                    //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
-                    //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
-                    //   policies: [ 'default', 'insp-power-user' ],
-                    //   metadata: { org: 'Openmail', username: 'djenriquez' },
-                    //   lease_duration: 3600,
-                    //   renewable: true }
-                    let accessToken = _.get(resp, 'data.client_token');
-                    if (accessToken) {
-                        window.localStorage.setItem("vaultAccessToken", accessToken);
-                        window.localStorage.setItem('vaultAccessTokenExpiration', Date.now() + (_.get(resp, 'data.lease_duration') * 1000))
-                        window.location.href = '/';
-                    } else {
-                        this.setState({ errorMessage: "Auth token validation failed." })
-                    }
+                    this.setAccessToken(resp);
                 })
                 .catch((err) => {
                     console.error(err.stack);
                     this.setState({ errorMessage: err.response.data })
                 });
+        }
+    }
+
+    setAccessToken(resp) {
+        //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
+        //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
+        //   policies: [ 'default', 'insp-power-user' ],
+        //   metadata: { org: 'Openmail', username: 'djenriquez' },
+        //   lease_duration: 3600,
+        //   renewable: true }
+        let accessToken = _.get(resp, 'data.client_token');
+        if (accessToken) {
+            window.localStorage.setItem("vaultAccessToken", accessToken);
+            let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now() + _.get(resp, 'data.lease_duration') * 1000
+            window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
+            window.location.href = '/';
+        } else {
+            this.setState({ errorMessage: "Unable to obtain access token." })
         }
     }
 
