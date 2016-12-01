@@ -2,6 +2,7 @@
 
 var axios = require('axios');
 var _ = require('lodash');
+var qs = require('querystring');
 
 /* Returned body
    "auth": {
@@ -21,6 +22,9 @@ var _ = require('lodash');
 */
 exports.login = function (req, res) {
     let creds = _.get(req, "body.Creds");
+    if( typeof(creds.Username) != "undefined" ) {
+      var username = qs.escape(creds.Username);
+    }
 
     let endpoint = '';
     let body = {}
@@ -34,7 +38,13 @@ exports.login = function (req, res) {
             };
             break;
         case 'usernamepassword':
-            endpoint = `/v1/auth/userpass/login/${creds.Username}`;
+            endpoint = `/v1/auth/userpass/login/${username}`;
+            body = {
+                password: creds.Password
+            };
+            break;
+        case 'ldap':
+            endpoint = `/v1/auth/ldap/login/${username}`;
             body = {
                 password: creds.Password
             };
