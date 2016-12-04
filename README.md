@@ -8,12 +8,12 @@ A beautiful way to manage your secrets in Vault
 ![Secrets Management](https://github.com/djenriquez/vault-ui/raw/master/images/Secrets.png)
 ![New Secrets](https://github.com/djenriquez/vault-ui/raw/master/images/NewSecret.png)
 
-# Configuration
+## Configuration
 Configuration is accessed by clicking on the configuration cog on the login page.
 ![Configuration](https://github.com/djenriquez/vault-ui/raw/master/images/Config.png)
-## Vault Endpoint
+### Vault Endpoint
 Users can enter in the full endpoint to Vault, including scheme.
-## Authentication
+### Authentication
 There are currently three supported authentication backends. [Github](https://www.vaultproject.io/docs/auth/github.html), [Username and Password](https://www.vaultproject.io/docs/auth/userpass.html), and [Token](https://www.vaultproject.io/docs/auth/token.html). 
 ![Auth Backend](https://github.com/djenriquez/vault-ui/raw/master/images/AuthConfig.png)
 
@@ -22,6 +22,10 @@ By default, secrets will display as their raw JSON value represented by the `dat
 <img src="https://github.com/djenriquez/vault-ui/raw/master/images/RootKey.png" height="240">
 ## Policies
 Policies can be entered in as JSON or as HCL. If entered in as HCL, it will be converted to JSON as required for the PUT command in Vault's API. However, existing policies that are in HCL will continue to be displayed in HCL.
+
+## Response Wrapping
+Vault-UI supports response-wrapping raw values. It currently does not support wrapping of existing secrets.
+![Response Wrapping](https://github.com/djenriquez/vault-ui/raw/master/images/ResponseWrapping.png)
 
 ## Run
 Vault-UI is attached to an automated build on Docker Hub. To run Vault-UI:
