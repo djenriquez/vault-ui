@@ -3,6 +3,7 @@
 var secrets = require('./secrets');
 var login = require('./login');
 var policies = require('./policies');
+var respwrapping = require('./respwrapping');
 
 module.exports = (function () {
     return {
@@ -16,6 +17,8 @@ module.exports = (function () {
         updatePolicy: policies.updatePolicy,
         deletePolicy: policies.deletePolicy,
         setGithubTeamPolicy: policies.setGithubTeamPolicy,
-        getGithubTeamPolicy: policies.getGithubTeamPolicy
+        getGithubTeamPolicy: policies.getGithubTeamPolicy,
+        wrapValue: respwrapping.wrapResponse,
+        unwrapValue: respwrapping.unwrapResponse
     };
 })();

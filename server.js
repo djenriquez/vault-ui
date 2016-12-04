@@ -73,6 +73,14 @@ app.post('/githubteampolicy', function(req, res) {
     routeHandler.setGithubTeamPolicy(req, res);
 });
 
+app.post('/wrap', function(req,res) {
+    routeHandler.wrapValue(req, res);
+});
+
+app.post('/unwrap', function(req, res) {
+    routeHandler.unwrapValue(req, res);
+})
+
 app.get('/');
 
 app.get('*', function (req, res) {

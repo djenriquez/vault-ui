@@ -5,11 +5,14 @@ import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
+import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
+import Dialog from 'material-ui/Dialog';
 
 import _ from 'lodash';
+import axios from 'axios';
 
 import styles from './responseWrapper.css';
+import copy from 'copy-to-clipboard';
 
 export default class ResponseWrapper extends React.Component {
 
@@ -19,10 +22,13 @@ export default class ResponseWrapper extends React.Component {
             WrapType: '',
             WrapValue: '',
             WrappedToken: '',
+            WrapTokenDialogValue: '',
             WrappedSecretKey: '',
             WrapTTL: '',
             submitBtnColor: 'lightgrey',
-            submitBtnDisabled: true
+            submitBtnDisabled: true,
+            openWrapTokenDialog: false,
+            errorMessage: ''
         };
 
         _.bindAll(
@@ -31,7 +37,8 @@ export default class ResponseWrapper extends React.Component {
             'submitBtnClick',
             'checkValue',
             'checkWrappedToken',
-            'checkSecretKey'
+            'checkSecretKey',
+            'showWrappedToken'
         );
     }
 
@@ -42,7 +49,9 @@ export default class ResponseWrapper extends React.Component {
             WrappedSecretKey: '',
             WrapTTL: '',
             submitBtnColor: 'lightgrey',
-            submitBtnDisabled: true
+            WrapTokenDialogValue: '',
+            submitBtnDisabled: true,
+            errorMessage: ''
         });
     }
 
@@ -88,12 +97,56 @@ export default class ResponseWrapper extends React.Component {
     submitBtnClick() {
         switch (this.state.WrapType) {
             case "WRAPVALUE":
+                axios.post(`/wrap?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "value": this.state.WrapValue, "ttl": this.state.WrapTTL })
+                    .then((resp) => {
+                        this.state.WrapTokenDialogValue = _.get(resp, "data.token");
+                        this.setState({
+                            openWrapTokenDialog: true
+                        });
+                    })
+                    .catch((err) => {
+                        console.error(err.stack);
+                    });
                 break;
             case "WRAPSECRET":
                 break;
             case "UNWRAP":
+                axios.post(`/unwrap?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${this.state.WrappedToken}`)
+                    .then((resp) => {
+                        this.setState({
+                            WrapTokenDialogValue: resp.data.value,
+                            openWrapTokenDialog: true,
+                            errorMessage: ''
+                        })
+                    })
+                    .catch((err) => {
+                        this.setState({
+                            errorMessage: 'Token is invalid'
+                        });
+                    });
                 break;
         }
+    }
+
+    showWrappedToken() {
+        const actions = [
+            <div>
+                <FlatButton label="Close" primary={true} onTouchTap={() => this.setState({ openWrapTokenDialog: false })} />
+                <FlatButton label="Copy" secondary={true} onTouchTap={() => { copy(this.state.WrapTokenDialogValue), this.setState({ openWrapTokenDialog: false }) } } />
+            </div>
+        ];
+        return (
+            <Dialog
+                actions={actions}
+                modal={true}
+                open={this.state.openWrapTokenDialog}
+                >
+                <div style={{ textAlign: 'center' }}>
+                    <h2>{this.state.WrapTokenDialogValue}</h2>
+                </div>
+
+            </Dialog>
+        );
     }
 
     renderWrapFunction() {
@@ -168,6 +221,7 @@ export default class ResponseWrapper extends React.Component {
 
         return (
             <div>
+                {this.state.openWrapTokenDialog && this.showWrappedToken()}
                 <div>
                     <h1 id={styles.pageHeader}>Response Wrapping</h1>
                     <SelectField
@@ -175,8 +229,8 @@ export default class ResponseWrapper extends React.Component {
                         value={this.state.WrapType}
                         onChange={handleSelectFieldChange.bind(this)}
                         floatingLabelText="Wrap Function">
-                        <MenuItem value={"WRAPVALUE"} primaryText="Wrap Value" />
-                        <MenuItem value={"WRAPSECRET"} primaryText="Wrap Secret" />
+                        <MenuItem value={"WRAPVALUE"} primaryText="Wrap" />
+                        <MenuItem style={{ display: "none" }} value={"WRAPSECRET"} primaryText="Wrap Secret" />
                         <MenuItem value={"UNWRAP"} primaryText="Unwrap" />
                     </SelectField>
                 </div>
@@ -190,6 +244,7 @@ export default class ResponseWrapper extends React.Component {
                         labelStyle={{ color: white }}
                         onTouchTap={() => this.submitBtnClick()} />
                 </div>
+                <div className={styles.error}>{this.state.errorMessage}</div>
             </div>
         )
     }
