@@ -24,7 +24,9 @@ By default, secrets will display as their raw JSON value represented by the `dat
 Policies can be entered in as JSON or as HCL. If entered in as HCL, it will be converted to JSON as required for the PUT command in Vault's API. However, existing policies that are in HCL will continue to be displayed in HCL.
 
 ## Run
-Vault-UI is attached to an automated build on Docker Hub. To run Vault-UI:
+Vault-UI Docker images are automatically built using an [automated build
+on Docker Hub](https://hub.docker.com/r/djenriquez/vault-ui/builds/).
+To run Vault-UI using the latest Docker image:
 ```bash
 docker run -d \
 -p 8000:8000 \
