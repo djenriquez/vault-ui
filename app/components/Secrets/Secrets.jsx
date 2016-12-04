@@ -225,6 +225,14 @@ class Secrets extends React.Component {
             <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit} />
         ];
 
+        var rootKeyInfo;
+
+        if (this.state.useRootKey) {
+          rootKeyInfo = "Current Root Key: " + this.state.rootKey;
+        } else {
+          rootKeyInfo = "No Root Key set. Value must be JSON.";
+        }
+
         return (
             <Dialog
                 title={`New Key`}
@@ -242,6 +250,7 @@ class Secrets extends React.Component {
                     hintText="Value"
                     onChange={this.secretChanged} />
                 <div className={styles.error}>{this.state.errorMessage}</div>
+                <div>{rootKeyInfo}</div>
             </Dialog>
         );
     }
