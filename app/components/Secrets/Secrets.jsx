@@ -125,10 +125,15 @@ class Secrets extends React.Component {
 
     checkValidJson() {
         try {
-            JSON.parse(JSON.stringify(this.state.focusSecret));
+            if (this.state.useRootKey) {
+                JSON.parse(JSON.stringify(this.state.focusSecret));
+            } else {
+                JSON.parse(this.state.focusSecret);
+            }
             this.setState({
                 errorMessage: ''
             })
+            console.log("Parsed fine");
             return true;
         } catch (e) {
             this.setState({
@@ -282,8 +287,8 @@ class Secrets extends React.Component {
                 .then((resp) => {
                     let val = this.state.useRootKey ? _.get(resp, `data.${this.state.rootKey}`) : resp.data;
                     if (val === undefined) {
-                        this.setState({ 
-                            errorMessage: `No value exists under the root key '${this.state.rootKey}'.`, 
+                        this.setState({
+                            errorMessage: `No value exists under the root key '${this.state.rootKey}'.`,
                             focusSecret: '',
                             disableSubmit: true,
                             openEditModal: true,
