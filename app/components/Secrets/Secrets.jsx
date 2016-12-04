@@ -125,7 +125,7 @@ class Secrets extends React.Component {
 
     checkValidJson() {
         try {
-            JSON.parse(this.state.focusSecret);
+            JSON.parse(JSON.stringify(this.state.focusSecret));
             this.setState({
                 errorMessage: ''
             })
@@ -211,6 +211,7 @@ class Secrets extends React.Component {
                 });
                 return;
             }
+            if (!this.checkValidJson()) return;
             this.updateSecret(true);
             this.setState({ openNewKeyModal: false, errorMessage: '' });
         }
