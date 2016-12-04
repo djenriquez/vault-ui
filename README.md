@@ -14,9 +14,12 @@ Configuration is accessed by clicking on the configuration cog on the login page
 ### Vault Endpoint
 Users can enter in the full endpoint to Vault, including scheme.
 
-### Authentication
-There are currently four supported authentication backends. [Github](https://www.vaultproject.io/docs/auth/github.html), [Username and Password](https://www.vaultproject.io/docs/auth/userpass.html), [LDAP](https://www.vaultproject.io/docs/auth/ldap.html), and [Token](https://www.vaultproject.io/docs/auth/token.html). 
-![Auth Backend](https://github.com/djenriquez/vault-ui/raw/master/images/AuthConfig.png)
+## Authentication
+Currently supported authentication backends:
+- [GitHub](https://www.vaultproject.io/docs/auth/github.html)
+- [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html)
+- [LDAP](https://www.vaultproject.io/docs/auth/ldap.html)
+- [Tokens](https://www.vaultproject.io/docs/auth/token.html)
 
 ## Secrets
 By default, secrets will display as their raw JSON value represented by the `data` field in the HTTP GET response metadata. However, users can apply a "Root Key" bias to the secrets through the settings page. The "Root Key" will be used when reading, creating and updating secrets such that the value displayed in the UI is the value stored at the "Root Key". For example, if the secret at `secret/hello` is `{ "value": "world" }`, setting the "Root Key" to `value` will update the UI such that the secret will display as simply "world" instead of `{ "value": "world" }`.
@@ -30,7 +33,9 @@ Vault-UI supports response-wrapping raw values. It currently does not support wr
 ![Response Wrapping](https://github.com/djenriquez/vault-ui/raw/master/images/ResponseWrapping.png)
 
 ## Run
-Vault-UI is attached to an automated build on Docker Hub. To run Vault-UI:
+Vault-UI Docker images are automatically built using an [automated build
+on Docker Hub](https://hub.docker.com/r/djenriquez/vault-ui/builds/).
+To run Vault-UI using the latest Docker image:
 ```bash
 docker run -d \
 -p 8000:8000 \
