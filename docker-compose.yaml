@@ -1,0 +1,14 @@
+---
+version: '2'
+services:
+  vault:
+    image: vault
+    ports:
+      - "8200:8200"
+
+  vault-ui:
+    build: .
+    ports:
+      - "8000:8000"
+    links:
+      - vault
