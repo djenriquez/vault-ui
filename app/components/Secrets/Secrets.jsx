@@ -133,7 +133,6 @@ class Secrets extends React.Component {
             this.setState({
                 errorMessage: ''
             })
-            console.log("Parsed fine");
             return true;
         } catch (e) {
             this.setState({
