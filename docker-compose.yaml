@@ -12,3 +12,11 @@ services:
       - "8000:8000"
     links:
       - vault
+    volumes:
+      - .:/app
+
+  webpack:
+    build: .
+    volumes:
+      - .:/app
+    command: webpack -w
