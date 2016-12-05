@@ -142,7 +142,7 @@ export default class ResponseWrapper extends React.Component {
                 open={this.state.openWrapTokenDialog}
                 >
                 <div style={{ textAlign: 'center' }}>
-                    <h2>{this.state.WrapTokenDialogValue}</h2>
+                    <p>{this.state.WrapTokenDialogValue}</p>
                 </div>
 
             </Dialog>
@@ -167,6 +167,7 @@ export default class ResponseWrapper extends React.Component {
                                 id="text-field-wrap"
                                 value={this.state.WrapValue}
                                 onChange={this.checkValue}
+                                fullWidth={true}
                                 multiLine={true}
                                 floatingLabelText="Value to wrap"
                                 />
@@ -189,6 +190,7 @@ export default class ResponseWrapper extends React.Component {
                             id="text-field-wrap"
                             value={this.state.WrappedSecretKey}
                             onChange={this.checkSecretKey}
+                            fullWidth={true}
                             floatingLabelText="Secret Key to wrap"
                             />
                     </div>
@@ -201,6 +203,7 @@ export default class ResponseWrapper extends React.Component {
                             floatingLabelText="Token to unwrap"
                             value={this.state.WrappedToken}
                             onChange={this.checkWrappedToken}
+                            fullWidth={true}
                             />
                     </div>
                 )
