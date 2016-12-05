@@ -1,16 +1,19 @@
 import React, { PropTypes } from 'react'
+import Snackbar from 'material-ui/Snackbar';
+import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
+import axios from 'axios';
+
 import Header from '../shared/Header/Header.jsx';
 import Menu from '../shared/Menu/Menu.jsx';
-import styles from './home.css';
 import Secrets from '../Secrets/Secrets.jsx';
 import Health from '../Health/Health.jsx';
 import Policies from '../Policies/Home.jsx';
 import Settings from '../Settings/Settings.jsx';
-import Snackbar from 'material-ui/Snackbar';
+import ResponseWrapper from '../ResponseWrapper/ResponseWrapper.jsx';
+
+import styles from './home.css';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
-import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
-import axios from 'axios';
 import { browserHistory } from 'react-router';
 
 var logoutCheck;
@@ -88,6 +91,8 @@ export default class Home extends React.Component {
                 return <Health />
             case '/settings':
                 return <Settings />
+            case '/responsewrapper':
+                return <ResponseWrapper />
             case '/policies/manage':
             case '/policies/github':
             case '/policies/ec2':
@@ -101,7 +106,6 @@ export default class Home extends React.Component {
                         Use the menu on the left to navigate around.</p>
                     </div>
                 );
-
         }
     }
 
