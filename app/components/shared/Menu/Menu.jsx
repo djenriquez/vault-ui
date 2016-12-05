@@ -35,7 +35,7 @@ class Menu extends React.Component {
                             <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/github')}`} onClick={() => browserHistory.push('/policies/github')}>Github</p>
                         </div>
                         <div>
-                            <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/ec2')}`} onClick={() => browserHistory.push('/policies/ec2')}>EC2</p>
+                            <p className={`${styles.link} ${styles.disabled}  ${this.applyActiveLink('/policies/ec2')}`} onClick={() => browserHistory.push('/policies/ec2')}>EC2</p>
                         </div>
                     </div>
                 }

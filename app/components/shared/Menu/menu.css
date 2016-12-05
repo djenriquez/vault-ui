@@ -29,3 +29,7 @@
     margin-left: 10px;
     user-select: none;
 }
+
+.disabled {
+    display: none;
+}
