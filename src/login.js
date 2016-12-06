@@ -5,6 +5,43 @@ var _ = require('lodash');
 var qs = require('querystring');
 
 /* Returned body
+   "github/": {
+       "config": { "default_lease_ttl": 0, "max_lease_ttl": 0 },
+       "description": "",
+       "type": "github"
+   },
+   "ldap/": {
+       "config": { "default_lease_ttl": 0, "max_lease_ttl": 0 },
+       "description": "",
+       "type": "ldap"
+   },
+   "token/": {
+       "config": { "default_lease_ttl": 0, "max_lease_ttl": 0 },
+       "description": "token based credentials",
+       "type": "token"
+   },
+   "userpass/": {
+       "config": { "default_lease_ttl": 0, "max_lease_ttl": 0 },
+       "description": "",
+       "type": "userpass"
+   }
+*/
+exports.listAuthBackends = function (req, res) {
+    let vaultAddr = decodeURI(req.query['vaultaddr']);
+    let config = { headers: { 'X-Vault-Token': req.query['token'] } }
+    let endpoint = "/v1/sys/auth";
+
+    axios.get(`${vaultAddr}${endpoint}`, config)
+        .then((resp) => {
+            res.json(resp.data);
+        })
+        .catch((err) => {
+            console.error(err.stack);
+            res.status(err.response.status).send(err.response);
+        });
+}
+
+/* Returned body
    "auth": {
      "renewable": true,
      "lease_duration": 2764800,
