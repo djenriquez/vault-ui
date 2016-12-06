@@ -43,6 +43,18 @@ djenriquez/vault-ui
 ```
 
 ## Development
+
+### With Docker
+The command below will use [Docker Compose](https://docs.docker.com/compose/)
+to spin up a Vault dev server and a Vault UI server that you can log
+into with username "test" and password "test":
+```sh
+./run-docker-compose-dev
+```
+
+### Without Docker
+The following will spin up a Vault UI server only. It will not set up
+Vault for you:
 ```sh
 npm install
 
