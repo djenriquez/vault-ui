@@ -1,0 +1,15 @@
+#!/bin/sh
+
+docker-compose up -d
+echo
+
+exec_in_vault() {
+  echo "------------- $@ -------------"
+  docker-compose exec -T vault "$@"
+  echo
+}
+
+exec_in_vault vault status
+exec_in_vault vault auth-enable userpass
+exec_in_vault vault policy-write admin /app/admin.hcl
+exec_in_vault vault write auth/userpass/users/test password=test policies=admin

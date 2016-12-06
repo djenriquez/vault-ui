@@ -1,0 +1,26 @@
+---
+version: '2'
+services:
+  vault:
+    image: vault
+    volumes:
+      - .:/app
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+
+  vault-ui:
+    build: .
+    ports:
+      - "8000:8000"
+    links:
+      - vault
+    volumes:
+      - .:/app
+
+  webpack:
+    build: .
+    volumes:
+      - .:/app
+    command: webpack -w
