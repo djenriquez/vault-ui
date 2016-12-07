@@ -52,7 +52,7 @@ exports.listSecretBackends = function (req, res) {
 */
 exports.listSecrets = function (req, res) {
     let namespace = decodeURI(req.query['namespace']);
-    let endpoint = `/v1/sys/mounts`;
+    let endpoint = `/v1/secret${namespace}?list=true`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': decodeURI(req.query['token']) } }
 
