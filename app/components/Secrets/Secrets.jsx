@@ -32,6 +32,7 @@ class Secrets extends React.Component {
             disableTextField: false,
             focusKey: '',
             focusSecret: '',
+            secretBackends: [],
             secrets: [],
             namespace: '/',
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
@@ -42,6 +43,7 @@ class Secrets extends React.Component {
 
         _.bindAll(
             this,
+            'listSecretBackends',
             'getSecrets',
             'renderSecrets',
             'renderNamespace',
@@ -57,7 +59,8 @@ class Secrets extends React.Component {
     }
 
     componentWillMount() {
-        this.getSecrets("/");
+      // TODO: list secret backends first, then getSecrets for the backend that is selected
+        this.listSecretBackends();
     }
 
     copyText(value) {
@@ -253,6 +256,31 @@ class Secrets extends React.Component {
                 <div>{rootKeyInfo}</div>
             </Dialog>
         );
+    }
+
+    listSecretBackends() {
+      axios.get(`/listSecretBackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+          .then((resp) => {
+              var secretBackends = _.map(resp.data.keys, (key) => {
+                  return {
+                      key: key
+                  }
+              });
+
+              this.setState({
+                  secretBackends: secretBackends,
+                  forbidden: false,
+                  buttonColor: green500
+              });
+          })
+          .catch((err) => {
+              console.error(err.response.data);
+              this.setState({
+                  errorMessage: err.response.data,
+                  forbidden: true,
+                  buttonColor: 'lightgrey'
+              });
+          });
     }
 
     getSecrets(namespace) {
