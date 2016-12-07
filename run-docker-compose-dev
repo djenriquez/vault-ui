@@ -1,6 +1,11 @@
 #!/bin/sh
 
+echo "------------- docker-compose up -d -------------"
 docker-compose up -d
+echo
+
+echo "------------- docker-compose ps -------------"
+docker-compose ps
 echo
 
 exec_in_vault() {
@@ -13,3 +18,6 @@ exec_in_vault vault status
 exec_in_vault vault auth-enable userpass
 exec_in_vault vault policy-write admin /app/admin.hcl
 exec_in_vault vault write auth/userpass/users/test password=test policies=admin
+
+echo "------------- Vault Root Token -------------"
+docker-compose logs vault | grep 'Root Token:'
