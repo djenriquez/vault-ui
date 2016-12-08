@@ -18,9 +18,11 @@ services:
       - vault
     volumes:
       - .:/app
+      - /app/node_modules
 
   webpack:
     build: .
     volumes:
       - .:/app
+      - /app/node_modules
     command: webpack -w
