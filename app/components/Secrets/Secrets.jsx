@@ -259,9 +259,9 @@ class Secrets extends React.Component {
     }
 
     listSecretBackends() {
-      axios.get(`/listSecretBackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+      axios.get(`/listsecretbackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
           .then((resp) => {
-              var secretBackends = _.map(resp.data.keys, (key) => {
+              var secretBackends = _.forEach(resp.data.data, (key) => {
                   return {
                       key: key
                   }
