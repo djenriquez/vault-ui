@@ -87,7 +87,7 @@ exports.getSecret = function (req, res) {
 }
 
 exports.writeSecret = function (req, res) {
-    let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
+    let endpoint = `/v1${decodeURI(req.query['secret'])}`;
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
     let body = _.get(req, "body.Value")
@@ -108,7 +108,7 @@ exports.writeSecret = function (req, res) {
 }
 
 exports.deleteSecret = function (req, res) {
-    let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
+    let endpoint = `/v1${decodeURI(req.query['secret'])}`;
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
     let vaultAddr = decodeURI(req.query['vaultaddr']);
 
