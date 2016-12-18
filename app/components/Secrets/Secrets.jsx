@@ -34,7 +34,7 @@ class Secrets extends React.Component {
             focusSecret: '',
             secretBackends: [],
             secrets: [],
-            namespace: '/',
+            namespace: '/secret/',
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
             forbidden: false,

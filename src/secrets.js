@@ -52,7 +52,7 @@ exports.listSecretBackends = function (req, res) {
 */
 exports.listSecrets = function (req, res) {
     let namespace = decodeURI(req.query['namespace']);
-    let endpoint = `/v1/secret${namespace}?list=true`;
+    let endpoint = `/v1${namespace}?list=true`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': decodeURI(req.query['token']) } }
 
@@ -72,7 +72,7 @@ exports.listSecrets = function (req, res) {
  Query params 'secret' and 'vaultaddr' must go through encodeURI()
 */
 exports.getSecret = function (req, res) {
-    let endpoint = `/v1/secret/${decodeURI(req.query['secret'])}`;
+    let endpoint = `/v1${decodeURI(req.query['secret'])}`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
