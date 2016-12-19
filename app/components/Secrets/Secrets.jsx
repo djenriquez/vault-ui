@@ -32,6 +32,7 @@ class Secrets extends React.Component {
             disableTextField: false,
             focusKey: '',
             focusSecret: '',
+            listBackends: false,
             secretBackends: [],
             secrets: [],
             namespace: '/secret/',
@@ -45,7 +46,7 @@ class Secrets extends React.Component {
             this,
             'listSecretBackends',
             'getSecrets',
-            'renderSecrets',
+            'renderList',
             'renderNamespace',
             'clickSecret',
             'secretChanged',
@@ -261,12 +262,12 @@ class Secrets extends React.Component {
     listSecretBackends() {
       axios.get(`/listsecretbackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
           .then((resp) => {
-              var secretBackends = _.forEach(resp.data.data, (key) => {
-                  return {
-                      key: key
+              var secretBackends = [];
+              _.forEach(Object.keys(resp.data.data), (key) => {
+                  if (resp.data.data[key].type == "generic") {
+                      secretBackends.push({key: key});
                   }
               });
-
               this.setState({
                   secretBackends: secretBackends,
                   forbidden: false,
@@ -328,7 +329,8 @@ class Secrets extends React.Component {
                             focusSecret: '',
                             disableSubmit: true,
                             openEditModal: true,
-                            disableTextField: true
+                            disableTextField: true,
+                            listBackends: false
                         });
                     } else {
                         val = typeof val == 'object' ? JSON.stringify(val) : val;
@@ -338,14 +340,14 @@ class Secrets extends React.Component {
                             disableTextField: false,
                             openEditModal: true,
                             focusKey: key,
-                            focusSecret: val
+                            focusSecret: val,
+                            listBackends: false
                         });
                     }
                 })
                 .catch((err) => {
                     console.error(err.stack);
                 });
-
         }
     }
 
@@ -369,19 +371,34 @@ class Secrets extends React.Component {
         }
     }
 
-    renderSecrets() {
-        return _.map(this.state.secrets, (secret) => {
-            return (
-                <ListItem
-                    style={{ marginLeft: -17 }}
-                    key={secret.key}
-                    onTouchTap={() => { this.clickSecret(secret.key) } }
-                    primaryText={<div className={styles.key}>{secret.key}</div>}
-                    //secondaryText={<div className={styles.key}>{secret.value}</div>}
-                    rightIconButton={this.showDelete(secret.key)}>
-                </ListItem>
-            );
-        });
+    renderList() {
+        if (this.state.listBackends) {
+            return _.map(this.state.secretBackends, (secretBackend) => {
+                return (
+                    <ListItem
+                        style={{ marginLeft: -17 }}
+                        key={secretBackend.key}
+                        onTouchTap={() => { this.setState({ namespace: '/' + secretBackend.key , listBackends: false , secrets: this.getSecrets('/' + secretBackend.key)})}}
+                        primaryText={<div className={styles.key}>{secretBackend.key}</div>}
+                        //secondaryText={<div className={styles.key}>{secret.value}</div>}
+                        >
+                    </ListItem>
+                );
+            });
+        } else {
+            return _.map(this.state.secrets, (secret) => {
+                return (
+                    <ListItem
+                        style={{ marginLeft: -17 }}
+                        key={secret.key}
+                        onTouchTap={() => { this.clickSecret(secret.key) } }
+                        primaryText={<div className={styles.key}>{secret.key}</div>}
+                        //secondaryText={<div className={styles.key}>{secret.value}</div>}
+                        rightIconButton={this.showDelete(secret.key)}>
+                    </ListItem>
+                );
+            });
+        }
     }
 
     renderNamespace() {
@@ -392,7 +409,7 @@ class Secrets extends React.Component {
                     return (
                         <div style={{ display: 'inline-block' }} key={index}>
                             <span className={styles.link}
-                                onTouchTap={() => this.clickSecret("/", true)}>ROOT</span>
+                                onTouchTap={() => this.setState({ listBackends: true, namespace: '/'})}>ROOT</span>
                             {index !== namespaceParts.length - 1 && <span>/</span>}
                         </div>
                     );
@@ -426,7 +443,7 @@ class Secrets extends React.Component {
                     onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '', errorMessage: '' })} />
                 <div className={styles.namespace}>{this.renderNamespace()}</div>
                 <List>
-                    {this.renderSecrets()}
+                    {this.renderList()}
                 </List>
             </div>
         );
