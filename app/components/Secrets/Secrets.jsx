@@ -60,8 +60,8 @@ class Secrets extends React.Component {
     }
 
     componentWillMount() {
-      // TODO: list secret backends first, then getSecrets for the backend that is selected
         this.listSecretBackends();
+        this.getSecrets(this.state.namespace);
     }
 
     copyText(value) {
