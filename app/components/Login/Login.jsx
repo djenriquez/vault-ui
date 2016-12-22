@@ -19,7 +19,7 @@ export default class Login extends React.Component {
             show: false,
             openSettings: false,
             authToken: "",
-            vaultUrl: window.localStorage.getItem("vaultUrl") || window.defaultUrl || "",
+            vaultUrl: window.localStorage.getItem("vaultUrl") || window.defaultUrl,
             tmpVaultUrl: "",
             errorMessage: "",
             username: "",

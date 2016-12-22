@@ -8,7 +8,7 @@ var _ = require('lodash');
 var routeHandler = require('./src/routeHandler');
 
 var PORT = 8000;
-var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT;
+var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT || "";
 
 var app = express();
 app.set('view engine', 'html');
