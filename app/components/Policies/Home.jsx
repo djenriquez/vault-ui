@@ -70,7 +70,7 @@ export default class Home extends React.Component {
     }
 
     renderPolicyPage() {
-        switch (this.props.subPath) {
+        switch (this.props.params.policy) {
             case 'manage':
                 return <Manage />
             case 'github':
