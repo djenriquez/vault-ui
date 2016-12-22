@@ -8,9 +8,11 @@ var _ = require('lodash');
 var routeHandler = require('./src/routeHandler');
 
 var PORT = 8000;
+var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT;
 
 var app = express();
-app.set('view engine', '.html');
+app.set('view engine', 'html');
+app.engine('html', require('hbs').__express);
 app.use('/assets', express.static('dist'));
 
 // parse application/x-www-form-urlencoded
@@ -84,5 +86,5 @@ app.post('/unwrap', function(req, res) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.sendFile(path.join(__dirname, '/index.html'));
+    res.render(path.join(__dirname, '/index.html'),{defaultUrl: VAULT_URL_DEFAULT});
 });
