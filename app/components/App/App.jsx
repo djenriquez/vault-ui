@@ -8,6 +8,9 @@ import { browserHistory } from 'react-router';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
 
+let twoMinuteWarningTimeout;
+let logoutTimeout;
+
 export default class App extends React.Component {
     constructor(props) {
         super(props);
@@ -37,17 +40,26 @@ export default class App extends React.Component {
         let tokenExpireDate = window.localStorage.getItem('vaultAccessTokenExpiration');
         let TWO_MINUTES = 1000 * 60 * 2;
 
-        setTimeout(() => {
-            browserHistory.push('/login');
-        }, Math.floor((tokenExpireDate-Date.now())/1000));
-
-        setTimeout(() => {
+        let twoMinuteWarningTimeout = () => {
             if (!this.state.logoutPromptSeen) {
                 this.setState({
                     logoutOpen: true
                 });
             }
-        }, Math.floor((tokenExpireDate-Date.now())/1000)-TWO_MINUTES);
+        }
+
+        let logoutTimeout = () => {
+            browserHistory.push('/login');
+        }
+
+        setTimeout(logoutTimeout, tokenExpireDate);
+
+        setTimeout(twoMinuteWarningTimeout, tokenExpireDate - TWO_MINUTES);
+    }
+
+    componentWillUnmount() {
+        clearTimeout(logoutTimeout);
+        clearTimeout(twoMinuteWarningTimeout);
     }
 
     renderLogoutDialog() {
