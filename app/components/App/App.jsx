@@ -51,10 +51,10 @@ export default class App extends React.Component {
         let logoutTimeout = () => {
             browserHistory.push('/login');
         }
-
-        setTimeout(logoutTimeout, tokenExpireDate);
-
-        setTimeout(twoMinuteWarningTimeout, tokenExpireDate - TWO_MINUTES);
+        if (tokenExpireDate >= 0) {
+            setTimeout(logoutTimeout, tokenExpireDate);
+            setTimeout(twoMinuteWarningTimeout, tokenExpireDate - TWO_MINUTES);
+        }
     }
 
     componentWillUnmount() {
