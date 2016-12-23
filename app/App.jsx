@@ -1,11 +1,16 @@
 import React, { PropTypes } from 'react'
 import ReactDOM from 'react-dom';
 import Login from './components/Login/Login.jsx';
-import Home from './components/Home/Home.jsx';
 import { Router, Route, Link, browserHistory } from 'react-router'
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import App from './components/App/App.jsx';
+import Secrets from './components/Secrets/Secrets.jsx';
+import Health from './components/Health/Health.jsx';
+import Policies from './components/Policies/Home.jsx';
+import Settings from './components/Settings/Settings.jsx';
+import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
 
 injectTapEventPlugin();
 
@@ -41,8 +46,13 @@ ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
   <Router history={browserHistory}>
       <Route path="/login" component={Login}/>
-      <Route path="/" component={Home} onEnter={checkAccessToken}>
-          <Route path="*" component={Home}/>
+      <Route path="/" component={App} onEnter={checkAccessToken}>
+          <Route path="/secrets" component={Secrets}/>
+          <Route path="/health" component={Health}/>
+          <Route path="/secrets" component={Secrets}/>
+          <Route path="/settings" component={Settings}/>
+          <Route path="/responsewrapper" component={ResponseWrapper}/>
+          <Route path="/policies/:policy" component={Policies}/>
       </Route>
   </Router>
   </MuiThemeProvider>
