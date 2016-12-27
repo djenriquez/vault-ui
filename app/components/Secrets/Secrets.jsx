@@ -232,9 +232,9 @@ class Secrets extends React.Component {
         var rootKeyInfo;
 
         if (this.state.useRootKey) {
-          rootKeyInfo = "Current Root Key: " + this.state.rootKey;
+            rootKeyInfo = "Current Root Key: " + this.state.rootKey;
         } else {
-          rootKeyInfo = "No Root Key set. Value must be JSON.";
+            rootKeyInfo = "No Root Key set. Value must be JSON.";
         }
 
         return (
@@ -260,28 +260,28 @@ class Secrets extends React.Component {
     }
 
     listSecretBackends() {
-      axios.get(`/listsecretbackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
-          .then((resp) => {
-              var secretBackends = [];
-              _.forEach(Object.keys(resp.data.data), (key) => {
-                  if (resp.data.data[key].type == "generic") {
-                      secretBackends.push({key: key});
-                  }
-              });
-              this.setState({
-                  secretBackends: secretBackends,
-                  forbidden: false,
-                  buttonColor: green500
-              });
-          })
-          .catch((err) => {
-              console.error(err.response.data);
-              this.setState({
-                  errorMessage: err.response.data,
-                  forbidden: true,
-                  buttonColor: 'lightgrey'
-              });
-          });
+        axios.get(`/listsecretbackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+            .then((resp) => {
+                var secretBackends = [];
+                _.forEach(Object.keys(resp.data.data), (key) => {
+                    if (resp.data.data[key].type == "generic") {
+                        secretBackends.push({ key: key });
+                    }
+                });
+                this.setState({
+                    secretBackends: secretBackends,
+                    forbidden: false,
+                    buttonColor: green500
+                });
+            })
+            .catch((err) => {
+                console.error(err.response.data);
+                this.setState({
+                    errorMessage: err.response.data,
+                    forbidden: true,
+                    buttonColor: 'lightgrey'
+                });
+            });
     }
 
     getSecrets(namespace) {
@@ -378,7 +378,7 @@ class Secrets extends React.Component {
                     <ListItem
                         style={{ marginLeft: -17 }}
                         key={secretBackend.key}
-                        onTouchTap={() => { this.setState({ namespace: '/' + secretBackend.key , listBackends: false , secrets: this.getSecrets('/' + secretBackend.key)})}}
+                        onTouchTap={() => { this.setState({ namespace: '/' + secretBackend.key, listBackends: false, secrets: this.getSecrets('/' + secretBackend.key) }) } }
                         primaryText={<div className={styles.key}>{secretBackend.key}</div>}
                         //secondaryText={<div className={styles.key}>{secret.value}</div>}
                         >
@@ -409,7 +409,7 @@ class Secrets extends React.Component {
                     return (
                         <div style={{ display: 'inline-block' }} key={index}>
                             <span className={styles.link}
-                                onTouchTap={() => this.setState({ listBackends: true, namespace: '/'})}>ROOT</span>
+                                onTouchTap={() => this.setState({ listBackends: true, namespace: '/' })}>ROOT</span>
                             {index !== namespaceParts.length - 1 && <span>/</span>}
                         </div>
                     );
