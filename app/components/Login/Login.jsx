@@ -19,7 +19,7 @@ export default class Login extends React.Component {
             show: false,
             openSettings: false,
             authToken: "",
-            vaultUrl: window.localStorage.getItem("vaultUrl") || "",
+            vaultUrl: window.localStorage.getItem("vaultUrl") || window.defaultUrl,
             tmpVaultUrl: "",
             errorMessage: "",
             username: "",
@@ -135,7 +135,7 @@ export default class Login extends React.Component {
         let accessToken = _.get(resp, 'data.client_token');
         if (accessToken) {
             window.localStorage.setItem("vaultAccessToken", accessToken);
-            let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now() + _.get(resp, 'data.lease_duration') * 1000
+            let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? -1 : _.get(resp, 'data.lease_duration') * 1000
             window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
             window.location.href = '/';
         } else {
