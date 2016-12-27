@@ -35,6 +35,10 @@ app.post('/login', function (req, res) {
     routeHandler.login(req, res);
 });
 
+app.get('/listsecretbackends', function (req, res) {
+    routeHandler.listSecretBackends(req, res);
+});
+
 app.get('/listsecrets', function (req, res) {
     routeHandler.listSecrets(req, res);
 });

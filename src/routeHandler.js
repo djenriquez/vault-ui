@@ -8,6 +8,7 @@ var respwrapping = require('./respwrapping');
 module.exports = (function () {
     return {
         login: login.login,
+        listSecretBackends: secrets.listSecretBackends,
         listSecrets: secrets.listSecrets,
         getSecret: secrets.getSecret,
         writeSecret: secrets.writeSecret,

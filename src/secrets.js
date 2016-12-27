@@ -4,6 +4,42 @@ var axios = require('axios');
 var _ = require('lodash');
 
 /* Returned body
+{
+  "aws": {
+    "type": "aws",
+    "description": "AWS keys",
+    "config": {
+      "default_lease_ttl": 0,
+      "max_lease_ttl": 0
+    }
+  },
+
+  "sys": {
+    "type": "system",
+    "description": "system endpoint",
+    "config": {
+      "default_lease_ttl": 0,
+      "max_lease_ttl": 0
+    }
+  }
+}
+*/
+exports.listSecretBackends = function (req, res) {
+  let endpoint = `/v1/sys/mounts`;
+  let vaultAddr = decodeURI(req.query['vaultaddr']);
+  let config = { headers: { 'X-Vault-Token': decodeURI(req.query['token']) } }
+
+  axios.get(`${vaultAddr}${endpoint}`, config)
+      .then((resp) => {
+          res.json(resp.data);
+      })
+      .catch((err) => {
+          console.error(err.stack);
+          res.status(err.response.status).send(err.response);
+      });
+}
+
+/* Returned body
  {
  "auth": null,
  "data": {
@@ -15,9 +51,8 @@ var _ = require('lodash');
  }
 */
 exports.listSecrets = function (req, res) {
-
     let namespace = decodeURI(req.query['namespace']);
-    let endpoint = `/v1/secret${namespace}?list=true`;
+    let endpoint = `/v1${namespace}?list=true`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': decodeURI(req.query['token']) } }
 
@@ -37,7 +72,7 @@ exports.listSecrets = function (req, res) {
  Query params 'secret' and 'vaultaddr' must go through encodeURI()
 */
 exports.getSecret = function (req, res) {
-    let endpoint = `/v1/secret/${decodeURI(req.query['secret'])}`;
+    let endpoint = `/v1${decodeURI(req.query['secret'])}`;
     let vaultAddr = decodeURI(req.query['vaultaddr']);
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
@@ -52,8 +87,7 @@ exports.getSecret = function (req, res) {
 }
 
 exports.writeSecret = function (req, res) {
-
-    let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
+    let endpoint = `/v1${decodeURI(req.query['secret'])}`;
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
 
     let body = _.get(req, "body.Value")
@@ -74,10 +108,10 @@ exports.writeSecret = function (req, res) {
 }
 
 exports.deleteSecret = function (req, res) {
-    let endpoint = `/v1/secret${decodeURI(req.query['secret'])}`;
+    let endpoint = `/v1${decodeURI(req.query['secret'])}`;
     let config = { headers: { 'X-Vault-Token': req.query['token'] } }
     let vaultAddr = decodeURI(req.query['vaultaddr']);
-    
+
     axios.delete(`${vaultAddr}${endpoint}`, config)
     .then((resp) => {
         res.sendStatus(resp.status);
@@ -87,4 +121,3 @@ exports.deleteSecret = function (req, res) {
         res.status(err.response.status).send(err.response);
     })
 }
-

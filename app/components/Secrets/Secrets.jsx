@@ -32,18 +32,21 @@ class Secrets extends React.Component {
             disableTextField: false,
             focusKey: '',
             focusSecret: '',
+            listBackends: false,
+            secretBackends: [],
             secrets: [],
-            namespace: '/',
+            namespace: '/secret/',
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
-            forbidden: false,
+            disableAddButton: false,
             buttonColor: 'lightgrey'
         };
 
         _.bindAll(
             this,
+            'listSecretBackends',
             'getSecrets',
-            'renderSecrets',
+            'renderList',
             'renderNamespace',
             'clickSecret',
             'secretChanged',
@@ -57,7 +60,8 @@ class Secrets extends React.Component {
     }
 
     componentWillMount() {
-        this.getSecrets("/");
+        this.listSecretBackends();
+        this.getSecrets(this.state.namespace);
     }
 
     copyText(value) {
@@ -228,9 +232,9 @@ class Secrets extends React.Component {
         var rootKeyInfo;
 
         if (this.state.useRootKey) {
-          rootKeyInfo = "Current Root Key: " + this.state.rootKey;
+            rootKeyInfo = "Current Root Key: " + this.state.rootKey;
         } else {
-          rootKeyInfo = "No Root Key set. Value must be JSON.";
+            rootKeyInfo = "No Root Key set. Value must be JSON.";
         }
 
         return (
@@ -255,6 +259,31 @@ class Secrets extends React.Component {
         );
     }
 
+    listSecretBackends() {
+        axios.get(`/listsecretbackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+            .then((resp) => {
+                var secretBackends = [];
+                _.forEach(Object.keys(resp.data.data), (key) => {
+                    if (resp.data.data[key].type == "generic") {
+                        secretBackends.push({ key: key });
+                    }
+                });
+                this.setState({
+                    secretBackends: secretBackends,
+                    disableAddButton: false,
+                    buttonColor: green500
+                });
+            })
+            .catch((err) => {
+                console.error(err.response.data);
+                this.setState({
+                    errorMessage: err.response.data,
+                    disableAddButton: true,
+                    buttonColor: 'lightgrey'
+                });
+            });
+    }
+
     getSecrets(namespace) {
         axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&namespace=${encodeURI(namespace)}`)
             .then((resp) => {
@@ -267,7 +296,7 @@ class Secrets extends React.Component {
                 this.setState({
                     namespace: namespace,
                     secrets: secrets,
-                    forbidden: false,
+                    disableAddButton: false,
                     buttonColor: green500
                 });
             })
@@ -275,7 +304,7 @@ class Secrets extends React.Component {
                 console.error(err.response.data);
                 this.setState({
                     errorMessage: err.response.data,
-                    forbidden: true,
+                    disableAddButton: true,
                     buttonColor: 'lightgrey'
                 });
             });
@@ -300,7 +329,8 @@ class Secrets extends React.Component {
                             focusSecret: '',
                             disableSubmit: true,
                             openEditModal: true,
-                            disableTextField: true
+                            disableTextField: true,
+                            listBackends: false
                         });
                     } else {
                         val = typeof val == 'object' ? JSON.stringify(val) : val;
@@ -310,14 +340,14 @@ class Secrets extends React.Component {
                             disableTextField: false,
                             openEditModal: true,
                             focusKey: key,
-                            focusSecret: val
+                            focusSecret: val,
+                            listBackends: false
                         });
                     }
                 })
                 .catch((err) => {
                     console.error(err.stack);
                 });
-
         }
     }
 
@@ -341,19 +371,41 @@ class Secrets extends React.Component {
         }
     }
 
-    renderSecrets() {
-        return _.map(this.state.secrets, (secret) => {
-            return (
-                <ListItem
-                    style={{ marginLeft: -17 }}
-                    key={secret.key}
-                    onTouchTap={() => { this.clickSecret(secret.key) } }
-                    primaryText={<div className={styles.key}>{secret.key}</div>}
-                    //secondaryText={<div className={styles.key}>{secret.value}</div>}
-                    rightIconButton={this.showDelete(secret.key)}>
-                </ListItem>
-            );
-        });
+    renderList() {
+        if (this.state.listBackends) {
+            return _.map(this.state.secretBackends, (secretBackend) => {
+                return (
+                    <ListItem
+                        style={{ marginLeft: -17 }}
+                        key={secretBackend.key}
+                        onTouchTap={() => {
+                            this.setState(
+                                {
+                                    namespace: '/' + secretBackend.key,
+                                    listBackends: false,
+                                    secrets: this.getSecrets('/' + secretBackend.key)
+                                })
+                        } }
+                        primaryText={<div className={styles.key}>{secretBackend.key}</div>}
+                        //secondaryText={<div className={styles.key}>{secret.value}</div>}
+                        >
+                    </ListItem>
+                );
+            });
+        } else {
+            return _.map(this.state.secrets, (secret) => {
+                return (
+                    <ListItem
+                        style={{ marginLeft: -17 }}
+                        key={secret.key}
+                        onTouchTap={() => { this.clickSecret(secret.key) } }
+                        primaryText={<div className={styles.key}>{secret.key}</div>}
+                        //secondaryText={<div className={styles.key}>{secret.value}</div>}
+                        rightIconButton={this.showDelete(secret.key)}>
+                    </ListItem>
+                );
+            });
+        }
     }
 
     renderNamespace() {
@@ -364,7 +416,14 @@ class Secrets extends React.Component {
                     return (
                         <div style={{ display: 'inline-block' }} key={index}>
                             <span className={styles.link}
-                                onTouchTap={() => this.clickSecret("/", true)}>ROOT</span>
+                                onTouchTap={() => this.setState(
+                                    {
+                                        listBackends: true,
+                                        namespace: '/',
+                                        disableAddButton: true,
+                                        buttonColor: 'lightgrey'
+                                    })}
+                                >ROOT</span>
                             {index !== namespaceParts.length - 1 && <span>/</span>}
                         </div>
                     );
@@ -392,13 +451,13 @@ class Secrets extends React.Component {
                 <FlatButton
                     label="Add Key"
                     backgroundColor={this.state.buttonColor}
-                    disabled={this.state.forbidden}
+                    disabled={this.state.disableAddButton}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '', errorMessage: '' })} />
                 <div className={styles.namespace}>{this.renderNamespace()}</div>
                 <List>
-                    {this.renderSecrets()}
+                    {this.renderList()}
                 </List>
             </div>
         );
