@@ -38,7 +38,7 @@ class Secrets extends React.Component {
             namespace: '/secret/',
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
-            forbidden: false,
+            disableAddButton: false,
             buttonColor: 'lightgrey'
         };
 
@@ -270,7 +270,7 @@ class Secrets extends React.Component {
                 });
                 this.setState({
                     secretBackends: secretBackends,
-                    forbidden: false,
+                    disableAddButton: false,
                     buttonColor: green500
                 });
             })
@@ -278,7 +278,7 @@ class Secrets extends React.Component {
                 console.error(err.response.data);
                 this.setState({
                     errorMessage: err.response.data,
-                    forbidden: true,
+                    disableAddButton: true,
                     buttonColor: 'lightgrey'
                 });
             });
@@ -296,7 +296,7 @@ class Secrets extends React.Component {
                 this.setState({
                     namespace: namespace,
                     secrets: secrets,
-                    forbidden: false,
+                    disableAddButton: false,
                     buttonColor: green500
                 });
             })
@@ -304,7 +304,7 @@ class Secrets extends React.Component {
                 console.error(err.response.data);
                 this.setState({
                     errorMessage: err.response.data,
-                    forbidden: true,
+                    disableAddButton: true,
                     buttonColor: 'lightgrey'
                 });
             });
@@ -378,7 +378,14 @@ class Secrets extends React.Component {
                     <ListItem
                         style={{ marginLeft: -17 }}
                         key={secretBackend.key}
-                        onTouchTap={() => { this.setState({ namespace: '/' + secretBackend.key, listBackends: false, secrets: this.getSecrets('/' + secretBackend.key) }) } }
+                        onTouchTap={() => {
+                            this.setState(
+                                {
+                                    namespace: '/' + secretBackend.key,
+                                    listBackends: false,
+                                    secrets: this.getSecrets('/' + secretBackend.key)
+                                })
+                        } }
                         primaryText={<div className={styles.key}>{secretBackend.key}</div>}
                         //secondaryText={<div className={styles.key}>{secret.value}</div>}
                         >
@@ -409,7 +416,14 @@ class Secrets extends React.Component {
                     return (
                         <div style={{ display: 'inline-block' }} key={index}>
                             <span className={styles.link}
-                                onTouchTap={() => this.setState({ listBackends: true, namespace: '/' })}>ROOT</span>
+                                onTouchTap={() => this.setState(
+                                    {
+                                        listBackends: true,
+                                        namespace: '/',
+                                        disableAddButton: true,
+                                        buttonColor: 'lightgrey'
+                                    })}
+                                >ROOT</span>
                             {index !== namespaceParts.length - 1 && <span>/</span>}
                         </div>
                     );
@@ -437,7 +451,7 @@ class Secrets extends React.Component {
                 <FlatButton
                     label="Add Key"
                     backgroundColor={this.state.buttonColor}
-                    disabled={this.state.forbidden}
+                    disabled={this.state.disableAddButton}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '', errorMessage: '' })} />
