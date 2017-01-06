@@ -13,8 +13,10 @@ Configuration is accessed by clicking on the configuration cog on the login page
 ![Configuration](https://github.com/djenriquez/vault-ui/raw/master/images/Config.png)
 ### Vault Endpoint
 Users can enter in the full endpoint to Vault, including scheme.  When running the docker image, it is possible to
-set an environment variable `VAULT_DEFAULT_URL`, which will set the default endpoint for users without needing them
-to enter one in the UI.  This default can be overridden if the user fills out the endpoint manually.
+set the environment variables `VAULT_URL_DEFAULT` and `VAULT_AUTH_DEFAULT`.
+`VAULT_URL_DEFAULT` will set the default endpoint for users without needing them to enter one in the UI.
+`VAULT_AUTH_DEFAULT` will set the default authentication method type. Supported values are: GITHUB, TOKEN, LDAP, USERNAMEPASSWORD
+This defaults can be overridden if the user fills out the endpoint and auth method manually.
 
 ## Authentication
 Currently supported authentication backends:
