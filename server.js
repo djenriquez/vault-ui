@@ -9,6 +9,7 @@ var routeHandler = require('./src/routeHandler');
 
 var PORT = 8000;
 var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT || "";
+var VAULT_AUTH_DEFAULT = process.env.VAULT_AUTH_DEFAULT || "GITHUB";
 
 var app = express();
 app.set('view engine', 'html');
@@ -90,5 +91,5 @@ app.post('/unwrap', function(req, res) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.render(path.join(__dirname, '/index.html'),{defaultUrl: VAULT_URL_DEFAULT});
+    res.render(path.join(__dirname, '/index.html'),{defaultUrl: VAULT_URL_DEFAULT, defaultAuth: VAULT_AUTH_DEFAULT});
 });

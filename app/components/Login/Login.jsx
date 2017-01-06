@@ -24,8 +24,8 @@ export default class Login extends React.Component {
             errorMessage: "",
             username: "",
             password: "",
-            loginMethodType: window.localStorage.getItem("loginMethodType") || "GITHUB",
-            tmpLoginMethodType: window.localStorage.getItem("loginMethodType") || "GITHUB",
+            loginMethodType: window.localStorage.getItem("loginMethodType") || window.defaultAuth,
+            tmpLoginMethodType: window.localStorage.getItem("loginMethodType") || window.defaultAuth,
             settingsChanged: false
         };
 
