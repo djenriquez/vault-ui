@@ -51,7 +51,8 @@ export default class App extends React.Component {
         let logoutTimeout = () => {
             browserHistory.push('/login');
         }
-        if (tokenExpireDate >= 0) {
+        // The upper limit of setTimeout is 0x7FFFFFFF (or 2147483647 in decimal)
+        if (tokenExpireDate >= 0 && tokenExpireDate < 2147483648) {
             setTimeout(logoutTimeout, tokenExpireDate);
             setTimeout(twoMinuteWarningTimeout, tokenExpireDate - TWO_MINUTES);
         }
