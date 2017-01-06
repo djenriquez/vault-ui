@@ -19,13 +19,13 @@ export default class Login extends React.Component {
             show: false,
             openSettings: false,
             authToken: "",
-            vaultUrl: window.localStorage.getItem("vaultUrl") || window.defaultUrl,
+            vaultUrl: this.getVaultUrl(),
             tmpVaultUrl: "",
             errorMessage: "",
             username: "",
             password: "",
-            loginMethodType: window.localStorage.getItem("loginMethodType") || window.defaultAuth,
-            tmpLoginMethodType: window.localStorage.getItem("loginMethodType") || window.defaultAuth,
+            loginMethodType: this.getVaultAuthMethod(),
+            tmpLoginMethodType: this.getVaultAuthMethod(),
             settingsChanged: false
         };
 
@@ -50,9 +50,23 @@ export default class Login extends React.Component {
         }
     }
 
+    getVaultUrl() {
+      if (window.localStorage.getItem("vaultUrl"))
+        return window.localStorage.getItem("vaultUrl");
+      else
+        return window.defaultUrl;
+    }
+
+    getVaultAuthMethod() {
+      if (window.localStorage.getItem("loginMethodType"))
+        return window.localStorage.getItem("loginMethodType");
+      else
+        return window.defaultAuth;
+    }
+
     validateUsernamePassword(e) {
         if (e.keyCode === 13) {
-            if (!window.localStorage.getItem("vaultUrl")) {
+            if (!this.getVaultUrl()) {
                 this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
                 return;
             }
@@ -66,9 +80,9 @@ export default class Login extends React.Component {
                 return;
             }
             axios.post('/login', {
-                "VaultUrl": window.localStorage.getItem("vaultUrl"),
+                "VaultUrl": this.getVaultUrl(),
                 "Creds": {
-                    "Type": this.state.loginMethodType,
+                    "Type": this.getVaultAuthMethod(),
                     "Username": this.state.username,
                     "Password": this.state.password
                 }
@@ -85,7 +99,7 @@ export default class Login extends React.Component {
 
     validateToken(e) {
         if (e.keyCode === 13) {
-            if (!window.localStorage.getItem("vaultUrl")) {
+            if (!this.getVaultUrl()) {
                 this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
                 return;
             }
@@ -106,7 +120,7 @@ export default class Login extends React.Component {
 
     validateAuthToken(e) {
         if (e.keyCode === 13) {
-            if (!window.localStorage.getItem("vaultUrl")) {
+            if (!this.getVaultUrl()) {
                 this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
                 return;
             }
