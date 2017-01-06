@@ -107,7 +107,7 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No auth token provided." });
                 return;
             }
-            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
+            axios.post('/login', { "VaultUrl": this.getVaultUrl(), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
                 .then((resp) => {
                     this.setAccessToken(resp);
                 })
@@ -128,7 +128,7 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No auth token provided." });
                 return;
             }
-            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
+            axios.post('/login', { "VaultUrl": this.getVaultUrl(), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
                 .then((resp) => {
                     this.setAccessToken(resp);
                 })
@@ -151,6 +151,8 @@ export default class Login extends React.Component {
             window.localStorage.setItem("vaultAccessToken", accessToken);
             let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? -1 : _.get(resp, 'data.lease_duration') * 1000
             window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
+            window.localStorage.setItem('vaultUrl', this.getVaultUrl());
+            window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
             window.location.href = '/';
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })
