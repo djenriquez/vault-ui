@@ -19,13 +19,13 @@ export default class Login extends React.Component {
             show: false,
             openSettings: false,
             authToken: "",
-            vaultUrl: window.localStorage.getItem("vaultUrl") || "",
+            vaultUrl: this.getVaultUrl(),
             tmpVaultUrl: "",
             errorMessage: "",
             username: "",
             password: "",
-            loginMethodType: window.localStorage.getItem("loginMethodType") || "GITHUB",
-            tmpLoginMethodType: window.localStorage.getItem("loginMethodType") || "GITHUB",
+            loginMethodType: this.getVaultAuthMethod(),
+            tmpLoginMethodType: this.getVaultAuthMethod(),
             settingsChanged: false
         };
 
@@ -50,9 +50,23 @@ export default class Login extends React.Component {
         }
     }
 
+    getVaultUrl() {
+      if (window.localStorage.getItem("vaultUrl"))
+        return window.localStorage.getItem("vaultUrl");
+      else
+        return window.defaultUrl;
+    }
+
+    getVaultAuthMethod() {
+      if (window.localStorage.getItem("loginMethodType"))
+        return window.localStorage.getItem("loginMethodType");
+      else
+        return window.defaultAuth;
+    }
+
     validateUsernamePassword(e) {
         if (e.keyCode === 13) {
-            if (!window.localStorage.getItem("vaultUrl")) {
+            if (!this.getVaultUrl()) {
                 this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
                 return;
             }
@@ -66,9 +80,9 @@ export default class Login extends React.Component {
                 return;
             }
             axios.post('/login', {
-                "VaultUrl": window.localStorage.getItem("vaultUrl"),
+                "VaultUrl": this.getVaultUrl(),
                 "Creds": {
-                    "Type": this.state.loginMethodType,
+                    "Type": this.getVaultAuthMethod(),
                     "Username": this.state.username,
                     "Password": this.state.password
                 }
@@ -85,7 +99,7 @@ export default class Login extends React.Component {
 
     validateToken(e) {
         if (e.keyCode === 13) {
-            if (!window.localStorage.getItem("vaultUrl")) {
+            if (!this.getVaultUrl()) {
                 this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
                 return;
             }
@@ -93,7 +107,7 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No auth token provided." });
                 return;
             }
-            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
+            axios.post('/login', { "VaultUrl": this.getVaultUrl(), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
                 .then((resp) => {
                     this.setAccessToken(resp);
                 })
@@ -106,7 +120,7 @@ export default class Login extends React.Component {
 
     validateAuthToken(e) {
         if (e.keyCode === 13) {
-            if (!window.localStorage.getItem("vaultUrl")) {
+            if (!this.getVaultUrl()) {
                 this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
                 return;
             }
@@ -114,7 +128,7 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No auth token provided." });
                 return;
             }
-            axios.post('/login', { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
+            axios.post('/login', { "VaultUrl": this.getVaultUrl(), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
                 .then((resp) => {
                     this.setAccessToken(resp);
                 })
@@ -135,8 +149,10 @@ export default class Login extends React.Component {
         let accessToken = _.get(resp, 'data.client_token');
         if (accessToken) {
             window.localStorage.setItem("vaultAccessToken", accessToken);
-            let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? 8640000000000000 : Date.now() + _.get(resp, 'data.lease_duration') * 1000
+            let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? -1 : _.get(resp, 'data.lease_duration') * 1000
             window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
+            window.localStorage.setItem('vaultUrl', this.getVaultUrl());
+            window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
             window.location.href = '/';
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })

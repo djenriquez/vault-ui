@@ -8,9 +8,12 @@ var _ = require('lodash');
 var routeHandler = require('./src/routeHandler');
 
 var PORT = 8000;
+var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT || "";
+var VAULT_AUTH_DEFAULT = process.env.VAULT_AUTH_DEFAULT || "GITHUB";
 
 var app = express();
-app.set('view engine', '.html');
+app.set('view engine', 'html');
+app.engine('html', require('hbs').__express);
 app.use('/assets', express.static('dist'));
 
 // parse application/x-www-form-urlencoded
@@ -35,6 +38,10 @@ app.get('/listauthbackends', function (req, res) {
 
 app.post('/login', function (req, res) {
     routeHandler.login(req, res);
+});
+
+app.get('/listsecretbackends', function (req, res) {
+    routeHandler.listSecretBackends(req, res);
 });
 
 app.get('/listsecrets', function (req, res) {
@@ -88,5 +95,5 @@ app.post('/unwrap', function(req, res) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.sendFile(path.join(__dirname, '/index.html'));
+    res.render(path.join(__dirname, '/index.html'),{defaultUrl: VAULT_URL_DEFAULT, defaultAuth: VAULT_AUTH_DEFAULT});
 });

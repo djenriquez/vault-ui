@@ -209,7 +209,7 @@ export default class Github extends React.Component {
                 {this.renderOrganizationDialog()}
                 <p>Here you can view, update, and delete policies assigned to teams in your Github org.</p>
                 <div className="row middle-xs" key="org">
-                    <p>Current Organization: <span className={styles.orgName}>{<FlatButton label={this.state.organization.toUpperCase()} primary={true} onTouchTap={() => this.setState({ requestOrganization: true })} />}</span></p>
+                    <p>Current Organization: <span className={styles.orgName}>{this.state.organization ? <FlatButton label={this.state.organization.toUpperCase()} primary={true} onTouchTap={() => this.setState({ requestOrganization: true })} /> : ""}</span></p>
 
                 </div>
                 <div className="row" key="team">

@@ -9,6 +9,7 @@ module.exports = (function () {
     return {
         listAuthBackends: login.listAuthBackends,
         login: login.login,
+        listSecretBackends: secrets.listSecretBackends,
         listSecrets: secrets.listSecrets,
         getSecret: secrets.getSecret,
         writeSecret: secrets.writeSecret,

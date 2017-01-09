@@ -49,6 +49,7 @@
     "body-parser": "^1.15.2",
     "copy-to-clipboard": "^3.0.5",
     "express": "^4.14.0",
+    "hbs": "^4.0.1",
     "hcl-to-json": "0.0.4",
     "lodash": "^4.16.6",
     "material-ui": "^0.16.1",
