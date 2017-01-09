@@ -32,6 +32,10 @@ app.listen(PORT, function () {
     console.log('Vault UI listening on: ' + PORT);
 });
 
+app.get('/listauthbackends', function (req, res) {
+    routeHandler.listAuthBackends(req, res);
+});
+
 app.post('/login', function (req, res) {
     routeHandler.login(req, res);
 });
