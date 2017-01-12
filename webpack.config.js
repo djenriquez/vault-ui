@@ -21,11 +21,19 @@ module.exports = {
             exclude: 'node_modules'
         }, {
             test: /\.json$/i,
-            loader: 'json',
+            loader: 'json-loader',
             exclude: 'node_modules'
         }, {
+            test: /\.svg$/,
+            loader: 'url'
+        }, {
             test: /\.css$/,
-            loader: ExtractTextPlugin.extract('css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader')
+            loader: ExtractTextPlugin.extract('css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader'),
+            exclude: /node_modules/
+        }, {
+            test: /\.css$/,
+            loader: ExtractTextPlugin.extract('css!postcss-loader'),
+            include: /node_modules/
         }]
     },
     postcss: [ autoprefixer({ browsers: ['last 2 versions'] }) ],
@@ -43,6 +51,7 @@ module.exports = {
         //     comments: false,
         //     sourceMap: false
         // }),
-        new ExtractTextPlugin("styles.css")
+        new ExtractTextPlugin("styles.css"),
+        new webpack.IgnorePlugin(/regenerator|nodent|js-beautify/, /ajv/)
     ]
 };
