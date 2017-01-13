@@ -268,7 +268,6 @@ export default class Manage extends React.Component {
                         errorMessage: 'An error occurred.'
                     });
                 } else {
-                    debugger;
                     let policies = this.state.policies;
                     let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
                     policies = _.pull(policies, policyToDelete);
