@@ -249,6 +249,7 @@ export default class Manage extends React.Component {
                         focusPolicy: policyName,
                         currentPolicy: rules_obj,
                         disableSubmit: true,
+                        errorMessage: '',
                     });
                 }
             })
@@ -341,7 +342,6 @@ export default class Manage extends React.Component {
                         disableSubmit: true,
                         focusPolicy: '',
                         currentPolicy: { path: { 'sample/path' : { capabilities: ['read'] }} }
-
                     })} />}
                 {this.state.errorMessage &&
                     <div className={styles.error}>
