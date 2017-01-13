@@ -1,0 +1,50 @@
+{
+    "type": "object",
+    "required": [ "path" ],
+    "properties": {
+        "path": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "patternProperties": {
+                "^[^\/].*$": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "anyOf": [
+                            {"required": ["capabilities"]},
+                            {"required": ["policy"]}
+                    ],
+                    "properties": {
+                        "capabilities" : {
+                            "type": "array",
+                            "minItems": 1,
+                            "uniqueItems": true,
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "create",
+                                    "read",
+                                    "update",
+                                    "delete",
+                                    "list",
+                                    "sudo",
+                                    "deny"
+                                ]
+                            }
+                        },
+                        "policy" : {
+                            "type": "string",
+                            "enum": [
+                                "read",
+                                "write",
+                                "sudo",
+                                "deny"
+                            ]
+                        }
+                    }
+                    
+                }
+            }
+        }
+    }
+}

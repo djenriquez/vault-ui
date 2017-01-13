@@ -36,6 +36,7 @@
     "babel-preset-stage-2": "^6.18.0",
     "css-loader": "^0.25.0",
     "url-loader": "^0.5.7",
+    "json-loader": "^0.5.4",
     "extract-text-webpack-plugin": "^1.0.1",
     "material-ui": "^0.16.4",
     "postcss-loader": "^1.1.0",

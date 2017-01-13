@@ -9,6 +9,9 @@ import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
+import JsonEditor from '../shared/JsonEditor.jsx';
+import hcltojson from 'hcl-to-json'
+import jsonschema from './vault-policy-schema.json'
 
 export default class Manage extends React.Component {
     constructor(props) {
@@ -17,11 +20,13 @@ export default class Manage extends React.Component {
             openEditModal: false,
             openNewPolicyModal: false,
             newPolicyErrorMessage: '',
+            newPolicyNameErrorMessage: '',
             openDeleteModal: false,
-            editingPolicy: -1,
+            focusPolicy: -1,
             deletingPolicy: '',
             policies: [],
             currentPolicy: '',
+            disableSubmit: false,
             errorMessage: '',
             forbidden: false,
             buttonColor: 'lightgrey'
@@ -45,23 +50,27 @@ export default class Manage extends React.Component {
         this.listPolicies();
     }
 
-    updatePolicy() {
-        let policyName = this.state.editingPolicy;
+    updatePolicy(policyName, isNewPolicy) {
 
         axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
             .then((resp) => {
-                // Custom future logic on success
-                this.setState({
-                    errorMessage: ''
-                });
+                if (isNewPolicy) {
+                    let policies = this.state.policies;
+                    policies.push({ name: policyName });
+                    this.setState({
+                        policies: policies
+                    });
+                }
             })
             .catch((err) => {
                 console.error(err.stack);
-                this.setState({
-                    errorMessage: err.response.data
-                });
+                if(err.response.data.errors){
+                    this.setState({
+                        errorMessage: err.response.data.errors.join('<br />')
+                    });
+                }
             })
-
+        this.setState({ openNewPolicyModal: false });
         this.setState({ openEditModal: false });
     }
 
@@ -93,86 +102,78 @@ export default class Manage extends React.Component {
     renderEditDialog() {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
-            <FlatButton label="Submit" primary={true} onTouchTap={() => this.updatePolicy()} />
+            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => this.updatePolicy(this.state.focusPolicy, false)} />
         ];
 
-        let policyChanged = (e, v, ) => {
-            this.state.currentPolicy = e.target.value;
+        let policyChanged = (v, syntaxCheckOk, schemaCheckOk) => {
+            if (syntaxCheckOk && schemaCheckOk && v) {
+                this.setState({disableSubmit: false, currentPolicy: v});
+            } else {
+                this.setState({disableSubmit: true});
+            }
         };
 
         return (
             <Dialog
-                title={`Editing ${this.state.editingPolicy}`}
+                title={`Editing ${this.state.focusPolicy}`}
                 modal={false}
                 actions={actions}
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
                 >
-                <TextField
-                    style={{ height: '5000px' }}
-                    onChange={(e, v) => policyChanged(e, v)}
-                    name="editingText" multiLine={true}
-                    autoFocus
-                    defaultValue={this.state.currentPolicy}
-                    fullWidth={true} />
+                <JsonEditor
+                    rootName={this.state.focusPolicy}
+                    value={this.state.currentPolicy}
+                    mode={'code'}
+                    schema={jsonschema}
+                    onChange={policyChanged}
+                />
             </Dialog>
         );
     }
 
     renderNewPolicyDialog() {
         const MISSING_POLICY_ERROR = "Policy cannot be empty.";
-        const DUPLICATE_POLICY_ERROR = `Policy ${this.state.newPolicy.name} already exists.`;
+        const DUPLICATE_POLICY_ERROR = `Policy ${this.state.focusPolicy} already exists.`;
 
         let validateAndSubmit = () => {
-            if (this.state.newPolicy.name === '') {
+            if (this.state.focusPolicy === '') {
                 this.setState({
                     newPolicyErrorMessage: MISSING_POLICY_ERROR
                 });
                 return;
             }
 
-            if (_.filter(this.state.policies, x => x.name === this.state.newPolicy.name).length > 0) {
+            if (_.filter(this.state.policies, x => x.name === this.state.focusPolicy).length > 0) {
                 this.setState({
                     newPolicyErrorMessage: DUPLICATE_POLICY_ERROR
                 });
                 return;
             }
-
-            axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(this.state.newPolicy.name)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
-                .then((resp) => {
-                    let policies = this.state.policies;
-                    policies.push({ name: this.state.newPolicy.name });
-                    this.setState({
-                        policies: policies,
-                        errorMessage: ''
-                    });
-                })
-                .catch((err) => {
-                    console.error(err.stack);
-                    this.setState({
-                        errorMessage: err.response.data
-                    });
-                })
-
-            this.setState({ openNewPolicyModal: false });
+            this.updatePolicy(this.state.focusPolicy, true);
         }
 
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })} />,
-            <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit} />
+            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={validateAndSubmit} />
         ];
 
-        let setNewPolicy = (e, v) => {
-            let currentPolicy = this.state.newPolicy;
-            if (e.target.name === "newName") {
-                currentPolicy.name = v;
-            } else if (e.target.name === "newRules") {
-                currentPolicy.rules = v;
+        let setNewPolicy = (v, syntaxCheckOk, schemaCheckOk) => {
+            if (syntaxCheckOk && schemaCheckOk && v) {
+                this.setState({disableSubmit: false, currentPolicy: v});
+            } else {
+                this.setState({disableSubmit: true});
             }
-            this.setState({
-                newPolicy: currentPolicy
-            });
+        }
+
+        let validatePolicyName = (event, v) => {
+            var pattern = /^[^\/&]+$/;
+            if (v.match(pattern)) {
+                this.setState({newPolicyNameErrorMessage: '', focusPolicy: v});
+            } else {
+                this.setState({newPolicyNameErrorMessage: 'Policy name contains illegal characters'});
+            }
         }
 
 
@@ -186,14 +187,21 @@ export default class Manage extends React.Component {
                 autoScrollBodyContent={true}
                 autoDetectWindowHeight={true}
                 >
-                <TextField name="newName" autoFocus fullWidth={true} hintText="Name" onChange={(e, v) => setNewPolicy(e, v)} />
                 <TextField
-                    name="newRules"
-                    multiLine={true}
-                    style={{ height: '5000px' }}
+                    name="newName"
+                    autoFocus
                     fullWidth={true}
-                    hintText="Rules"
-                    onChange={(e, v) => setNewPolicy(e, v)} />
+                    hintText="Name"
+                    errorText={this.state.newPolicyNameErrorMessage}
+                    onChange={validatePolicyName}
+                />
+                <JsonEditor
+                    rootName={this.state.focusPolicy || null}
+                    value={this.state.currentPolicy}
+                    mode={'code'}
+                    schema={jsonschema}
+                    onChange={setNewPolicy}
+                />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
         );
@@ -224,18 +232,25 @@ export default class Manage extends React.Component {
         axios.get(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
             .then((resp) => {
                 let rules = resp.data.data.rules;
+                let rules_obj;
                 // Attempt to parse into JSON incase a stringified JSON was sent
                 try {
-                    rules = JSON.parse(rules)
+                    rules_obj = JSON.parse(rules);
                 } catch (e) { }
 
-                let val = typeof rules == 'object' ? JSON.stringify(rules, null, 4) : rules;
+                if (!rules_obj) {
+                    // Previous parse failed, attempt HCL to JSON conversion
+                    rules_obj = hcltojson(rules);
+                }
 
-                this.setState({
-                    openEditModal: true,
-                    editingPolicy: policyName,
-                    currentPolicy: val
-                });
+                if(rules_obj) {
+                    this.setState({
+                        openEditModal: true,
+                        focusPolicy: policyName,
+                        currentPolicy: rules_obj,
+                        disableSubmit: true,
+                    });
+                }
             })
             .catch((err) => {
                 console.error(err.stack);
@@ -251,11 +266,12 @@ export default class Manage extends React.Component {
                         errorMessage: 'An error occurred.'
                     });
                 } else {
+                    debugger;
                     let policies = this.state.policies;
-                    let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName }); å
+                    let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
                     policies = _.pull(policies, policyToDelete);
                     this.setState({
-                        secrets: policies,
+                        policies: policies,
                         errorMessage: ''
                     });
                 }
@@ -317,7 +333,16 @@ export default class Manage extends React.Component {
                     backgroundColor={this.state.buttonColor}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({ openNewPolicyModal: true, newPolicy: { name: '', value: '' } })} />}
+                    onTouchTap={() => this.setState({
+                        openNewPolicyModal: true,
+                        errorMessage: '',
+                        newPolicyErrorMessage: '',
+                        newPolicyNameErrorMessage: '',
+                        disableSubmit: true,
+                        focusPolicy: '',
+                        currentPolicy: { path: { 'sample/path' : { capabilities: ['read'] }} }
+
+                    })} />}
                 {this.state.errorMessage &&
                     <div className={styles.error}>
                         <FontIcon className="fa fa-exclamation-triangle" color={red500} style={{ marginRight: 10 }} />
