@@ -36,6 +36,7 @@ export default class Manage extends React.Component {
             this,
             'updatePolicy',
             'listPolicies',
+            'policyChangeSetState',
             'renderEditDialog',
             'renderNewPolicyDialog',
             'renderDeleteConfirmationDialog',
@@ -99,19 +100,19 @@ export default class Manage extends React.Component {
             });
     }
 
+    policyChangeSetState(v, syntaxCheckOk, schemaCheckOk) {
+        if (syntaxCheckOk && schemaCheckOk && v) {
+            this.setState({disableSubmit: false, currentPolicy: v});
+        } else {
+            this.setState({disableSubmit: true});
+        }
+    }
+
     renderEditDialog() {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
             <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => this.updatePolicy(this.state.focusPolicy, false)} />
         ];
-
-        let policyChanged = (v, syntaxCheckOk, schemaCheckOk) => {
-            if (syntaxCheckOk && schemaCheckOk && v) {
-                this.setState({disableSubmit: false, currentPolicy: v});
-            } else {
-                this.setState({disableSubmit: true});
-            }
-        };
 
         return (
             <Dialog
@@ -127,7 +128,7 @@ export default class Manage extends React.Component {
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
-                    onChange={policyChanged}
+                    onChange={this.policyChangeSetState}
                 />
             </Dialog>
         );
@@ -158,14 +159,6 @@ export default class Manage extends React.Component {
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })} />,
             <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={validateAndSubmit} />
         ];
-
-        let setNewPolicy = (v, syntaxCheckOk, schemaCheckOk) => {
-            if (syntaxCheckOk && schemaCheckOk && v) {
-                this.setState({disableSubmit: false, currentPolicy: v});
-            } else {
-                this.setState({disableSubmit: true});
-            }
-        }
 
         let validatePolicyName = (event, v) => {
             var pattern = /^[^\/&]+$/;
@@ -201,7 +194,7 @@ export default class Manage extends React.Component {
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
-                    onChange={setNewPolicy}
+                    onChange={this.policyChangeSetState}
                 />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
