@@ -169,6 +169,7 @@ export default class Manage extends React.Component {
 
         let validatePolicyName = (event, v) => {
             var pattern = /^[^\/&]+$/;
+            v = v.toLowerCase();
             if (v.match(pattern)) {
                 this.setState({newPolicyNameErrorMessage: '', focusPolicy: v});
             } else {
