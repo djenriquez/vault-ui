@@ -48,16 +48,8 @@ exports.updatePolicy = function (req, res) {
     //API requires an escaped JSON
     let policy = _.get(req, "body.Policy");
 
-    // Attempt to parse into JSON incase a stringified JSON was sent
-    try {
-        policy = JSON.parse(policy)
-    } catch (e) { }
-
-    //If the user passed in an HCL document, convert to stringified JSON as required by the API
-    let rules = typeof policy == 'object' ? JSON.stringify(policy) : JSON.stringify(hcltojson(policy));
-
     let body = {
-        rules: rules
+        rules: JSON.stringify(policy)
     };
 
     axios.put(`${vaultAddr}${endpoint}`, body, config)
@@ -65,8 +57,7 @@ exports.updatePolicy = function (req, res) {
             res.json(resp.data);
         })
         .catch((err) => {
-            console.error(err.stack);
-            res.status(err.response.status).send(err.response);
+            res.status(err.response.status).send(err.response.data);
         });
 }
 

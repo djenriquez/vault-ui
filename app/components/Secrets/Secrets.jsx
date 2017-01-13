@@ -13,6 +13,7 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import axios from 'axios';
+import JsonEditor from '../shared/JsonEditor.jsx';
 
 const copyEvent = new CustomEvent("snackbar", {
     detail: {
@@ -49,7 +50,8 @@ class Secrets extends React.Component {
             'renderList',
             'renderNamespace',
             'clickSecret',
-            'secretChanged',
+            'secretChangedTextEditor',
+            'secretChangedJsonEditor',
             'updateSecret',
             'renderEditDialog',
             'renderNewKeyDialog',
@@ -115,35 +117,19 @@ class Secrets extends React.Component {
             })
     }
 
-    secretChanged(e, v) {
-        if (this.state.useRootKey) {
-            //If root key is in place, set as json object to properly escape special characters
-            let tmp = {};
-            tmp = _.set(tmp, `${this.state.rootKey}`, v);
-            this.state.focusSecret = tmp;
+    secretChangedJsonEditor(v, syntaxCheckOk) {
+        if (syntaxCheckOk && v) {
+            this.setState({disableSubmit: false, focusSecret: v});
         } else {
-            this.state.focusSecret = v;
-
+            this.setState({disableSubmit: true});
         }
     }
 
-    checkValidJson() {
-        try {
-            if (this.state.useRootKey) {
-                JSON.parse(JSON.stringify(this.state.focusSecret));
-            } else {
-                JSON.parse(this.state.focusSecret);
-            }
-            this.setState({
-                errorMessage: ''
-            })
-            return true;
-        } catch (e) {
-            this.setState({
-                errorMessage: `Invalid JSON`
-            })
-            return false;
-        }
+    secretChangedTextEditor(e, v) {
+        this.setState({disableSubmit: false});
+        let tmp = {};
+        _.set(tmp, `${this.state.rootKey}`, v);
+        this.state.focusSecret = tmp;
     }
 
     renderEditDialog() {
@@ -153,28 +139,47 @@ class Secrets extends React.Component {
         ];
 
         let submitUpdate = () => {
-            if (!this.checkValidJson()) return;
             this.updateSecret(false);
             this.setState({ openEditModal: false });
         }
 
+        var objectIsBasicRootKey = _.size(this.state.focusSecret) == 1 && this.state.focusSecret.hasOwnProperty(this.state.rootKey);
+        var content;
+
+        if (objectIsBasicRootKey && this.state.useRootKey) {
+            var title = `Editing ${this.state.namespace}${this.state.focusKey} with specified root key`;
+            content = (
+                <TextField
+                    onChange={this.secretChangedTextEditor}
+                    name="editingText"
+                    disabled={this.state.disableTextField}
+                    autoFocus
+                    multiLine={true}
+                    defaultValue={this.state.focusSecret[this.state.rootKey]}
+                    fullWidth={true}
+                />
+            );
+        } else {
+            var title = `Editing ${this.state.namespace}${this.state.focusKey}`;
+            content = (
+                <JsonEditor
+                    rootName={this.state.namespace+this.state.focusKey}
+                    value={this.state.focusSecret}
+                    mode={'tree'}
+                    onChange={this.secretChangedJsonEditor}
+                />
+            );
+        }
         return (
             <Dialog
-                title={`Editing ${this.state.namespace}${this.state.focusKey}`}
+                title={title}
                 modal={false}
                 actions={actions}
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
                 >
-                <TextField
-                    onChange={this.secretChanged}
-                    name="editingText"
-                    disabled={this.state.disableTextField}
-                    autoFocus
-                    multiLine={true}
-                    defaultValue={this.state.focusSecret}
-                    fullWidth={true} />
+                {content}
                 <div className={styles.error}>{this.state.errorMessage}</div>
             </Dialog>
         );
@@ -219,40 +224,52 @@ class Secrets extends React.Component {
                 });
                 return;
             }
-            if (!this.checkValidJson()) return;
+            console.log(this.state.focusSecret);
             this.updateSecret(true);
             this.setState({ openNewKeyModal: false, errorMessage: '' });
         }
 
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewKeyModal: false, errorMessage: '' })} />,
-            <FlatButton label="Submit" primary={true} onTouchTap={validateAndSubmit} />
+            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={validateAndSubmit} />
         ];
 
         var rootKeyInfo;
+        var content;
 
         if (this.state.useRootKey) {
             rootKeyInfo = "Current Root Key: " + this.state.rootKey;
+            var content = (
+                <TextField
+                    name="newValue"
+                    multiLine={true}
+                    fullWidth={true}
+                    hintText="Value"
+                    autoFocus
+                    onChange={this.secretChangedTextEditor}
+                />
+            );
         } else {
-            rootKeyInfo = "No Root Key set. Value must be JSON.";
+            content = (
+                <JsonEditor
+                    rootName={this.state.namespace+this.state.focusKey}
+                    mode={'tree'}
+                    onChange={this.secretChangedJsonEditor}
+                />
+            );
         }
 
         return (
             <Dialog
-                title={`New Key`}
+                title={`Create new secret`}
                 modal={false}
                 actions={actions}
                 open={this.state.openNewKeyModal}
                 onRequestClose={() => this.setState({ openNewKeyModal: false, errorMessage: '' })}
                 autoScrollBodyContent={true}
                 >
-                <TextField name="newKey" autoFocus fullWidth={true} hintText="Key" onChange={(e, v) => this.setState({ focusKey: v })} />
-                <TextField
-                    name="newValue"
-                    multiLine={true}
-                    fullWidth={true}
-                    hintText="Value"
-                    onChange={this.secretChanged} />
+                <TextField name="newKey" autoFocus fullWidth={true} hintText="Insert object key" onChange={(e, v) => this.setState({ focusKey: v })} />
+                {content}
                 <div className={styles.error}>{this.state.errorMessage}</div>
                 <div>{rootKeyInfo}</div>
             </Dialog>
@@ -322,28 +339,15 @@ class Secrets extends React.Component {
             let fullKey = `${this.state.namespace}${key}`;
             axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
                 .then((resp) => {
-                    let val = this.state.useRootKey ? _.get(resp, `data.${this.state.rootKey}`) : resp.data;
-                    if (val === undefined) {
-                        this.setState({
-                            errorMessage: `No value exists under the root key '${this.state.rootKey}'.`,
-                            focusSecret: '',
-                            disableSubmit: true,
-                            openEditModal: true,
-                            disableTextField: true,
-                            listBackends: false
-                        });
-                    } else {
-                        val = typeof val == 'object' ? JSON.stringify(val) : val;
-                        this.setState({
-                            errorMessage: '',
-                            disableSubmit: false,
-                            disableTextField: false,
-                            openEditModal: true,
-                            focusKey: key,
-                            focusSecret: val,
-                            listBackends: false
-                        });
-                    }
+                    this.setState({
+                        errorMessage: '',
+                        disableSubmit: false,
+                        disableTextField: false,
+                        openEditModal: true,
+                        focusKey: key,
+                        focusSecret: resp.data,
+                        listBackends: false
+                    });
                 })
                 .catch((err) => {
                     console.error(err.stack);
@@ -449,12 +453,18 @@ class Secrets extends React.Component {
                 <h1 id={styles.welcomeHeadline}>Secrets</h1>
                 <p>Here you can view, update, and delete keys stored in your Vault.  Just remember, <span className={styles.error}>deleting keys cannot be undone!</span></p>
                 <FlatButton
-                    label="Add Key"
+                    label="New Secret"
                     backgroundColor={this.state.buttonColor}
                     disabled={this.state.disableAddButton}
                     hoverColor={green400}
                     labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({ openNewKeyModal: true, focusKey: '', focusSecret: '', errorMessage: '' })} />
+                    onTouchTap={() => this.setState({
+                        disableSubmit: true,
+                        openNewKeyModal: true,
+                        focusKey: '',
+                        focusSecret: '',
+                        errorMessage: ''
+                    })} />
                 <div className={styles.namespace}>{this.renderNamespace()}</div>
                 <List>
                     {this.renderList()}
