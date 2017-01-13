@@ -118,10 +118,8 @@ class Secrets extends React.Component {
     }
 
     secretChangedJsonEditor(v, syntaxCheckOk) {
-        console.log(`syntax: ${syntaxCheckOk} , secret: ${v}`);
         if (syntaxCheckOk && v) {
-            this.setState({disableSubmit: false});
-            this.state.focusSecret = v;
+            this.setState({disableSubmit: false, focusSecret: v});
         } else {
             this.setState({disableSubmit: true});
         }
