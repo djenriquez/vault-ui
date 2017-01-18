@@ -48,12 +48,12 @@ export default class Login extends React.Component {
                 openSettings: true
             });
         } else {
-          // If a token was supplied in the window.suppliedAuthToken, simulate a login
-          if ( window.suppliedAuthToken ) {
-            this.setState({loginMethodType: 'TOKEN', authToken: window.suppliedAuthToken}, function () {
-                this.validateToken({keyCode: 13});
-            });
-          }
+            // If a token was supplied in the window.suppliedAuthToken, simulate a login
+            if ( window.suppliedAuthToken ) {
+                this.setState({loginMethodType: 'TOKEN', authToken: window.suppliedAuthToken}, function () {
+                    this.validateToken({keyCode: 13});
+                });
+            }
         }
     }
 

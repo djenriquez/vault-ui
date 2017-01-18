@@ -97,8 +97,8 @@ app.get('/');
 
 app.get('*', function (req, res) {
     res.render(path.join(__dirname, '/index.html'),{
-      defaultUrl: VAULT_URL_DEFAULT,
-      defaultAuth: VAULT_AUTH_DEFAULT,
-      suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER ? req.header(VAULT_SUPPLIED_TOKEN_HEADER) : ""
+        defaultUrl: VAULT_URL_DEFAULT,
+        defaultAuth: VAULT_AUTH_DEFAULT,
+        suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER ? req.header(VAULT_SUPPLIED_TOKEN_HEADER) : ""
     });
 });
