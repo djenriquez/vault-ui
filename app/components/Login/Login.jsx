@@ -39,6 +39,14 @@ export default class Login extends React.Component {
             'validateUsernamePassword',
             'checkSettings'
         )
+
+        // If a token was supplied in the window.suppliedAuthToken variable, then simulate a login
+        if ( window.suppliedAuthToken && this.state.vaultUrl ) {
+            this.state.loginMethodType = 'TOKEN';
+            this.state.authToken = window.suppliedAuthToken;
+            this.validateToken({keyCode: 13});
+        }
+
     }
 
     componentDidMount() {
@@ -113,7 +121,10 @@ export default class Login extends React.Component {
                 })
                 .catch((err) => {
                     console.error(err.stack);
-                    this.setState({ errorMessage: err.response.data })
+                    this.setState({
+                        errorMessage: `${window.suppliedAuthToken ? 'Login was attempted using a server supplied token. Please contact your network administrator. -- ' :  ''}${err.response.data}`,
+                        loginMethodType: this.getVaultAuthMethod()
+                    });
                 });
         }
     }
