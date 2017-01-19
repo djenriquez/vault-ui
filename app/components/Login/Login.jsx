@@ -48,10 +48,10 @@ export default class Login extends React.Component {
                 openSettings: true
             });
         } else {
-            // If a token was supplied in the window.suppliedAuthToken, simulate a login
+            // If a token was supplied in the window.suppliedAuthToken variable, then simulate a login
             if ( window.suppliedAuthToken ) {
                 this.setState({loginMethodType: 'TOKEN', authToken: window.suppliedAuthToken}, function () {
-                    this.validateToken({keyCode: 13});
+                    this.validateToken({keyCode: 13, tokenSupplied: true});
                 });
             }
         }
@@ -120,7 +120,10 @@ export default class Login extends React.Component {
                 })
                 .catch((err) => {
                     console.error(err.stack);
-                    this.setState({ errorMessage: err.response.data })
+                    this.setState({ errorMessage: err.response.data, loginMethodType: this.getVaultAuthMethod() })
+                    if ( e.hasOwnProperty('tokenSupplied') ) {
+                        this.setState({ errorMessage: err.response.data + ". Login was attempted using a server supplied token. Please contact your network administrator." })
+                    }
                 });
         }
     }
