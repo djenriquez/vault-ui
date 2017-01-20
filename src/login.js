@@ -64,41 +64,32 @@ exports.login = function (req, res) {
     }
 
     let endpoint = '';
-    let body = {}
-    let config = {}
+    let body = {};
+    let config = { method: 'post' };
+    var instance = axios.create({ baseURL: `${_.get(req, "body.VaultUrl")}/v1/auth/`});
 
     switch (creds.Type.toLowerCase()) {
         case 'github':
-            endpoint = '/v1/auth/github/login';
-            body = {
-                token: creds.Token
-            };
+            config['url'] = 'github/login';
+            config['data'] = { token: creds.Token };
             break;
         case 'usernamepassword':
-            endpoint = `/v1/auth/userpass/login/${username}`;
-            body = {
-                password: creds.Password
-            };
+            config['url'] = `userpass/login/${username}`;
+            config['data'] = { password: creds.Password };
             break;
         case 'ldap':
-            endpoint = `/v1/auth/ldap/login/${username}`;
-            body = {
-                password: creds.Password
-            };
+            config['url'] = `ldap/login/${username}`;
+            config['data'] = { password: creds.Password };
             break;
         case 'token':
-            endpoint = `/v1/auth/token/lookup`
-            body = {
-                token: creds.Token
-            };
-            config = {
-                headers: { "X-Vault-Token": creds.Token }
-            };
+            config['method'] = 'get';
+            config['url'] = `token/lookup-self`;
+            config['headers'] = { "X-Vault-Token": creds.Token };
             break;
         default:
             res.status(400).send("Invalid auth method");
     }
-    axios.post(`${_.get(req, "body.VaultUrl")}${endpoint}`, body, config)
+    instance.request(config)
         .then((resp) => {
             if (creds.Type.toLowerCase() === 'token') {
                 res.json({
