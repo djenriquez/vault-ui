@@ -159,6 +159,7 @@ export default class Login extends React.Component {
         //   renewable: true }
         let accessToken = _.get(resp, 'data.client_token');
         if (accessToken) {
+            window.localStorage.setItem('capability_cache', JSON.stringify({}));
             window.localStorage.setItem("vaultAccessToken", accessToken);
             let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? -1 : _.get(resp, 'data.lease_duration') * 1000
             window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)

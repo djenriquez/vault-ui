@@ -11,6 +11,7 @@ import Health from './components/Health/Health.jsx';
 import Policies from './components/Policies/Home.jsx';
 import Settings from './components/Settings/Settings.jsx';
 import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
+import TokenManage from './components/Tokens/Manage.jsx'
 
 injectTapEventPlugin();
 
@@ -44,16 +45,17 @@ const muiTheme = getMuiTheme({
 
 ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
-  <Router history={browserHistory}>
-      <Route path="/login" component={Login}/>
-      <Route path="/" component={App} onEnter={checkAccessToken}>
-          <Route path="/secrets" component={Secrets}/>
-          <Route path="/health" component={Health}/>
-          <Route path="/secrets" component={Secrets}/>
-          <Route path="/settings" component={Settings}/>
-          <Route path="/responsewrapper" component={ResponseWrapper}/>
-          <Route path="/policies/:policy" component={Policies}/>
-      </Route>
-  </Router>
-  </MuiThemeProvider>
+        <Router history={browserHistory}>
+            <Route path="/login" component={Login}/>
+            <Route path="/" component={App} onEnter={checkAccessToken}>
+            <Route path="/secrets" component={Secrets}/>
+            <Route path="/health" component={Health}/>
+            <Route path="/secrets" component={Secrets}/>
+            <Route path="/settings" component={Settings}/>
+            <Route path="/responsewrapper" component={ResponseWrapper}/>
+            <Route path="/policies/:policy" component={Policies}/>
+            <Route path="/tokens" component={TokenManage}/>
+            </Route>
+        </Router>
+    </MuiThemeProvider>
 ), document.getElementById('app'))

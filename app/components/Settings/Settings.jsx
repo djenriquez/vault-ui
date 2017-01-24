@@ -30,6 +30,10 @@ class Settings extends React.Component {
         });
     }
 
+    setCapCachePreference(e, isChecked) {
+        window.localStorage.setItem('enableCapabilitiesCache', isChecked);
+    }
+
     setRootKey(e, rootKey) {
         window.localStorage.setItem('secretsRootKey', rootKey)
         this.setState({ rootKey: rootKey });
@@ -49,6 +53,10 @@ class Settings extends React.Component {
                         label="Warn Dialog Before Delete"
                         onCheck={this.setDeleteDialogPreference}
                         defaultChecked={window.localStorage.getItem('showDeleteModal') === 'true'} />
+                    <Checkbox
+                        label="Enable capabilities cache"
+                        onCheck={this.setCapCachePreference}
+                        defaultChecked={window.localStorage.getItem('enableCapabilitiesCache') === 'true'} />
                 </div>
                 <div>
                     <h2>Secrets</h2>

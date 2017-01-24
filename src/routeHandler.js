@@ -4,6 +4,7 @@ var secrets = require('./secrets');
 var login = require('./login');
 var policies = require('./policies');
 var respwrapping = require('./respwrapping');
+var vaultapi = require('./vaultapi');
 
 module.exports = (function () {
     return {
@@ -21,6 +22,7 @@ module.exports = (function () {
         setGithubTeamPolicy: policies.setGithubTeamPolicy,
         getGithubTeamPolicy: policies.getGithubTeamPolicy,
         wrapValue: respwrapping.wrapResponse,
-        unwrapValue: respwrapping.unwrapResponse
+        unwrapValue: respwrapping.unwrapResponse,
+        vaultapi: vaultapi.callMethod
     };
 })();

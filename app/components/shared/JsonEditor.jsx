@@ -15,7 +15,8 @@ class JsonEditor extends React.Component {
     static propTypes = {
         rootName: PropTypes.string,
         value: PropTypes.any,
-        mode: PropTypes.oneOf(['tree', 'code']),
+        mode: PropTypes.oneOf(['tree', 'code', 'view']),
+        modes: React.PropTypes.array,
         schema: PropTypes.object,
         onChange: PropTypes.func,
     };
@@ -24,6 +25,7 @@ class JsonEditor extends React.Component {
         rootName: '',
         value: '',
         mode: 'tree',
+        modes: ['tree', 'code'],
         schema: null,
         onChange: () => {}
     };
@@ -59,7 +61,7 @@ class JsonEditor extends React.Component {
         var options = {
             name: this.props.rootName,
             mode: this.props.mode,
-            modes: ['tree', 'code'],
+            modes: this.props.modes,
             schema: this.props.schema,
             onChange: this.handleInputChange,
         };
