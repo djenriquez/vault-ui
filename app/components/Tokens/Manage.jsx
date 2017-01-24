@@ -195,7 +195,7 @@ export default class TokenManage extends React.Component {
                         this.setState({'canCreateOrphan': 'no_parent'});
                         // sudo users can assign any policy to a token. load the full list, if possible
                         return tokenHasCapabilities(['read'], 'sys/policy').then(() => {
-                            return callVaultApi(['get'], 'sys/policy').then((resp) => {
+                            return callVaultApi('get', 'sys/policy').then((resp) => {
                                 this.setState({newTokenAvailablePolicies: resp.data.data.keys});
                             });
                         });
