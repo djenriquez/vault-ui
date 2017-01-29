@@ -8,7 +8,7 @@ function resetCapabilityCache() {
 
 function setCachedCapabilities(path, result) {
     var cache = JSON.parse(window.localStorage.getItem('capability_cache'));
-    if(!cache) {
+    if (!cache) {
         cache = resetCapabilityCache();
     }
     cache[path] = result;
@@ -17,25 +17,30 @@ function setCachedCapabilities(path, result) {
 
 function getCachedCapabilities(path) {
     var cache = JSON.parse(window.localStorage.getItem('capability_cache'));
-    if(!cache) {
+    if (!cache) {
         cache = resetCapabilityCache();
     }
-    if ( path in cache ) {
+    if (path in cache) {
         return cache[path];
     } else {
         throw new Error('cache miss');
     }
-        
+
 }
 
-function callVaultApi(method, path, query={}, data, headers={}) {
-    
-    var instance = axios.create({
+function callVaultApi(method, path, query = {}, data, headers = {}) {
+
+    let config = {
         baseURL: '/v1/',
-        params:   { "vaultaddr"    : window.localStorage.getItem("vaultUrl") },
-        headers: { "X-Vault-Token": window.localStorage.getItem("vaultAccessToken") },
-    });
+        params: { "vaultaddr": window.localStorage.getItem("vaultUrl") },
+    };
+
+    if (window.localStorage.getItem("vaultAccessToken") !== null) {
+        config.headers = { "X-Vault-Token": window.localStorage.getItem("vaultAccessToken") };
+    }
     
+    var instance = axios.create(config);
+
     return instance.request({
         url: path,
         method: method,
@@ -46,7 +51,7 @@ function callVaultApi(method, path, query={}, data, headers={}) {
 }
 
 function tokenHasCapabilities(capabilities, path) {
-    
+
     if (window.localStorage.getItem('enableCapabilitiesCache')) {
         try {
             var cached_capabilities = getCachedCapabilities(path);
@@ -64,16 +69,16 @@ function tokenHasCapabilities(capabilities, path) {
             // That was a cache miss, let's continue and ask vault
         }
     }
-    
-    return callVaultApi('post', 'sys/capabilities-self', {}, {path: path})
+
+    return callVaultApi('post', 'sys/capabilities-self', {}, { path: path })
         .then((resp) => {
             setCachedCapabilities(path, resp.data.capabilities);
             var evaluation = _.every(capabilities, function (v) {
-                let has_cap =  _.indexOf(resp.data.capabilities, v) !== -1;
+                let has_cap = _.indexOf(resp.data.capabilities, v) !== -1;
                 return has_cap;
             });
-            
-            if (evaluation || _.indexOf(resp.data.capabilities, 'root') !== -1 ) {
+
+            if (evaluation || _.indexOf(resp.data.capabilities, 'root') !== -1) {
                 return Promise.resolve(true);
             }
             return Promise.reject(false)

@@ -18,7 +18,7 @@ exports.callMethod = function (req, res) {
         headers: req.headers,
         data: req.body
     }
-    //console.log(config);
+    console.log(config);
     axios.request(config)
         .then(function (resp) {
             res.json(resp.data);
