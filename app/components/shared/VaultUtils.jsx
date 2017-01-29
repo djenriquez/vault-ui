@@ -25,12 +25,6 @@ function getCachedCapabilities(path) {
     } else {
         throw new Error('cache miss');
     }
-
-}
-
-function login(method, path, query = {}, data, headers = {}) {
-
-
 }
 
 function callVaultApi(method, path, query = {}, data, headers = {}) {

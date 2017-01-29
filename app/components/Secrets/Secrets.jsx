@@ -16,7 +16,7 @@ import axios from 'axios';
 import { callVaultApi } from '../shared/VaultUtils.jsx'
 import JsonEditor from '../shared/JsonEditor.jsx';
 import { browserHistory } from 'react-router'
-
+import Snackbar from 'material-ui/Snackbar';
 
 const copyEvent = new CustomEvent("snackbar", {
     detail: {
@@ -51,7 +51,8 @@ class Secrets extends React.Component {
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
             disableAddButton: false,
-            buttonColor: 'lightgrey'
+            buttonColor: 'lightgrey',
+            snackBarMsg: ''
         };
 
         _.bindAll(
@@ -189,7 +190,6 @@ class Secrets extends React.Component {
                 });
                 return;
             }
-            //console.log(this.state.focusSecret);
             this.updateSecret(true);
             this.setState({ openNewKeyModal: false, errorMessage: '' });
         }
@@ -242,7 +242,7 @@ class Secrets extends React.Component {
     }
 
     listSecretBackends() {
-        callVaultApi('get', '/sys/mounts', null, null, null)
+        callVaultApi('get', 'sys/mounts', null, null, null)
             .then((resp) => {
                 var secretBackends = [];
                 _.forEach(Object.keys(resp.data.data), (key) => {
@@ -333,7 +333,8 @@ class Secrets extends React.Component {
                     let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete.key == key; });
                     secrets = _.pull(secrets, secretToDelete);
                     this.setState({
-                        secrets: secrets
+                        secrets: secrets,
+                        snackBarMsg: `Secret ${key} deleted`
                     });
                 }
             })
@@ -359,8 +360,11 @@ class Secrets extends React.Component {
                     let key = this.state.focusKey.includes('/') ? `${this.state.focusKey.split('/')[0]}/` : this.state.focusKey;
                     secrets.push({ key: key, value: this.state.focusSecret });
                     this.setState({
-                        secrets: secrets
+                        secrets: secrets,
+                        snackBarMsg: `Secret ${this.state.focusKey} added`
                     });
+                } else {
+                    this.setState({ snackBarMsg: `Secret ${this.state.focusKey} updated` });
                 }
             })
             .catch((err) => {
@@ -482,6 +486,14 @@ class Secrets extends React.Component {
                 <List>
                     {this.renderList()}
                 </List>
+                <Snackbar
+                    open={this.state.snackBarMsg != ''}
+                    message={this.state.snackBarMsg}
+                    action="OK"
+                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
+                    autoHideDuration={4000}
+                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
+                    />
             </div>
         );
     }

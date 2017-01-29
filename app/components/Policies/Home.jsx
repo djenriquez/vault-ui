@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
 import styles from './policies.css';
