@@ -29,7 +29,6 @@ export default class Login extends React.Component {
             loginMethodType: this.getVaultAuthMethod(),
             tmpLoginMethodType: this.getVaultAuthMethod(),
             settingsChanged: false,
-            snackBarMsg: ''
         };
 
         _.bindAll(
@@ -131,10 +130,7 @@ export default class Login extends React.Component {
                 }
             })
             .catch((error) => {
-                this.setState({
-                    loading: false,
-                    snackBarMsg: `${error}`//`Server returned status ${error.response.status}: ${_.join(error.response.data.errors)}`
-                })
+                this.setState({ errorMessage: `Error: ${error}` });
             });
     }
 
@@ -188,12 +184,6 @@ export default class Login extends React.Component {
     }
 
     setAccessToken(resp) {
-        //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
-        //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
-        //   policies: [ 'default', 'insp-power-user' ],
-        //   metadata: { org: 'Openmail', username: 'djenriquez' },
-        //   lease_duration: 3600,
-        //   renewable: true }
         let accessToken = _.get(resp, 'client_token');
         if (accessToken) {
             window.localStorage.setItem('capability_cache', JSON.stringify({}));
@@ -364,14 +354,6 @@ export default class Login extends React.Component {
                         </div>
                     </div>
                 </div>
-                <Snackbar
-                    open={this.state.snackBarMsg != ''}
-                    message={this.state.snackBarMsg}
-                    action="OK"
-                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
-                    autoHideDuration={4000}
-                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
-                    />
             </div>
         );
     }

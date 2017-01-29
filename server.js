@@ -33,34 +33,6 @@ app.listen(PORT, function () {
     console.log('Vault UI listening on: ' + PORT);
 });
 
-// app.get('/listauthbackends', function (req, res) {
-//     routeHandler.listAuthBackends(req, res);
-// });
-
-// app.post('/login', function (req, res) {
-//     routeHandler.login(req, res);
-// });
-
-app.get('/listsecretbackends', function (req, res) {
-    routeHandler.listSecretBackends(req, res);
-});
-
-app.get('/listsecrets', function (req, res) {
-    routeHandler.listSecrets(req, res);
-});
-
-app.get('/secret', function (req, res) {
-    routeHandler.getSecret(req, res);
-});
-
-app.post('/secret', function (req, res) {
-    routeHandler.writeSecret(req, res);
-});
-
-app.delete('/secret', function (req, res) {
-    routeHandler.deleteSecret(req, res);
-});
-
 app.get('/listpolicies', function (req, res) {
     routeHandler.listPolicies(req, res);
 });
