@@ -28,18 +28,18 @@ function getCachedCapabilities(path) {
 
 }
 
+function login(method, path, query = {}, data, headers = {}) {
+
+
+}
+
 function callVaultApi(method, path, query = {}, data, headers = {}) {
 
-    let config = {
+    var instance = axios.create({
         baseURL: '/v1/',
         params: { "vaultaddr": window.localStorage.getItem("vaultUrl") },
-    };
-
-    if (window.localStorage.getItem("vaultAccessToken") !== null) {
-        config.headers = { "X-Vault-Token": window.localStorage.getItem("vaultAccessToken") };
-    }
-    
-    var instance = axios.create(config);
+        headers: { "X-Vault-Token": window.localStorage.getItem("vaultAccessToken") }
+    });
 
     return instance.request({
         url: path,

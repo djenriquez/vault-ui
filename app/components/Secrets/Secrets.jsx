@@ -224,7 +224,7 @@ class Secrets extends React.Component {
                 });
                 return;
             }
-            console.log(this.state.focusSecret);
+            //console.log(this.state.focusSecret);
             this.updateSecret(true);
             this.setState({ openNewKeyModal: false, errorMessage: '' });
         }
