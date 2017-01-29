@@ -108,9 +108,19 @@ export default class Login extends React.Component {
                 throw new Error(`Login method type: '${this.state.loginMethodType}' is not supported`);
         }
 
-        callVaultApi(method, uri, query, data, headers)
+        let instance = axios.create({
+            baseURL: '/v1/'
+        });
+
+        instance.request({
+            url: uri,
+            method: method,
+            data: data,
+            params: { "vaultaddr": this.state.vaultUrl },
+            headers: headers
+        })
             .then((resp) => {
-                console.log(resp);
+                //console.log(resp);
                 if (this.state.loginMethodType == "TOKEN") {
                     this.setAccessToken({
                         client_token: resp.data.data.id,
