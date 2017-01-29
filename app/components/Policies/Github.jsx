@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
 import styles from './policies.css';
@@ -10,6 +9,8 @@ import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
 import Checkbox from 'material-ui/Checkbox';
+import { callVaultApi } from '../shared/VaultUtils.jsx'
+import Snackbar from 'material-ui/Snackbar';
 
 export default class Github extends React.Component {
     constructor(props) {
@@ -23,7 +24,8 @@ export default class Github extends React.Component {
             submitBtnColor: 'lightgrey',
             submitBtnDisabled: true,
             errorMessage: '',
-            selected: props.selected === 'Github'
+            selected: props.selected === 'Github',
+            snackBarMsg: ''
         };
 
         this.processTeamNameDebounced = _.debounce(this.processTeamName, 400);
@@ -96,7 +98,7 @@ export default class Github extends React.Component {
     }
 
     listPolicies() {
-        axios.get(`/listpolicies?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+        callVaultApi('get', 'sys/policy', null, null, null)
             .then((resp) => {
                 let policies = _.map(resp.data.policies, (policy) => {
                     return {
@@ -115,14 +117,18 @@ export default class Github extends React.Component {
     }
 
     submitGithubPolicy() {
-        axios.post(`/githubteampolicy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&team=${this.state.teamName}`, { "Policy": this.state.checkedPolicies })
-            .catch((err) => {
+        callVaultApi('post', `auth/github/map/teams/${this.state.teamName}`, null, { value: this.state.checkedPolicies }, null)
+            .then((resp) => {
 
+            })
+            .catch((err) => {
+                this.setState({ errorMessage: err });
             });
     }
 
     getTeamPolicy(teamName) {
-        axios.get(`/githubteampolicy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&team=${teamName}`)
+        let uri = encodeURI(`auth/github/map/teams/${this.state.teamName}`);
+        callVaultApi('get', uri, null, null, null)
             .then((resp) => {
                 let policyNames = _.get(resp, "data.data.value").split(',');
 
@@ -134,7 +140,7 @@ export default class Github extends React.Component {
                 });
             })
             .catch((err) => {
-
+                this.setState({errorMessage: `${err} - URI: ${decodeURI(uri)}`});
             });
     }
 
@@ -228,6 +234,14 @@ export default class Github extends React.Component {
                     disabled={this.state.submitBtnDisabled}
                     labelStyle={{ color: white }}
                     onTouchTap={() => this.submitGithubPolicy()} />}
+                <Snackbar
+                    open={this.state.snackBarMsg != ''}
+                    message={this.state.snackBarMsg}
+                    action="OK"
+                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
+                    autoHideDuration={4000}
+                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
+                    />
             </div>
         );
     }
