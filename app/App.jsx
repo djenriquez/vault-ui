@@ -48,9 +48,10 @@ ReactDOM.render((
         <Router history={browserHistory}>
             <Route path="/login" component={Login}/>
             <Route path="/" component={App} onEnter={checkAccessToken}>
-            <Route path="/secrets" component={Secrets}/>
+            <Route path="/secrets" component={Secrets}>
+                <Route path="**" component={Secrets}/>
+            </Route>
             <Route path="/health" component={Health}/>
-            <Route path="/secrets" component={Secrets}/>
             <Route path="/settings" component={Settings}/>
             <Route path="/responsewrapper" component={ResponseWrapper}/>
             <Route path="/policies/:policy" component={Policies}/>

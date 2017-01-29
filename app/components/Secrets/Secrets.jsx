@@ -15,12 +15,22 @@ import { green500, green400, red500, red300, yellow500, white } from 'material-u
 import axios from 'axios';
 import { callVaultApi } from '../shared/VaultUtils.jsx'
 import JsonEditor from '../shared/JsonEditor.jsx';
+import { browserHistory } from 'react-router'
+
 
 const copyEvent = new CustomEvent("snackbar", {
     detail: {
         message: 'Copied!'
     }
 });
+
+const removeTrailingSlash = (path) => {
+    return _.trimEnd(path,'/');
+}
+
+const removeSecretFromPath = (path) => {
+    return path.replace(/\/secret\//g,'');
+}
 
 class Secrets extends React.Component {
     constructor(props) {
@@ -37,7 +47,7 @@ class Secrets extends React.Component {
             listBackends: false,
             secretBackends: [],
             secrets: [],
-            namespace: '/secret/',
+            namespace: `/secret/${removeTrailingSlash(this.props.params.splat) || ''}/`,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
             disableAddButton: false,
@@ -270,6 +280,8 @@ class Secrets extends React.Component {
                     disableAddButton: false,
                     buttonColor: green500
                 });
+                browserHistory.push(`/secrets/${removeSecretFromPath(namespace)}`);
+
             })
             .catch((err) => {
                 console.error(err.response.data);
@@ -302,6 +314,7 @@ class Secrets extends React.Component {
                         focusSecret: resp.data.data,
                         listBackends: false
                     });
+                    browserHistory.push(`/secrets/${removeSecretFromPath(fullKey)}`);
                 })
                 .catch((err) => {
                     console.error(err.stack);
