@@ -28,10 +28,6 @@ const removeTrailingSlash = (path) => {
     return _.trimEnd(path,'/');
 }
 
-const removeSecretFromPath = (path) => {
-    return path.replace(/\/secret\//g,'');
-}
-
 class Secrets extends React.Component {
     constructor(props) {
         super(props);
@@ -44,10 +40,10 @@ class Secrets extends React.Component {
             disableTextField: false,
             focusKey: '',
             focusSecret: '',
-            listBackends: false,
+            listBackends: true,
             secretBackends: [],
             secrets: [],
-            namespace: `/secret/${removeTrailingSlash(this.props.params.splat) || ''}/`,
+            namespace: `${removeTrailingSlash(this.props.params.splat) || '/'}`,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
             disableAddButton: false,
@@ -280,7 +276,7 @@ class Secrets extends React.Component {
                     disableAddButton: false,
                     buttonColor: green500
                 });
-                browserHistory.push(`/secrets/${removeSecretFromPath(namespace)}`);
+                browserHistory.push(`/secrets${namespace}`);
 
             })
             .catch((err) => {
@@ -314,7 +310,7 @@ class Secrets extends React.Component {
                         focusSecret: resp.data.data,
                         listBackends: false
                     });
-                    browserHistory.push(`/secrets/${removeSecretFromPath(fullKey)}`);
+                    browserHistory.push(`/secrets${fullKey}`);
                 })
                 .catch((err) => {
                     console.error(err.stack);
