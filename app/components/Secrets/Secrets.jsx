@@ -24,10 +24,6 @@ const copyEvent = new CustomEvent("snackbar", {
     }
 });
 
-const removeTrailingSlash = (path) => {
-    return _.trimEnd(path,'/');
-}
-
 class Secrets extends React.Component {
     constructor(props) {
         super(props);
@@ -40,13 +36,13 @@ class Secrets extends React.Component {
             disableTextField: false,
             focusKey: '',
             focusSecret: '',
-            listBackends: true,
+            listBackends: false,
             secretBackends: [],
             secrets: [],
-            namespace: `${removeTrailingSlash(this.props.params.splat) || '/'}`,
+            namespace: this.props.params.splat === undefined ? '/' : `/${this.props.params.splat}`,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
-            disableAddButton: false,
+            disableAddButton: true,
             buttonColor: 'lightgrey',
             snackBarMsg: ''
         };
@@ -65,13 +61,29 @@ class Secrets extends React.Component {
             'renderNewKeyDialog',
             'renderDeleteConfirmationDialog',
             'copyText',
-            'deleteKey'
+            'deleteKey',
+            'clickRoot'
         );
     }
 
     componentWillMount() {
         this.listSecretBackends();
-        this.getSecrets(this.state.namespace);
+        if (this.state.namespace === '/') {
+            this.clickRoot();
+        } else {
+            if (this.props.params.splat[this.props.params.splat.length - 1] === '/') {
+                this.getSecrets(this.state.namespace);
+            } else {
+                let paths = this.props.params.splat.split('/');
+                let key = paths[paths.length - 1];
+                //console.log(`key: ${key}`);
+                this.state.namespace = `/${this.props.params.splat.replace(key, '')}`;
+                //console.log(`namespace: ${this.state.namespace}`);
+                this.getSecrets(`${this.state.namespace}`);
+                this.clickSecret(key, false);
+            }
+
+        }
     }
 
     copyText(value) {
@@ -96,7 +108,11 @@ class Secrets extends React.Component {
 
     renderEditDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => {
+                this.setState({ openEditModal: false });
+                browserHistory.push(`/secrets${this.state.namespace}`);
+            }
+            } />,
             <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
         ];
 
@@ -142,7 +158,7 @@ class Secrets extends React.Component {
                 autoScrollBodyContent={true}
                 >
                 {content}
-                <div className={styles.error}>{this.state.errorMessage}</div>
+                < div className={styles.error} > {this.state.errorMessage}</div>
             </Dialog>
         );
     }
@@ -247,17 +263,13 @@ class Secrets extends React.Component {
                     }
                 });
                 this.setState({
-                    secretBackends: secretBackends,
-                    disableAddButton: false,
-                    buttonColor: green500
+                    secretBackends: secretBackends
                 });
             })
             .catch((err) => {
                 console.error(err.response.data);
                 this.setState({
-                    errorMessage: err.response.data,
-                    disableAddButton: true,
-                    buttonColor: 'lightgrey'
+                    errorMessage: err.response.data
                 });
             });
     }
@@ -276,8 +288,6 @@ class Secrets extends React.Component {
                     disableAddButton: false,
                     buttonColor: green500
                 });
-                browserHistory.push(`/secrets${namespace}`);
-
             })
             .catch((err) => {
                 console.error(err.response.data);
@@ -292,11 +302,9 @@ class Secrets extends React.Component {
     clickSecret(key, isFullPath) {
         let isDir = key[key.length - 1] === '/';
         if (isDir) {
-            if (isFullPath) {
-                this.getSecrets(`${key}`);
-            } else {
-                this.getSecrets(`${this.state.namespace}${key}`);
-            }
+            let secret = isFullPath ? key : `${this.state.namespace}${key}`;
+            this.getSecrets(secret);
+            browserHistory.push(`/secrets${secret}`);
         } else {
             let fullKey = `${this.state.namespace}${key}`;
             callVaultApi('get', `${encodeURI(fullKey)}`, null, null, null)
@@ -401,7 +409,8 @@ class Secrets extends React.Component {
                                     namespace: '/' + secretBackend.key,
                                     listBackends: false,
                                     secrets: this.getSecrets('/' + secretBackend.key)
-                                })
+                                });
+                            browserHistory.push(`/secrets/${secretBackend.key}`);
                         } }
                         primaryText={<div className={styles.key}>{secretBackend.key}</div>}
                         //secondaryText={<div className={styles.key}>{secret.value}</div>}
@@ -425,6 +434,17 @@ class Secrets extends React.Component {
         }
     }
 
+    clickRoot() {
+        this.setState({
+            listBackends: true,
+            namespace: '/',
+            disableAddButton: true,
+            buttonColor: 'lightgrey'
+        });
+        if (this.props.params.splat !== undefined)
+            browserHistory.push(`/secrets/`);
+    }
+
     renderNamespace() {
         let namespaceParts = this.state.namespace.split('/');
         return (
@@ -433,13 +453,7 @@ class Secrets extends React.Component {
                     return (
                         <div style={{ display: 'inline-block' }} key={index}>
                             <span className={styles.link}
-                                onTouchTap={() => this.setState(
-                                    {
-                                        listBackends: true,
-                                        namespace: '/',
-                                        disableAddButton: true,
-                                        buttonColor: 'lightgrey'
-                                    })}
+                                onTouchTap={(this.clickRoot)}
                                 >ROOT</span>
                             {index !== namespaceParts.length - 1 && <span>/</span>}
                         </div>
