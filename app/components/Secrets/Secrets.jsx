@@ -267,10 +267,8 @@ class Secrets extends React.Component {
                 });
             })
             .catch((err) => {
-                console.error(err.response.data);
-                this.setState({
-                    errorMessage: err.response.data
-                });
+                console.error(err);
+                this.setState({ errorMessage: `Error: ${err}` });
             });
     }
 
@@ -290,9 +288,9 @@ class Secrets extends React.Component {
                 });
             })
             .catch((err) => {
-                console.error(err.response.data);
+                console.error(err);
                 this.setState({
-                    errorMessage: err.response.data,
+                    errorMessage: err,
                     disableAddButton: true,
                     buttonColor: 'lightgrey'
                 });
@@ -321,7 +319,8 @@ class Secrets extends React.Component {
                     browserHistory.push(`/secrets${fullKey}`);
                 })
                 .catch((err) => {
-                    console.error(err.stack);
+                    console.error(err);
+                    this.setState({ errorMessage: `Error: ${err}` });
                 });
         }
     }
@@ -343,7 +342,8 @@ class Secrets extends React.Component {
                 }
             })
             .catch((err) => {
-                console.error(err.stack);
+                console.error(err);
+                this.setState({ errorMessage: `Error: ${err}` });
             });
 
         this.setState({
@@ -372,7 +372,8 @@ class Secrets extends React.Component {
                 }
             })
             .catch((err) => {
-                console.error(err.stack);
+                console.error(err);
+                this.setState({ errorMessage: `Error: ${err}` });
             });
     }
 
