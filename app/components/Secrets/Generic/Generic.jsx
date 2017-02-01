@@ -5,7 +5,7 @@ import { List, ListItem } from 'material-ui/List';
 import Edit from 'material-ui/svg-icons/editor/mode-edit';
 import Copy from 'material-ui/svg-icons/action/assignment';
 import Checkbox from 'material-ui/Checkbox';
-import styles from './secrets.css';
+import styles from './generic.css';
 import _ from 'lodash';
 import copy from 'copy-to-clipboard';
 import Dialog from 'material-ui/Dialog';
@@ -13,8 +13,8 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import axios from 'axios';
-import { callVaultApi } from '../shared/VaultUtils.jsx'
-import JsonEditor from '../shared/JsonEditor.jsx';
+import { callVaultApi } from '../../shared/VaultUtils.jsx'
+import JsonEditor from '../../shared/JsonEditor.jsx';
 import { browserHistory } from 'react-router'
 import Snackbar from 'material-ui/Snackbar';
 

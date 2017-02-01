@@ -1,59 +1,123 @@
-import React, { PropTypes } from 'react';
+import React, {PropTypes} from 'react';
 import styles from './menu.css';
+import Drawer from 'material-ui/Drawer';
 import { browserHistory } from 'react-router';
+import { List, ListItem, makeSelectable } from 'material-ui/List';
+import {tokenHasCapabilities, callVaultApi} from '../VaultUtils.jsx'
+
+const SelectableList = makeSelectable(List);
+
+
+const supported_secret_backend_types = [
+    'generic'
+]
+
+const supported_auth_backend_types = [
+    'token',
+    'github'
+]
 
 class Menu extends React.Component {
+    static propTypes = {
+        pathname: PropTypes.string.isRequired,
+    };
+
     constructor(props) {
         super(props);
-        this.applyActiveLink = this.applyActiveLink.bind(this);
-        this.state = {
-            togglePoliciesSubMenu: false
-        }
     }
 
-    applyActiveLink(name) {
-        if (name === this.props.pathname) {
-            return styles.activeLink
-        };
+    state = {
+        authBackends: [
+            {
+                path: 'token/',
+                type: 'token',
+                description: 'token based credentials'
+            }
+        ],
+        secretBackends: [
+            {
+                path: 'secret/',
+                type: 'generic',
+                description: 'generic secret storage'
+            }
+        ]
+    };
+
+    componentDidMount() {
+        tokenHasCapabilities(['read'], 'sys/mounts')
+            .then(() => {
+                return callVaultApi('get', 'sys/mounts').then((resp) => {
+                    let entries = _.get(resp, 'data.data', _.get(resp, 'data', {}));
+                    let discoveredSecretBackends = _.map(entries, (v, k) => {
+                        if ( _.indexOf(supported_secret_backend_types, v.type) != -1 ) {
+                            let entry = {
+                                path: k,
+                                type: v.type,
+                                description: v.description
+                            }
+                            return entry;
+                        }
+                    }).filter(Boolean);
+                    this.setState({secretBackends: discoveredSecretBackends});
+                });
+            })
+            .catch((err) => {
+                // Not allowed to list secret backends, using default
+                console.log("unable to list: " + err);
+            })
     }
+
 
     render() {
+
+        let renderSecretBackendList = () => {
+            return _.map(this.state.secretBackends, (backend, idx) => {
+                return (
+                    <ListItem primaryText={backend.path} secondaryText={backend.type} value={`/secrets/${backend.type}/${backend.path}`} />
+                )
+            })
+        }
+
+
         return (
-            <div id={styles.root}>
-                <div>
-                    <p className={`${styles.link} ${this.applyActiveLink('/secrets')}`} onClick={() => browserHistory.push('/secrets')}>Secrets</p>
-                </div>
-                <div>
-                    <p className={`${styles.link}`} onClick={() => this.setState({ togglePoliciesSubMenu: !this.state.togglePoliciesSubMenu})}>Policies</p>
-                </div>
-                {this.state.togglePoliciesSubMenu &&
-                    <div className={this.state.togglePoliciesSubMenu ? styles.hide : styles.show}>
-                        <div>
-                            <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/manage')}`} onClick={() => browserHistory.push('/policies/manage')}>Manage</p>
-                        </div>
-                        <div>
-                            <p className={`${styles.link} ${styles.sublink}  ${this.applyActiveLink('/policies/github')}`} onClick={() => browserHistory.push('/policies/github')}>Github</p>
-                        </div>
-                        <div>
-                            <p className={`${styles.link} ${styles.disabled}  ${this.applyActiveLink('/policies/ec2')}`} onClick={() => browserHistory.push('/policies/ec2')}>EC2</p>
-                        </div>
-                    </div>
-                }
-                <div>
-                    <p className={`${styles.link}  ${this.applyActiveLink('/tokens')}`} onClick={() => browserHistory.push('/tokens')}>Tokens</p>
-                </div>
-                <div>
-                    <p className={`${styles.link}  ${this.applyActiveLink('/settings')}`} onClick={() => browserHistory.push('/settings')}>Settings</p>
-                </div>
-                <div>
-                    <p className={`${styles.link}  ${this.applyActiveLink('/responsewrapper')}`} onClick={() => browserHistory.push('/responsewrapper')}>Response Wrapper</p>
-                </div>
-            </div>
+            <Drawer containerClassName={styles.root} docked={true} open={true} >
+                <SelectableList value={this.props.pathname} onChange={(e,v) => browserHistory.push(v)}>
+                    <ListItem
+                        primaryText="Secret Backends"
+                        primaryTogglesNestedList={true}
+                        initiallyOpen={true}
+                        nestedItems={renderSecretBackendList()}
+                    />
+                    <ListItem
+                        primaryText="Auth Backends"
+                        primaryTogglesNestedList={true}
+                        initiallyOpen={true}
+                        nestedItems={[
+                            <ListItem primaryText="Token" secondaryText="Builtin Token Backend" value="/tokens" />,
+                            <ListItem primaryText="Github" secondaryText="Github Backend" value="/policies/github" />
+                        ]}
+                    />
+                    <ListItem
+                        primaryText="System"
+                        primaryTogglesNestedList={true}
+                        initiallyOpen={true}
+                        nestedItems={[
+                            <ListItem primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/policies/manage" />,
+                            <ListItem primaryText="Response Wrapper" secondaryText="Securely forward secrets" value="/responsewrapper" />
+                        ]}
+                    />
+                    <ListItem
+                        primaryText="Preferencies"
+                        secondaryText="Customise Vault-UI"
+                        primaryTogglesNestedList={false}
+                        value="/settings"
+                    />
+
+                </SelectableList>
+            </Drawer>
+
         );
     }
 }
-/*<div>
-    <p className={`${styles.link}  ${this.applyActiveLink('/health')}`} onClick={() => browserHistory.push('/health')}>Health</p>
-</div>*/
 
 export default Menu;

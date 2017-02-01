@@ -6,7 +6,7 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import App from './components/App/App.jsx';
-import Secrets from './components/Secrets/Secrets.jsx';
+import SecretsGeneric from './components/Secrets/Generic/Generic.jsx';
 import Health from './components/Health/Health.jsx';
 import Policies from './components/Policies/Home.jsx';
 import Settings from './components/Settings/Settings.jsx';
@@ -40,7 +40,7 @@ const checkAccessToken = (nextState, replace, callback) => {
 }
 
 const muiTheme = getMuiTheme({
-  fontFamily: 'Source Sans Pro, sans-serif'
+  fontFamily: 'Source Sans Pro, sans-serif',
 });
 
 ReactDOM.render((
@@ -48,14 +48,12 @@ ReactDOM.render((
         <Router history={browserHistory}>
             <Route path="/login" component={Login}/>
             <Route path="/" component={App} onEnter={checkAccessToken}>
-            <Route path="/secrets" component={Secrets}>
-                <Route path="**" component={Secrets}/>
-            </Route>
-            <Route path="/health" component={Health}/>
-            <Route path="/settings" component={Settings}/>
-            <Route path="/responsewrapper" component={ResponseWrapper}/>
-            <Route path="/policies/:policy" component={Policies}/>
-            <Route path="/tokens" component={TokenManage}/>
+                <Route path="/secrets/generic/**" component={SecretsGeneric}/>
+                <Route path="/health" component={Health}/>
+                <Route path="/settings" component={Settings}/>
+                <Route path="/responsewrapper" component={ResponseWrapper}/>
+                <Route path="/policies/:policy" component={Policies}/>
+                <Route path="/tokens" component={TokenManage}/>
             </Route>
         </Router>
     </MuiThemeProvider>
