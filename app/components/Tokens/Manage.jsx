@@ -14,6 +14,7 @@ import Subheader from 'material-ui/Subheader';
 import Divider from 'material-ui/Divider';
 import LinearProgress from 'material-ui/LinearProgress';
 import Snackbar from 'material-ui/Snackbar';
+import {Tabs, Tab} from 'material-ui/Tabs';
 import Checkbox from 'material-ui/Checkbox';
 import Toggle from 'material-ui/Toggle';
 import Paper from 'material-ui/Paper';
@@ -471,80 +472,143 @@ export default class TokenManage extends React.Component {
                 {this.renderAccessorInfoDialog()}
                 {this.renderNewTokenDialog()}
                 <h1 id={styles.welcomeHeadline}>Tokens</h1>
-                <h2>Manage Tokens</h2>
-                <p>Here you can do stuff with tokens</p>
-                <Paper>
-                    <Toolbar>
-                        <ToolbarGroup firstChild={true}>
-                            <FlatButton
-                                primary={true}
-                                label="NEW TOKEN"
-                                disabled={this.state.newTokenBtnDisabled}
-                                onTouchTap={() => {this.setState({
-                                    newTokenDialog: true,
-                                    newTokenCodeDialog: false,
-                                    newTokenCode: '',
-                                    newTokenSelectedPolicies: ['default'],
-                                    newTokenIsOrphan: false,
-                                    newTokenIsRenewable: true,
-                                    newTokenMaxUses: 0,
-                                    newTokenOverrideTTL: 0
-                                })}}
-                            />
-                        </ToolbarGroup>
-                        <ToolbarGroup>
-                                <ToolbarSeparator />
-                                <IconMenu iconButtonElement={<IconButton iconClassName="fa fa-bars"/>}>
-                                    <MenuItem
-                                        primaryText="Show details"
-                                        disabled={!this.state.selectedAccessor}
-                                        onTouchTap={() => this.setState({accessorInfoDialog: true})}
-                                    />
-                                    <Divider />
-                                    <MenuItem
-                                        primaryText="Revoke Selected"
-                                        disabled={this.state.revokeBtnDisabled}
-                                        onTouchTap={() => {
-                                            this.setState({ revokeConfirmDialog: true, revokeAccessorId: this.state.selectedAccessor })
-                                        } }
-                                    />
-                                </IconMenu>    
-                            </ToolbarGroup>
-                        </Toolbar>
-                    <Table selectable={true} onRowSelection={this.onRowSelection}>
-                        <TableHeader displaySelectAll={false} adjustForCheckbox={true}>
-                            <TableRow>
-                                <TableHeaderColumn colSpan="2" >Accessor ID</TableHeaderColumn>
-                                <TableHeaderColumn>Display Name</TableHeaderColumn>
-                                <TableHeaderColumn>Additional Policies</TableHeaderColumn>
-                                <TableHeaderColumn>Created</TableHeaderColumn>
-                                <TableHeaderColumn style={{width: 40}}>Orphan</TableHeaderColumn>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody showRowHover={true} displayRowCheckbox={true} stripedRows={true} deselectOnClickaway={false}>
-                            {this.renderAccessorTableItems()}
-                        </TableBody>
-                        <TableFooter adjustForCheckbox={false}>
-                            <TableRow>
-                                <TableRowColumn style={{textAlign: 'center'}} colSpan="4">
-                                    <UltimatePagination
-                                        currentPage={this.state.currentPage}
-                                        totalPages={this.state.totalPages}
-                                        onChange={this.onPageChangeFromPagination}
-                                    />
-                                </TableRowColumn>
-                            </TableRow>
-                        </TableFooter>    
-                    </Table>
+                <Paper zDepth={5}>
+                    <Tabs>
+                        <Tab label="Manage Tokens" >
+                            <Paper className={styles.TabInfoSection} zDepth={0}>
+                                Here you can create new tokens and list active tokens.<br />
+                                Existing tokens are represented by their respective Accessor ID.
+                            </Paper>
+                            <Paper className={styles.accessorListSection} zDepth={0}>
+                                <Toolbar>
+                                    <ToolbarGroup firstChild={true}>
+                                        <FlatButton
+                                            primary={true}
+                                            label="NEW TOKEN"
+                                            disabled={this.state.newTokenBtnDisabled}
+                                            onTouchTap={() => {
+                                                this.setState({
+                                                    newTokenDialog: true,
+                                                    newTokenCodeDialog: false,
+                                                    newTokenCode: '',
+                                                    newTokenSelectedPolicies: ['default'],
+                                                    newTokenIsOrphan: false,
+                                                    newTokenIsRenewable: true,
+                                                    newTokenMaxUses: 0,
+                                                    newTokenOverrideTTL: 0
+                                                })
+                                            } }
+                                            />
+                                    </ToolbarGroup>
+                                    <ToolbarGroup>
+                                        <ToolbarSeparator />
+                                        <IconMenu iconButtonElement={<IconButton iconClassName="fa fa-bars" />}>
+                                            <MenuItem
+                                                primaryText="Show details"
+                                                disabled={!this.state.selectedAccessor}
+                                                onTouchTap={() => this.setState({ accessorInfoDialog: true })}
+                                                />
+                                            <Divider />
+                                            <MenuItem
+                                                primaryText="Revoke Selected"
+                                                disabled={this.state.revokeBtnDisabled}
+                                                onTouchTap={() => {
+                                                    this.setState({ revokeConfirmDialog: true, revokeAccessorId: this.state.selectedAccessor })
+                                                } }
+                                                />
+                                        </IconMenu>
+                                    </ToolbarGroup>
+                                </Toolbar>
+                                <Table selectable={true} onRowSelection={this.onRowSelection}>
+                                    <TableHeader displaySelectAll={false} adjustForCheckbox={true}>
+                                        <TableRow>
+                                            <TableHeaderColumn colSpan="2" >Accessor ID</TableHeaderColumn>
+                                            <TableHeaderColumn>Display Name</TableHeaderColumn>
+                                            <TableHeaderColumn>Additional Policies</TableHeaderColumn>
+                                            <TableHeaderColumn>Created</TableHeaderColumn>
+                                            <TableHeaderColumn style={{ width: 40 }}>Orphan</TableHeaderColumn>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody showRowHover={true} displayRowCheckbox={true} stripedRows={true} deselectOnClickaway={false}>
+                                        {this.renderAccessorTableItems()}
+                                    </TableBody>
+                                    <TableFooter adjustForCheckbox={false}>
+                                        <TableRow>
+                                            <TableRowColumn style={{ textAlign: 'center' }} colSpan="4">
+                                                <UltimatePagination
+                                                    currentPage={this.state.currentPage}
+                                                    totalPages={this.state.totalPages}
+                                                    onChange={this.onPageChangeFromPagination}
+                                                    />
+                                            </TableRowColumn>
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
+                            </Paper>
+                        </Tab>
+                        <Tab label="Manage Roles" >
+                            <Paper className={styles.TabInfoSection} zDepth={0}>
+                                Here you can create, list and edit token roles.<br />
+                                Roles can enforce specific behaviors when creating new tokens.
+                            </Paper>
+                            <Paper className={styles.rolesListSection} zDepth={0}>
+                                <Toolbar>
+                                    <ToolbarGroup firstChild={true}>
+                                        <FlatButton
+                                            primary={true}
+                                            label="NEW ROLE"
+                                            disabled={this.state.newTokenBtnDisabled}
+                                            onTouchTap={() => {
+                                                this.setState({
+                                                    newTokenDialog: true,
+                                                    newTokenCodeDialog: false,
+                                                    newTokenCode: '',
+                                                    newTokenSelectedPolicies: ['default'],
+                                                    newTokenIsOrphan: false,
+                                                    newTokenIsRenewable: true,
+                                                    newTokenMaxUses: 0,
+                                                    newTokenOverrideTTL: 0
+                                                })
+                                            } }
+                                            />
+                                    </ToolbarGroup>
+                                </Toolbar>
+                                <List>
+                                    <ListItem
+                                        key="goodone"
+                                        primaryText="goodone"
+                                        rightIconButton={
+                                            <IconMenu iconButtonElement={<IconButton iconClassName="fa fa-bars" />}>
+                                            <MenuItem
+                                                primaryText="Show details"
+                                                disabled={!this.state.selectedAccessor}
+                                                onTouchTap={() => this.setState({ accessorInfoDialog: true })}
+                                                />
+                                            <Divider />
+                                            <MenuItem
+                                                primaryText="Revoke Selected"
+                                                disabled={this.state.revokeBtnDisabled}
+                                                onTouchTap={() => {
+                                                    this.setState({ revokeConfirmDialog: true, revokeAccessorId: this.state.selectedAccessor })
+                                                } }
+                                                />
+                                        </IconMenu>
+                                            
+                                        }
+                                    ></ListItem>
+                                </List>
+                            </Paper>
+                        </Tab>
+                    </Tabs>
                 </Paper>
                 <Snackbar
                     open={this.state.snackBarMsg != ''}
                     message={this.state.snackBarMsg}
                     action="OK"
-                    onActionTouchTap={() => this.setState({snackBarMsg: ''})}
+                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
                     autoHideDuration={4000}
-                    onRequestClose={() => this.setState({snackBarMsg: ''})}
-                />
+                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
+                    />
             </div>
         );
     }
