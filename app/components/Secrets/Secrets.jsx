@@ -13,7 +13,10 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import axios from 'axios';
+import { callVaultApi } from '../shared/VaultUtils.jsx'
 import JsonEditor from '../shared/JsonEditor.jsx';
+import { browserHistory } from 'react-router'
+import Snackbar from 'material-ui/Snackbar';
 
 const copyEvent = new CustomEvent("snackbar", {
     detail: {
@@ -36,11 +39,12 @@ class Secrets extends React.Component {
             listBackends: false,
             secretBackends: [],
             secrets: [],
-            namespace: '/secret/',
+            namespace: this.props.params.splat === undefined ? '/' : `/${this.props.params.splat}`,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
-            disableAddButton: false,
-            buttonColor: 'lightgrey'
+            disableAddButton: true,
+            buttonColor: 'lightgrey',
+            snackBarMsg: ''
         };
 
         _.bindAll(
@@ -57,13 +61,29 @@ class Secrets extends React.Component {
             'renderNewKeyDialog',
             'renderDeleteConfirmationDialog',
             'copyText',
-            'deleteKey'
+            'deleteKey',
+            'clickRoot'
         );
     }
 
     componentWillMount() {
         this.listSecretBackends();
-        this.getSecrets(this.state.namespace);
+        if (this.state.namespace === '/') {
+            this.clickRoot();
+        } else {
+            if (this.props.params.splat[this.props.params.splat.length - 1] === '/') {
+                this.getSecrets(this.state.namespace);
+            } else {
+                let paths = this.props.params.splat.split('/');
+                let key = paths[paths.length - 1];
+                //console.log(`key: ${key}`);
+                this.state.namespace = `/${this.props.params.splat.replace(key, '')}`;
+                //console.log(`namespace: ${this.state.namespace}`);
+                this.getSecrets(`${this.state.namespace}`);
+                this.clickSecret(key, false);
+            }
+
+        }
     }
 
     copyText(value) {
@@ -71,62 +91,16 @@ class Secrets extends React.Component {
         document.dispatchEvent(copyEvent);
     }
 
-    deleteKey(key) {
-        let fullKey = `${this.state.namespace}${key}`;
-        axios.delete(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
-            .then((resp) => {
-                if (resp.status !== 204) {
-                    console.error(resp.status);
-                } else {
-                    let secrets = this.state.secrets;
-                    let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete.key == key; });
-                    secrets = _.pull(secrets, secretToDelete);
-                    this.setState({
-                        secrets: secrets
-                    });
-                }
-            })
-            .catch((err) => {
-                console.error(err.stack);
-            });
-
-        this.setState({
-            deletingKey: '',
-            openDeleteModal: false
-        });
-    }
-
-    updateSecret(isNewKey) {
-        let fullKey = `${this.state.namespace}${this.state.focusKey}`;
-        //Check if the secret is a json object, if so stringify it. This is needed to properly escape characters.
-        let secret = typeof this.state.focusSecret == 'object' ? JSON.stringify(this.state.focusSecret) : this.state.focusSecret;
-
-        axios.post(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "VaultUrl": window.localStorage.getItem("vaultUrl"), "Value": secret })
-            .then((resp) => {
-                if (isNewKey) {
-                    let secrets = this.state.secrets;
-                    let key = this.state.focusKey.includes('/') ? `${this.state.focusKey.split('/')[0]}/` : this.state.focusKey;
-                    secrets.push({ key: key, value: this.state.focusSecret });
-                    this.setState({
-                        secrets: secrets
-                    });
-                }
-            })
-            .catch((err) => {
-                console.error(err.stack);
-            })
-    }
-
     secretChangedJsonEditor(v, syntaxCheckOk) {
         if (syntaxCheckOk && v) {
-            this.setState({disableSubmit: false, focusSecret: v});
+            this.setState({ disableSubmit: false, focusSecret: v });
         } else {
-            this.setState({disableSubmit: true});
+            this.setState({ disableSubmit: true });
         }
     }
 
     secretChangedTextEditor(e, v) {
-        this.setState({disableSubmit: false});
+        this.setState({ disableSubmit: false });
         let tmp = {};
         _.set(tmp, `${this.state.rootKey}`, v);
         this.state.focusSecret = tmp;
@@ -134,7 +108,11 @@ class Secrets extends React.Component {
 
     renderEditDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => {
+                this.setState({ openEditModal: false });
+                browserHistory.push(`/secrets${this.state.namespace}`);
+            }
+            } />,
             <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
         ];
 
@@ -157,17 +135,17 @@ class Secrets extends React.Component {
                     multiLine={true}
                     defaultValue={this.state.focusSecret[this.state.rootKey]}
                     fullWidth={true}
-                />
+                    />
             );
         } else {
             var title = `Editing ${this.state.namespace}${this.state.focusKey}`;
             content = (
                 <JsonEditor
-                    rootName={this.state.namespace+this.state.focusKey}
+                    rootName={this.state.namespace + this.state.focusKey}
                     value={this.state.focusSecret}
                     mode={'tree'}
                     onChange={this.secretChangedJsonEditor}
-                />
+                    />
             );
         }
         return (
@@ -180,7 +158,7 @@ class Secrets extends React.Component {
                 autoScrollBodyContent={true}
                 >
                 {content}
-                <div className={styles.error}>{this.state.errorMessage}</div>
+                < div className={styles.error} > {this.state.errorMessage}</div>
             </Dialog>
         );
     }
@@ -224,7 +202,6 @@ class Secrets extends React.Component {
                 });
                 return;
             }
-            console.log(this.state.focusSecret);
             this.updateSecret(true);
             this.setState({ openNewKeyModal: false, errorMessage: '' });
         }
@@ -247,15 +224,15 @@ class Secrets extends React.Component {
                     hintText="Value"
                     autoFocus
                     onChange={this.secretChangedTextEditor}
-                />
+                    />
             );
         } else {
             content = (
                 <JsonEditor
-                    rootName={this.state.namespace+this.state.focusKey}
+                    rootName={this.state.namespace + this.state.focusKey}
                     mode={'tree'}
                     onChange={this.secretChangedJsonEditor}
-                />
+                    />
             );
         }
 
@@ -277,39 +254,36 @@ class Secrets extends React.Component {
     }
 
     listSecretBackends() {
-        axios.get(`/listsecretbackends?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+        callVaultApi('get', 'sys/mounts', null, null, null)
             .then((resp) => {
-                var secretBackends = [];
-                _.forEach(Object.keys(resp.data.data), (key) => {
-                    if (resp.data.data[key].type == "generic") {
+                // Backwards compatability for Vault 0.6
+                let data = _.get(resp, 'data.data', _.get(resp, 'data', {}));
+                let secretBackends = [];
+
+                _.forEach(Object.keys(data), (key) => {
+                    if (_.get(data, `${key}.type`) === "generic") {
                         secretBackends.push({ key: key });
                     }
                 });
+
                 this.setState({
-                    secretBackends: secretBackends,
-                    disableAddButton: false,
-                    buttonColor: green500
+                    secretBackends: secretBackends
                 });
             })
             .catch((err) => {
-                console.error(err.response.data);
-                this.setState({
-                    errorMessage: err.response.data,
-                    disableAddButton: true,
-                    buttonColor: 'lightgrey'
-                });
+                console.error(err);
+                this.setState({ errorMessage: `Error: ${err}` });
             });
     }
 
     getSecrets(namespace) {
-        axios.get(`/listsecrets?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}&namespace=${encodeURI(namespace)}`)
+        callVaultApi('get', `${encodeURI(namespace)}`, { list: true }, null, null)
             .then((resp) => {
                 var secrets = _.map(resp.data.data.keys, (key) => {
                     return {
                         key: key
                     }
                 });
-
                 this.setState({
                     namespace: namespace,
                     secrets: secrets,
@@ -318,9 +292,9 @@ class Secrets extends React.Component {
                 });
             })
             .catch((err) => {
-                console.error(err.response.data);
+                console.error(err);
                 this.setState({
-                    errorMessage: err.response.data,
+                    errorMessage: err,
                     disableAddButton: true,
                     buttonColor: 'lightgrey'
                 });
@@ -330,14 +304,12 @@ class Secrets extends React.Component {
     clickSecret(key, isFullPath) {
         let isDir = key[key.length - 1] === '/';
         if (isDir) {
-            if (isFullPath) {
-                this.getSecrets(`${key}`);
-            } else {
-                this.getSecrets(`${this.state.namespace}${key}`);
-            }
+            let secret = isFullPath ? key : `${this.state.namespace}${key}`;
+            this.getSecrets(secret);
+            browserHistory.push(`/secrets${secret}`);
         } else {
             let fullKey = `${this.state.namespace}${key}`;
-            axios.get(`/secret?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&secret=${encodeURI(fullKey)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+            callVaultApi('get', `${encodeURI(fullKey)}`, null, null, null)
                 .then((resp) => {
                     this.setState({
                         errorMessage: '',
@@ -345,14 +317,68 @@ class Secrets extends React.Component {
                         disableTextField: false,
                         openEditModal: true,
                         focusKey: key,
-                        focusSecret: resp.data,
+                        focusSecret: resp.data.data,
                         listBackends: false
                     });
+                    browserHistory.push(`/secrets${fullKey}`);
                 })
                 .catch((err) => {
-                    console.error(err.stack);
+                    console.error(err);
+                    this.setState({ errorMessage: `Error: ${err}` });
                 });
         }
+    }
+
+    deleteKey(key) {
+        let fullKey = `${this.state.namespace}${key}`;
+        callVaultApi('delete', `${encodeURI(fullKey)}`, null, null, null)
+            .then((resp) => {
+                if (resp.status !== 204 && resp.status !== 200) {
+                    this.setState({ errorMessage: `Delete returned status of ${resp.status}:${resp.statusText}` });
+                } else {
+                    let secrets = this.state.secrets;
+                    let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete.key == key; });
+                    secrets = _.pull(secrets, secretToDelete);
+                    this.setState({
+                        secrets: secrets,
+                        snackBarMsg: `Secret ${key} deleted`
+                    });
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+                this.setState({ errorMessage: `Error: ${err}` });
+            });
+
+        this.setState({
+            deletingKey: '',
+            openDeleteModal: false
+        });
+    }
+
+    updateSecret(isNewKey) {
+        let fullKey = `${this.state.namespace}${this.state.focusKey}`;
+        //Check if the secret is a json object, if so stringify it. This is needed to properly escape characters.
+        //let secret = typeof this.state.focusSecret == 'object' ? JSON.stringify(this.state.focusSecret) : this.state.focusSecret;
+        let secret = this.state.focusSecret;
+        callVaultApi('post', `${encodeURI(fullKey)}`, null, secret, null)
+            .then((resp) => {
+                if (isNewKey) {
+                    let secrets = this.state.secrets;
+                    let key = this.state.focusKey.includes('/') ? `${this.state.focusKey.split('/')[0]}/` : this.state.focusKey;
+                    secrets.push({ key: key, value: this.state.focusSecret });
+                    this.setState({
+                        secrets: secrets,
+                        snackBarMsg: `Secret ${this.state.focusKey} added`
+                    });
+                } else {
+                    this.setState({ snackBarMsg: `Secret ${this.state.focusKey} updated` });
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+                this.setState({ errorMessage: `Error: ${err}` });
+            });
     }
 
     showDelete(key) {
@@ -388,7 +414,8 @@ class Secrets extends React.Component {
                                     namespace: '/' + secretBackend.key,
                                     listBackends: false,
                                     secrets: this.getSecrets('/' + secretBackend.key)
-                                })
+                                });
+                            browserHistory.push(`/secrets/${secretBackend.key}`);
                         } }
                         primaryText={<div className={styles.key}>{secretBackend.key}</div>}
                         //secondaryText={<div className={styles.key}>{secret.value}</div>}
@@ -412,6 +439,17 @@ class Secrets extends React.Component {
         }
     }
 
+    clickRoot() {
+        this.setState({
+            listBackends: true,
+            namespace: '/',
+            disableAddButton: true,
+            buttonColor: 'lightgrey'
+        });
+        if (this.props.params.splat !== undefined)
+            browserHistory.push(`/secrets/`);
+    }
+
     renderNamespace() {
         let namespaceParts = this.state.namespace.split('/');
         return (
@@ -420,13 +458,7 @@ class Secrets extends React.Component {
                     return (
                         <div style={{ display: 'inline-block' }} key={index}>
                             <span className={styles.link}
-                                onTouchTap={() => this.setState(
-                                    {
-                                        listBackends: true,
-                                        namespace: '/',
-                                        disableAddButton: true,
-                                        buttonColor: 'lightgrey'
-                                    })}
+                                onTouchTap={(this.clickRoot)}
                                 >ROOT</span>
                             {index !== namespaceParts.length - 1 && <span>/</span>}
                         </div>
@@ -469,6 +501,14 @@ class Secrets extends React.Component {
                 <List>
                     {this.renderList()}
                 </List>
+                <Snackbar
+                    open={this.state.snackBarMsg != ''}
+                    message={this.state.snackBarMsg}
+                    action="OK"
+                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
+                    autoHideDuration={4000}
+                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
+                    />
             </div>
         );
     }

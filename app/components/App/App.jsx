@@ -29,6 +29,9 @@ export default class App extends React.Component {
         if (!window.localStorage.getItem('showDeleteModal')) {
             window.localStorage.setItem('showDeleteModal', 'true');
         }
+        if (!window.localStorage.getItem('enableCapabilitiesCache')) {
+            window.localStorage.setItem('enableCapabilitiesCache', 'true');
+        }
         document.addEventListener("snackbar", (e) => {
             this.setState({
                 snackbarMessage: e.detail.message,

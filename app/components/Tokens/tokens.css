@@ -1,0 +1,33 @@
+#welcomeHeadline {
+    font-size: 60px;
+    font-weight: 200;
+}
+
+span.policiesList > div > div {
+    padding: 2px !important;
+    font-size: 90%;
+    text-align: center;
+    vertical-align: middle;
+    border: dashed 1px black;
+}
+
+span.policiesList > div > div > div {
+    margin: 2px 0px 2px !important;
+}
+
+.textFieldStyle {
+    width: 30% !important;
+    padding-right: 3%;
+}
+
+.newTokenCodeEmitted input {
+    text-align: center;
+    font-family: monospace !important;
+    font-size: 150% !important;
+    color: black !important;
+    cursor: crosshair !important;
+}
+
+.newTokenCodeEmitted {
+    text-align: center;
+}

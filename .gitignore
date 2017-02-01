@@ -38,3 +38,6 @@ jspm_packages
 
 # build folder
 dist/*
+
+# Visual studio code
+.vscode/
