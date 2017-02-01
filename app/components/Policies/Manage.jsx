@@ -230,7 +230,7 @@ export default class Manage extends React.Component {
     clickPolicy(policyName) {
         callVaultApi('get', `sys/policy/${encodeURI(policyName)}`, null, null, null)
             .then((resp) => {
-                let rules = resp.data.data.rules;
+                let rules = _.get(resp, 'data.data.rules', _.get(resp, 'data.rules', {}));
                 let rules_obj;
                 // Attempt to parse into JSON incase a stringified JSON was sent
                 try {
