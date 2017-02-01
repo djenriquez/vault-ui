@@ -256,27 +256,19 @@ class Secrets extends React.Component {
     listSecretBackends() {
         callVaultApi('get', 'sys/mounts', null, null, null)
             .then((resp) => {
-                var secretBackends = [];
-                if (_.get(resp, 'data.data', null) === null) {
-                    // Backwards compatability for Vault 0.6
-                    _.forEach(Object.keys(resp.data), (key) => {
-                        if (_.get(resp, `data.${key}.type`, null) === "generic") {
-                            secretBackends.push({ key: key });
-                        }
-                    });
-                    this.setState({
-                        secretBackends: secretBackends
-                    });
-                } else {
-                    _.forEach(Object.keys(resp.data.data), (key) => {
-                        if (resp.data.data[key].type == "generic") {
-                            secretBackends.push({ key: key });
-                        }
-                    });
-                    this.setState({
-                        secretBackends: secretBackends
-                    });
-                }
+                // Backwards compatability for Vault 0.6
+                let data = _.get(resp, 'data.data', _.get(resp, 'data', {}));
+                let secretBackends = [];
+
+                _.forEach(Object.keys(data), (key) => {
+                    if (_.get(data, `${key}.type`) === "generic") {
+                        secretBackends.push({ key: key });
+                    }
+                });
+
+                this.setState({
+                    secretBackends: secretBackends
+                });
             })
             .catch((err) => {
                 console.error(err);
