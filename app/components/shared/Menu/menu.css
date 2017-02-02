@@ -1,6 +1,7 @@
 .root {
     padding-left: 16px;
     margin-top: 64px;
+    height: calc(100% - 60px) !important;
 }
 
 .root span {

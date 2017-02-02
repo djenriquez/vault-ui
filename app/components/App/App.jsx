@@ -4,6 +4,7 @@ import Header from '../shared/Header/Header.jsx';
 import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
+import Paper from 'material-ui/Paper';
 import { browserHistory } from 'react-router';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
@@ -17,8 +18,8 @@ export default class App extends React.Component {
         this.renderLogoutDialog = this.renderLogoutDialog.bind(this);
         this.state = {
             snackbarMessage: '',
-            snackbarOpen: false,
             snackbarType: 'OK',
+            snackbarStyle: {},
             namespace: '/',
             logoutOpen: false,
             logoutPromptSeen: false
@@ -33,10 +34,15 @@ export default class App extends React.Component {
             window.localStorage.setItem('enableCapabilitiesCache', 'true');
         }
         document.addEventListener("snackbar", (e) => {
+            let messageStyle = { backgroundColor: green500 };
+            if ( e.detail.message instanceof Error ) {
+                messageStyle = { backgroundColor: red500 };
+            }
+
             this.setState({
-                snackbarMessage: e.detail.message,
+                snackbarMessage: e.detail.message.toString(),
                 snackbarType: e.detail.type || 'OK',
-                snackbarOpen: true
+                snackbarStyle: messageStyle
             });
         });
 
@@ -92,27 +98,23 @@ export default class App extends React.Component {
                 Use the menu on the left to navigate around.</p>
             </div>
         );
-        let messageStyle = { backgroundColor: green500 };
-        if (this.state.snackbarType == 'warn') {
-            messageStyle = { backgroundColor: yellow500 };
-        }
-        if (this.state.snackbarType == 'error') {
-            messageStyle = { backgroundColor: red500 };
-        }
         return <div>
             <Snackbar
                 className={styles.snackbar}
-                bodyStyle={messageStyle}
-                open={this.state.snackbarOpen}
+                bodyStyle={this.state.snackbarStyle}
+                open={this.state.snackbarMessage != ''}
                 message={this.state.snackbarMessage}
-                autoHideDuration={2000}
-                onRequestClose={() => this.setState({ snackbarOpen: false })}
+                autoHideDuration={3000}
+                onRequestClose={() => this.setState({ snackbarMessage: '' })}
+                onActionTouchTap={() => this.setState({ snackbarMessage: '' })}
                 />
                 {this.state.logoutOpen && this.renderLogoutDialog()}
             <Header />
             <Menu pathname={this.props.location.pathname} />
             <div id={styles.content}>
-                {this.props.children || welcome}
+                <Paper zDepth={5}>
+                    {this.props.children || welcome}
+                </Paper>
             </div>
 
         </div>;

@@ -36,7 +36,7 @@ function callVaultApi(method, path, query = {}, data, headers = {}) {
     });
 
     return instance.request({
-        url: path,
+        url: encodeURI(path),
         method: method,
         data: data,
         params: query,

@@ -48,7 +48,7 @@ ReactDOM.render((
         <Router history={browserHistory}>
             <Route path="/login" component={Login}/>
             <Route path="/" component={App} onEnter={checkAccessToken}>
-                <Route path="/secrets/generic/**" component={SecretsGeneric}/>
+                <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric}/>
                 <Route path="/health" component={Health}/>
                 <Route path="/settings" component={Settings}/>
                 <Route path="/responsewrapper" component={ResponseWrapper}/>

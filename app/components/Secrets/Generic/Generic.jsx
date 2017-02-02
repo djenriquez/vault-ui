@@ -1,99 +1,159 @@
 import React, { PropTypes } from 'react';
+import { Tabs, Tab } from 'material-ui/Tabs';
+import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
+import Subheader from 'material-ui/Subheader';
+import Paper from 'material-ui/Paper';
+import Avatar from 'material-ui/Avatar';
+import FileFolder from 'material-ui/svg-icons/file/folder';
+import ActionAssignment from 'material-ui/svg-icons/action/assignment';
+import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
+import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
 import { List, ListItem } from 'material-ui/List';
-import Edit from 'material-ui/svg-icons/editor/mode-edit';
-import Copy from 'material-ui/svg-icons/action/assignment';
+import { Step, Stepper, StepLabel } from 'material-ui/Stepper';
 import Checkbox from 'material-ui/Checkbox';
 import styles from './generic.css';
+import sharedStyles from '../../shared/styles.css';
 import _ from 'lodash';
-import copy from 'copy-to-clipboard';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
-import axios from 'axios';
-import { callVaultApi } from '../../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
-import { browserHistory } from 'react-router'
-import Snackbar from 'material-ui/Snackbar';
+import { browserHistory, Link } from 'react-router'
 
-const copyEvent = new CustomEvent("snackbar", {
-    detail: {
-        message: 'Copied!'
-    }
-});
 
-class Secrets extends React.Component {
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
+
+class GenericSecretBackend extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+    };
+
     constructor(props) {
         super(props);
+
         this.state = {
-            openEditModal: false,
-            openNewKeyModal: false,
-            errorMessage: '',
+            newSecretBtnDisabled: true,
+            secretList: [],
+            secretContent: {},
+            newSecretName: '',
+            currentLogicalPath: '',
+            disableSubmit: true,
+            openNewObjectModal: false,
+            openEditObjectModal: false,
             openDeleteModal: false,
-            disableSubmit: false,
-            disableTextField: false,
-            focusKey: '',
-            focusSecret: '',
-            listBackends: false,
-            secretBackends: [],
-            secrets: [],
-            namespace: this.props.params.splat === undefined ? '/' : `/${this.props.params.splat}`,
+            deletingKey: '',
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
-            disableAddButton: true,
-            buttonColor: 'lightgrey',
-            snackBarMsg: ''
-        };
+        }
 
         _.bindAll(
             this,
-            'listSecretBackends',
-            'getSecrets',
-            'renderList',
-            'renderNamespace',
-            'clickSecret',
-            'secretChangedTextEditor',
             'secretChangedJsonEditor',
-            'updateSecret',
-            'renderEditDialog',
-            'renderNewKeyDialog',
-            'renderDeleteConfirmationDialog',
-            'copyText',
-            'deleteKey',
-            'clickRoot'
+            'secretChangedTextEditor',
+            'loadSecretsList',
+            'displaySecret',
+            'CreateUpdateObject',
+            'DeleteObject',
+            'renderNewObjectDialog',
+            'renderEditObjectDialog',
+            'renderDeleteConfirmationDialog'
         );
     }
 
-    componentWillMount() {
-        this.listSecretBackends();
-        if (this.state.namespace === '/') {
-            this.clickRoot();
-        } else {
-            if (this.props.params.splat[this.props.params.splat.length - 1] === '/') {
-                this.getSecrets(this.state.namespace);
-            } else {
-                let paths = this.props.params.splat.split('/');
-                let key = paths[paths.length - 1];
-                //console.log(`key: ${key}`);
-                this.state.namespace = `/${this.props.params.splat.replace(key, '')}`;
-                //console.log(`namespace: ${this.state.namespace}`);
-                this.getSecrets(`${this.state.namespace}`);
-                this.clickSecret(key, false);
-            }
+    isPathDirectory(path) {
+        if (!path) path = '/';
+        return (path[path.length - 1] === '/');
+    }
 
+    getBaseDir(path) {
+        if (!path) return '/';
+        return path.substring(0, _.lastIndexOf(path, '/') + 1);
+    }
+
+    loadSecretsList() {
+        // Control the new secret button
+        tokenHasCapabilities(['create'], this.state.currentLogicalPath)
+            .then(() => {
+                this.setState({ newSecretBtnDisabled: false })
+            })
+            .catch(() => {
+                this.setState({ newSecretBtnDisabled: true })
+            })
+
+        tokenHasCapabilities(['list'], this.state.currentLogicalPath)
+            .then(() => {
+                // Load secret list at current path
+                callVaultApi('get', this.state.currentLogicalPath, { list: true }, null, null)
+                    .then((resp) => {
+                        this.setState({ secretList: resp.data.data.keys });
+                    })
+                    .catch(snackBarMessage)
+            })
+            .catch(() => {
+                this.setState({ secretList: [] })
+                snackBarMessage(`No permissions to list content at ${this.state.currentLogicalPath}`);
+            })
+    }
+
+
+    displaySecret() {
+        tokenHasCapabilities(['read'], this.state.currentLogicalPath)
+            .then(() => {
+                // Load content of the secret
+                callVaultApi('get', this.state.currentLogicalPath, null, null, null)
+                    .then((resp) => {
+                        this.setState({ secretContent: resp.data.data, openEditObjectModal: true });
+                    })
+                    .catch(snackBarMessage)
+            })
+            .catch(() => {
+                this.setState({ secretContent: {} })
+                snackBarMessage(`No permissions to read content of ${this.state.currentLogicalPath}`);
+            })
+    }
+
+    componentWillMount() {
+        this.setState({ currentLogicalPath: `${this.props.params.namespace}/${this.props.params.splat}` })
+    }
+
+    componentDidMount() {
+        if (this.isPathDirectory(this.props.params.splat)) {
+            this.loadSecretsList();
+        } else {
+            this.displaySecret();
         }
     }
 
-    copyText(value) {
-        copy(value);
-        document.dispatchEvent(copyEvent);
+    componentWillReceiveProps(nextProps) {
+        this.setState({ currentLogicalPath: `${nextProps.params.namespace}/${nextProps.params.splat}` })
+        if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
+            // Reset
+            this.setState({
+                secretList: []
+            })
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (!_.isEqual(this.props.params, prevProps.params)) {
+            if (this.isPathDirectory(this.props.params.splat)) {
+                this.loadSecretsList();
+            } else {
+                this.displaySecret();
+            }
+        }
     }
 
     secretChangedJsonEditor(v, syntaxCheckOk) {
         if (syntaxCheckOk && v) {
-            this.setState({ disableSubmit: false, focusSecret: v });
+            this.setState({ disableSubmit: false, secretContent: v });
         } else {
             this.setState({ disableSubmit: true });
         }
@@ -103,111 +163,64 @@ class Secrets extends React.Component {
         this.setState({ disableSubmit: false });
         let tmp = {};
         _.set(tmp, `${this.state.rootKey}`, v);
-        this.state.focusSecret = tmp;
+        this.setState({ secretContent: tmp });
     }
 
-    renderEditDialog() {
-        const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => {
-                this.setState({ openEditModal: false });
-                browserHistory.push(`/secrets${this.state.namespace}`);
-            }
-            } />,
-            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
-        ];
-
-        let submitUpdate = () => {
-            this.updateSecret(false);
-            this.setState({ openEditModal: false });
-        }
-
-        var objectIsBasicRootKey = _.size(this.state.focusSecret) == 1 && this.state.focusSecret.hasOwnProperty(this.state.rootKey);
-        var content;
-
-        if (objectIsBasicRootKey && this.state.useRootKey) {
-            var title = `Editing ${this.state.namespace}${this.state.focusKey} with specified root key`;
-            content = (
-                <TextField
-                    onChange={this.secretChangedTextEditor}
-                    name="editingText"
-                    disabled={this.state.disableTextField}
-                    autoFocus
-                    multiLine={true}
-                    defaultValue={this.state.focusSecret[this.state.rootKey]}
-                    fullWidth={true}
-                    />
-            );
-        } else {
-            var title = `Editing ${this.state.namespace}${this.state.focusKey}`;
-            content = (
-                <JsonEditor
-                    rootName={this.state.namespace + this.state.focusKey}
-                    value={this.state.focusSecret}
-                    mode={'tree'}
-                    onChange={this.secretChangedJsonEditor}
-                    />
-            );
-        }
-        return (
-            <Dialog
-                title={title}
-                modal={false}
-                actions={actions}
-                open={this.state.openEditModal}
-                onRequestClose={() => this.setState({ openEditModal: false })}
-                autoScrollBodyContent={true}
-                >
-                {content}
-                < div className={styles.error} > {this.state.errorMessage}</div>
-            </Dialog>
-        );
+    CreateUpdateObject() {
+        let secret = this.state.secretContent;
+        let fullpath = this.state.currentLogicalPath + this.state.newSecretName;
+        callVaultApi('post', fullpath, null, secret, null)
+            .then((resp) => {
+                if (this.state.newSecretName) {
+                    let secrets = this.state.secretList;
+                    secrets.push(this.state.newSecretName);
+                    this.setState({
+                        secretList: secrets,
+                    });
+                    snackBarMessage(`Secret ${fullpath} added`);
+                } else {
+                    snackBarMessage(`Secret ${fullpath} updated`);
+                }
+            })
+            .catch(snackBarMessage)
     }
 
-    renderDeleteConfirmationDialog() {
-        const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deletingKey: '' })} />,
-            <FlatButton label="Delete" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => this.deleteKey(this.state.deletingKey)} />
-        ];
-
-        return (
-            <Dialog
-                title={`Delete Confirmation`}
-                modal={false}
-                actions={actions}
-                open={this.state.openDeleteModal}
-                onRequestClose={() => this.setState({ openDeleteModal: false, errorMessage: '' })}
-                >
-
-                <p>You are about to permanently delete {this.state.namespace}{this.state.deletingKey}.  Are you sure?</p>
-                <em>To disable this prompt, visit the settings page.</em>
-            </Dialog>
-        )
+    DeleteObject(key) {
+        let fullpath = this.state.currentLogicalPath + key;
+        callVaultApi('delete', fullpath, null, null, null)
+            .then((resp) => {
+                let secrets = this.state.secretList;
+                let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete == key; });
+                secrets = _.pull(secrets, secretToDelete);
+                this.setState({
+                    secretList: secrets,
+                });
+                snackBarMessage(`Secret ${fullpath} deleted`);
+            })
+            .catch(snackBarMessage)
     }
 
-    renderNewKeyDialog() {
+
+    renderNewObjectDialog() {
         const MISSING_KEY_ERROR = "Key cannot be empty.";
-        const DUPLICATE_KEY_ERROR = `Key '${this.state.namespace}${this.state.focusKey}' already exists.`;
+        const DUPLICATE_KEY_ERROR = `Key '${this.state.currentLogicalPath}${this.state.newSecretName}' already exists.`;
 
         let validateAndSubmit = (e, v) => {
-            if (this.state.focusKey === '') {
-                this.setState({
-                    errorMessage: MISSING_KEY_ERROR
-                });
+            if (this.state.newSecretName === '') {
+                snackBarMessage(new Error(MISSING_KEY_ERROR));
                 return;
             }
 
-            if (_.filter(this.state.secrets, x => x.key === this.state.focusKey).length > 0) {
-                this.setState({
-                    errorMessage: DUPLICATE_KEY_ERROR
-                });
+            if (_.filter(this.state.secretList, x => x === this.state.newSecretName).length > 0) {
+                snackBarMessage(new Error(DUPLICATE_KEY_ERROR));
                 return;
             }
-            this.updateSecret(true);
-            this.setState({ openNewKeyModal: false, errorMessage: '' });
+            this.CreateUpdateObject();
+            this.setState({ openNewObjectModal: false });
         }
 
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewKeyModal: false, errorMessage: '' })} />,
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewObjectModal: false, secretContent: '' })} />,
             <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={validateAndSubmit} />
         ];
 
@@ -216,7 +229,7 @@ class Secrets extends React.Component {
 
         if (this.state.useRootKey) {
             rootKeyInfo = "Current Root Key: " + this.state.rootKey;
-            var content = (
+            content = (
                 <TextField
                     name="newValue"
                     multiLine={true}
@@ -229,7 +242,7 @@ class Secrets extends React.Component {
         } else {
             content = (
                 <JsonEditor
-                    rootName={this.state.namespace + this.state.focusKey}
+                    rootName={`${this.state.currentLogicalPath}${this.state.newSecretName}`}
                     mode={'tree'}
                     onChange={this.secretChangedJsonEditor}
                     />
@@ -239,279 +252,201 @@ class Secrets extends React.Component {
         return (
             <Dialog
                 title={`Create new secret`}
-                modal={false}
+                modal={true}
                 actions={actions}
-                open={this.state.openNewKeyModal}
-                onRequestClose={() => this.setState({ openNewKeyModal: false, errorMessage: '' })}
+                open={this.state.openNewObjectModal}
                 autoScrollBodyContent={true}
                 >
-                <TextField name="newKey" autoFocus fullWidth={true} hintText="Insert object key" onChange={(e, v) => this.setState({ focusKey: v })} />
+                <TextField name="newKey" autoFocus fullWidth={true} hintText="Insert object key" onChange={(e, v) => this.setState({ newSecretName: v })} />
                 {content}
-                <div className={styles.error}>{this.state.errorMessage}</div>
                 <div>{rootKeyInfo}</div>
             </Dialog>
         );
     }
 
-    listSecretBackends() {
-        callVaultApi('get', 'sys/mounts', null, null, null)
-            .then((resp) => {
-                // Backwards compatability for Vault 0.6
-                let data = _.get(resp, 'data.data', _.get(resp, 'data', {}));
-                let secretBackends = [];
+    renderEditObjectDialog() {
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => {
+                this.setState({ openEditObjectModal: false, secretContent: '' });
+                browserHistory.goBack();
+            }
+            } />,
+            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
+        ];
 
-                _.forEach(Object.keys(data), (key) => {
-                    if (_.get(data, `${key}.type`) === "generic") {
-                        secretBackends.push({ key: key });
-                    }
-                });
-
-                this.setState({
-                    secretBackends: secretBackends
-                });
-            })
-            .catch((err) => {
-                console.error(err);
-                this.setState({ errorMessage: `Error: ${err}` });
-            });
-    }
-
-    getSecrets(namespace) {
-        callVaultApi('get', `${encodeURI(namespace)}`, { list: true }, null, null)
-            .then((resp) => {
-                var secrets = _.map(resp.data.data.keys, (key) => {
-                    return {
-                        key: key
-                    }
-                });
-                this.setState({
-                    namespace: namespace,
-                    secrets: secrets,
-                    disableAddButton: false,
-                    buttonColor: green500
-                });
-            })
-            .catch((err) => {
-                console.error(err);
-                this.setState({
-                    errorMessage: err,
-                    disableAddButton: true,
-                    buttonColor: 'lightgrey'
-                });
-            });
-    }
-
-    clickSecret(key, isFullPath) {
-        let isDir = key[key.length - 1] === '/';
-        if (isDir) {
-            let secret = isFullPath ? key : `${this.state.namespace}${key}`;
-            this.getSecrets(secret);
-            browserHistory.push(`/secrets${secret}`);
-        } else {
-            let fullKey = `${this.state.namespace}${key}`;
-            callVaultApi('get', `${encodeURI(fullKey)}`, null, null, null)
-                .then((resp) => {
-                    this.setState({
-                        errorMessage: '',
-                        disableSubmit: false,
-                        disableTextField: false,
-                        openEditModal: true,
-                        focusKey: key,
-                        focusSecret: resp.data.data,
-                        listBackends: false
-                    });
-                    browserHistory.push(`/secrets${fullKey}`);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    this.setState({ errorMessage: `Error: ${err}` });
-                });
+        let submitUpdate = () => {
+            this.CreateUpdateObject();
+            this.setState({ openEditObjectModal: false, secretContent: '' });
+            browserHistory.goBack();
         }
-    }
 
-    deleteKey(key) {
-        let fullKey = `${this.state.namespace}${key}`;
-        callVaultApi('delete', `${encodeURI(fullKey)}`, null, null, null)
-            .then((resp) => {
-                if (resp.status !== 204 && resp.status !== 200) {
-                    this.setState({ errorMessage: `Delete returned status of ${resp.status}:${resp.statusText}` });
-                } else {
-                    let secrets = this.state.secrets;
-                    let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete.key == key; });
-                    secrets = _.pull(secrets, secretToDelete);
-                    this.setState({
-                        secrets: secrets,
-                        snackBarMsg: `Secret ${key} deleted`
-                    });
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                this.setState({ errorMessage: `Error: ${err}` });
-            });
+        var objectIsBasicRootKey = _.size(this.state.secretContent) == 1 && this.state.secretContent.hasOwnProperty(this.state.rootKey);
+        var content;
+        var title;
 
-        this.setState({
-            deletingKey: '',
-            openDeleteModal: false
-        });
-    }
-
-    updateSecret(isNewKey) {
-        let fullKey = `${this.state.namespace}${this.state.focusKey}`;
-        //Check if the secret is a json object, if so stringify it. This is needed to properly escape characters.
-        //let secret = typeof this.state.focusSecret == 'object' ? JSON.stringify(this.state.focusSecret) : this.state.focusSecret;
-        let secret = this.state.focusSecret;
-        callVaultApi('post', `${encodeURI(fullKey)}`, null, secret, null)
-            .then((resp) => {
-                if (isNewKey) {
-                    let secrets = this.state.secrets;
-                    let key = this.state.focusKey.includes('/') ? `${this.state.focusKey.split('/')[0]}/` : this.state.focusKey;
-                    secrets.push({ key: key, value: this.state.focusSecret });
-                    this.setState({
-                        secrets: secrets,
-                        snackBarMsg: `Secret ${this.state.focusKey} added`
-                    });
-                } else {
-                    this.setState({ snackBarMsg: `Secret ${this.state.focusKey} updated` });
-                }
-            })
-            .catch((err) => {
-                console.error(err);
-                this.setState({ errorMessage: `Error: ${err}` });
-            });
-    }
-
-    showDelete(key) {
-        if (key[key.length - 1] === '/') {
-            return (<IconButton />);
+        if (objectIsBasicRootKey && this.state.useRootKey) {
+            title = `Editing ${this.state.currentLogicalPath} with specified root key`;
+            content = (
+                <TextField
+                    onChange={this.secretChangedTextEditor}
+                    name="editingText"
+                    autoFocus
+                    multiLine={true}
+                    defaultValue={this.state.secretContent[this.state.rootKey]}
+                    fullWidth={true}
+                    />
+            );
         } else {
-            return (
-                <IconButton
-                    tooltip="Delete"
-                    onTouchTap={() => {
-                        if (window.localStorage.getItem("showDeleteModal") === 'false') {
-                            this.deleteKey(key);
-                        } else {
-                            this.setState({ deletingKey: key, openDeleteModal: true })
-                        }
-                    } }
-                    >
-                    <FontIcon className="fa fa-times-circle" color={red500} />
-                </IconButton>);
+            title = `Editing ${this.state.currentLogicalPath}`;
+            content = (
+                <JsonEditor
+                    rootName={this.state.currentLogicalPath}
+                    value={this.state.secretContent}
+                    mode={'tree'}
+                    onChange={this.secretChangedJsonEditor}
+                    />
+            );
         }
-    }
-
-    renderList() {
-        if (this.state.listBackends) {
-            return _.map(this.state.secretBackends, (secretBackend) => {
-                return (
-                    <ListItem
-                        style={{ marginLeft: -17 }}
-                        key={secretBackend.key}
-                        onTouchTap={() => {
-                            this.setState(
-                                {
-                                    namespace: '/' + secretBackend.key,
-                                    listBackends: false,
-                                    secrets: this.getSecrets('/' + secretBackend.key)
-                                });
-                            browserHistory.push(`/secrets/${secretBackend.key}`);
-                        } }
-                        primaryText={<div className={styles.key}>{secretBackend.key}</div>}
-                        //secondaryText={<div className={styles.key}>{secret.value}</div>}
-                        >
-                    </ListItem>
-                );
-            });
-        } else {
-            return _.map(this.state.secrets, (secret) => {
-                return (
-                    <ListItem
-                        style={{ marginLeft: -17 }}
-                        key={secret.key}
-                        onTouchTap={() => { this.clickSecret(secret.key) } }
-                        primaryText={<div className={styles.key}>{secret.key}</div>}
-                        //secondaryText={<div className={styles.key}>{secret.value}</div>}
-                        rightIconButton={this.showDelete(secret.key)}>
-                    </ListItem>
-                );
-            });
-        }
-    }
-
-    clickRoot() {
-        this.setState({
-            listBackends: true,
-            namespace: '/',
-            disableAddButton: true,
-            buttonColor: 'lightgrey'
-        });
-        if (this.props.params.splat !== undefined)
-            browserHistory.push(`/secrets/`);
-    }
-
-    renderNamespace() {
-        let namespaceParts = this.state.namespace.split('/');
         return (
-            _.map(namespaceParts, (dir, index) => {
-                if (index === 0) {
-                    return (
-                        <div style={{ display: 'inline-block' }} key={index}>
-                            <span className={styles.link}
-                                onTouchTap={(this.clickRoot)}
-                                >ROOT</span>
-                            {index !== namespaceParts.length - 1 && <span>/</span>}
-                        </div>
-                    );
-                }
-                var link = [].concat(namespaceParts).slice(0, index + 1).join('/') + '/';
-                return (
-                    <div style={{ display: 'inline-block' }} key={index}>
-                        <span className={styles.link}
-                            onTouchTap={() => this.clickSecret(link, true)}>{dir.toUpperCase()}</span>
-                        {index !== namespaceParts.length - 1 && <span>/</span>}
-                    </div>
-                );
-            })
+            <Dialog
+                title={title}
+                modal={true}
+                actions={actions}
+                open={this.state.openEditObjectModal}
+                autoScrollBodyContent={true}
+                >
+                {content}
+            </Dialog>
         );
     }
+
+    renderDeleteConfirmationDialog() {
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deletingKey: '' })} />,
+            <FlatButton label="Delete" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => submitDelete()} />
+        ];
+
+        let submitDelete = () => {
+            this.DeleteObject(this.state.deletingKey);
+            this.setState({ openDeleteModal: false });
+        }
+
+        return (
+            <Dialog
+                title={`Delete Confirmation`}
+                modal={false}
+                actions={actions}
+                open={this.state.openDeleteModal}
+                >
+
+                <p>You are about to permanently delete {this.state.currentLogicalPath}{this.state.deletingKey}.  Are you sure?</p>
+                <em>To disable this prompt, visit the settings page.</em>
+            </Dialog>
+        )
+    }
+
+
 
     render() {
+        let renderSecretListItems = (returndirs, returnobjs) => {
+            return _.map(this.state.secretList, (key) => {
+                let avatar = (<Avatar icon={<ActionAssignment />} />);
+                let action = (
+                    <IconButton
+                        tooltip="Delete"
+                        onTouchTap={() => {
+                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                                this.DeleteObject(key);
+                            } else {
+                                this.setState({ openDeleteModal: true, deletingKey: key })
+                            }
+                        } }
+                        >
+                        ><ActionDeleteForever /></IconButton>
+                );
+                if (this.isPathDirectory(key)) {
+                    avatar = (<Avatar icon={<FileFolder />} />);
+                    action = (<IconButton />);
+                }
+                let item = (
+                    <ListItem
+                        key={key}
+                        primaryText={key}
+                        insetChildren={true}
+                        leftAvatar={avatar}
+                        rightIconButton={action}
+                        onTouchTap={() => {
+                            this.setState({ newSecretName: '' });
+                            tokenHasCapabilities(['read'], this.state.currentLogicalPath + key).then(() => {
+                                browserHistory.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
+                            }).catch(() => {
+                                snackBarMessage("Access denied");
+                            })
+
+                        } }
+                        />
+                )
+                if (this.isPathDirectory(key) && returndirs) { return item }
+                if (!this.isPathDirectory(key) && returnobjs) { return item }
+            });
+        }
+
+        let renderBreadcrumb = () => {
+            let components = _.initial(this.getBaseDir(this.state.currentLogicalPath).split('/'));
+            return _.map(components, (dir, index) => {
+                var relativelink = [].concat(components).slice(0, index + 1).join('/') + '/';
+                return (<Step key={dir}><StepLabel><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+            });
+        }
+
         return (
             <div>
-                {this.state.openEditModal && this.renderEditDialog()}
-                {this.state.openNewKeyModal && this.renderNewKeyDialog()}
-                {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
-                <h1 id={styles.welcomeHeadline}>Secrets</h1>
-                <p>Here you can view, update, and delete keys stored in your Vault.  Just remember, <span className={styles.error}>deleting keys cannot be undone!</span></p>
-                <FlatButton
-                    label="New Secret"
-                    backgroundColor={this.state.buttonColor}
-                    disabled={this.state.disableAddButton}
-                    hoverColor={green400}
-                    labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({
-                        disableSubmit: true,
-                        openNewKeyModal: true,
-                        focusKey: '',
-                        focusSecret: '',
-                        errorMessage: ''
-                    })} />
-                <div className={styles.namespace}>{this.renderNamespace()}</div>
-                <List>
-                    {this.renderList()}
-                </List>
-                <Snackbar
-                    open={this.state.snackBarMsg != ''}
-                    message={this.state.snackBarMsg}
-                    action="OK"
-                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
-                    autoHideDuration={4000}
-                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
-                    />
+                {this.renderEditObjectDialog()}
+                {this.renderNewObjectDialog()}
+                {this.renderDeleteConfirmationDialog()}
+                <Tabs>
+                    <Tab label="Browse Secrets" >
+                        <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
+                            Here you can create browse, edit, create and delete secrets.
+                        </Paper>
+                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                            <Toolbar>
+                                <ToolbarGroup firstChild={true}>
+                                    <FlatButton
+                                        primary={true}
+                                        label="NEW SECRET"
+                                        disabled={this.state.newSecretBtnDisabled}
+                                        onTouchTap={() => {
+                                            this.setState({
+                                                openNewObjectModal: true,
+                                                newSecretName: '',
+                                                secretContent: ''
+                                            })
+                                        } }
+                                        />
+                                </ToolbarGroup>
+                            </Toolbar>
+                            <List className={styles.listStyle}>
+                                <Subheader inset={false}>
+                                    <Stepper
+                                        style={{ justifyContent: 'flex-start', textTransform: 'uppercase', fontWeight: 600 }}
+                                        linear={false}
+                                        connector={<ArrowForwardIcon />}
+                                        >
+                                        {renderBreadcrumb()}
+                                    </Stepper>
+                                </Subheader>
+                                <Subheader inset={false}>Directories</Subheader>
+                                {renderSecretListItems(true, false)}
+                                <Subheader inset={false}>Objects</Subheader>
+                                {renderSecretListItems(false, true)}
+                            </List>
+                        </Paper>
+                    </Tab>
+                </Tabs>
             </div>
-        );
+        )
     }
 }
 
-export default Secrets;
+export default GenericSecretBackend;
