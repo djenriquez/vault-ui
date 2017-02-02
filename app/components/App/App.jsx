@@ -1,4 +1,5 @@
 import React from 'react';
+import _ from 'lodash';
 import Menu from '../shared/Menu/Menu.jsx';
 import Header from '../shared/Header/Header.jsx';
 import Snackbar from 'material-ui/Snackbar';
@@ -35,12 +36,18 @@ export default class App extends React.Component {
         }
         document.addEventListener("snackbar", (e) => {
             let messageStyle = { backgroundColor: green500 };
+            let message = e.detail.message.toString();
             if ( e.detail.message instanceof Error ) {
+                // Handle logical erros from vault
+                //debugger;
+                if (_.has(e.detail.message, 'response.data.errors')) 
+                    if (e.detail.message.response.data.errors.length > 0)
+                        message = e.detail.message.response.data.errors.join(',');
                 messageStyle = { backgroundColor: red500 };
             }
 
             this.setState({
-                snackbarMessage: e.detail.message.toString(),
+                snackbarMessage: message,
                 snackbarType: e.detail.type || 'OK',
                 snackbarStyle: messageStyle
             });

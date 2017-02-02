@@ -14,7 +14,8 @@ const supported_secret_backend_types = [
 
 const supported_auth_backend_types = [
     'token',
-    'github'
+    'github',
+    'aws-ec2'
 ]
 
 class Menu extends React.Component {
@@ -98,7 +99,7 @@ class Menu extends React.Component {
         let renderSecretBackendList = () => {
             return _.map(this.state.secretBackends, (backend, idx) => {
                 return (
-                    <ListItem primaryText={backend.path} secondaryText={backend.type} value={`/secrets/${backend.type}/${backend.path}`} />
+                    <ListItem primaryText={backend.path} secondaryText={`type: ${backend.type}`} value={`/secrets/${backend.type}/${backend.path}`} />
                 )
             })
         }
@@ -106,7 +107,7 @@ class Menu extends React.Component {
         let renderAuthBackendList = () => {
             return _.map(this.state.authBackends, (backend, idx) => {
                 return (
-                    <ListItem primaryText={backend.path} secondaryText={backend.type} value={`/auth/${backend.type}/${backend.path}`} />
+                    <ListItem primaryText={backend.path} secondaryText={`type: ${backend.type}`} value={`/auth/${backend.type}/${backend.path}`} />
                 )
             })
         }
@@ -137,7 +138,7 @@ class Menu extends React.Component {
                         primaryTogglesNestedList={true}
                         initiallyOpen={true}
                         nestedItems={[
-                            <ListItem primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/policies/manage" />,
+                            <ListItem primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/policies" />,
                             <ListItem primaryText="Response Wrapper" secondaryText="Securely forward secrets" value="/responsewrapper" />
                         ]}
                     />

@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
-import styles from './policies.css';
+import styles from './github.css';
 import FlatButton from 'material-ui/FlatButton';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import { List, ListItem } from 'material-ui/List';
@@ -9,10 +9,10 @@ import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
 import Checkbox from 'material-ui/Checkbox';
-import { callVaultApi } from '../shared/VaultUtils.jsx'
+import { callVaultApi } from '../../shared/VaultUtils.jsx'
 import Snackbar from 'material-ui/Snackbar';
 
-export default class Github extends React.Component {
+export default class GithubAuthBackend extends React.Component {
     constructor(props) {
         super(props);
         this.state = {

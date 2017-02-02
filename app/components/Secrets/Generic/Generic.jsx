@@ -6,6 +6,7 @@ import Paper from 'material-ui/Paper';
 import Avatar from 'material-ui/Avatar';
 import FileFolder from 'material-ui/svg-icons/file/folder';
 import ActionAssignment from 'material-ui/svg-icons/action/assignment';
+import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
 import IconButton from 'material-ui/IconButton';
@@ -99,7 +100,7 @@ class GenericSecretBackend extends React.Component {
             })
             .catch(() => {
                 this.setState({ secretList: [] })
-                snackBarMessage(`No permissions to list content at ${this.state.currentLogicalPath}`);
+                snackBarMessage(new Error(`No permissions to list content at ${this.state.currentLogicalPath}`));
             })
     }
 
@@ -116,7 +117,7 @@ class GenericSecretBackend extends React.Component {
             })
             .catch(() => {
                 this.setState({ secretContent: {} })
-                snackBarMessage(`No permissions to read content of ${this.state.currentLogicalPath}`);
+                snackBarMessage(new Error(`No permissions to read content of ${this.state.currentLogicalPath}`));
             })
     }
 
@@ -356,19 +357,28 @@ class GenericSecretBackend extends React.Component {
                     <IconButton
                         tooltip="Delete"
                         onTouchTap={() => {
-                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
-                                this.DeleteObject(key);
-                            } else {
-                                this.setState({ openDeleteModal: true, deletingKey: key })
-                            }
+                            tokenHasCapabilities(['delete'], this.state.currentLogicalPath + key).then(() => {
+                                if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                                    this.DeleteObject(key);
+                                } else {
+                                    this.setState({ openDeleteModal: true, deletingKey: key })
+                                }
+                            }).catch(() => {
+                                snackBarMessage(new Error("Access denied"));
+                            })
                         } }
                         >
-                        ><ActionDeleteForever /></IconButton>
+                        {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
+                    </IconButton>
                 );
+                let capability = 'read';
+
                 if (this.isPathDirectory(key)) {
                     avatar = (<Avatar icon={<FileFolder />} />);
                     action = (<IconButton />);
+                    capability = 'list';
                 }
+
                 let item = (
                     <ListItem
                         key={key}
@@ -378,10 +388,10 @@ class GenericSecretBackend extends React.Component {
                         rightIconButton={action}
                         onTouchTap={() => {
                             this.setState({ newSecretName: '' });
-                            tokenHasCapabilities(['read'], this.state.currentLogicalPath + key).then(() => {
+                            tokenHasCapabilities([capability], this.state.currentLogicalPath + key).then(() => {
                                 browserHistory.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
                             }).catch(() => {
-                                snackBarMessage("Access denied");
+                                snackBarMessage(new Error("Access denied"));
                             })
 
                         } }
@@ -417,6 +427,9 @@ class GenericSecretBackend extends React.Component {
                                         primary={true}
                                         label="NEW SECRET"
                                         disabled={this.state.newSecretBtnDisabled}
+                                        backgroundColor={green500}
+                                        hoverColor={green400}
+                                        labelStyle={{ color: white }}
                                         onTouchTap={() => {
                                             this.setState({
                                                 openNewObjectModal: true,
@@ -427,7 +440,7 @@ class GenericSecretBackend extends React.Component {
                                         />
                                 </ToolbarGroup>
                             </Toolbar>
-                            <List className={styles.listStyle}>
+                            <List className={sharedStyles.listStyle}>
                                 <Subheader inset={false}>
                                     <Stepper
                                         style={{ justifyContent: 'flex-start', textTransform: 'uppercase', fontWeight: 600 }}
@@ -437,9 +450,9 @@ class GenericSecretBackend extends React.Component {
                                         {renderBreadcrumb()}
                                     </Stepper>
                                 </Subheader>
-                                <Divider inset={false}/>
+                                <Divider inset={false} />
                                 {renderSecretListItems(true, false)}
-                                <Divider inset={true}/>
+                                <Divider inset={true} />
                                 {renderSecretListItems(false, true)}
                             </List>
                         </Paper>

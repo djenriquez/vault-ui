@@ -1,6 +1,10 @@
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
+import { Tabs, Tab } from 'material-ui/Tabs';
+import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
+import Paper from 'material-ui/Paper';
 import styles from './policies.css';
+import sharedStyles from '../shared/styles.css';
 import FlatButton from 'material-ui/FlatButton';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import { List, ListItem } from 'material-ui/List';
@@ -12,9 +16,17 @@ import JsonEditor from '../shared/JsonEditor.jsx';
 import hcltojson from 'hcl-to-json'
 import jsonschema from './vault-policy-schema.json'
 import { callVaultApi } from '../shared/VaultUtils.jsx'
-import Snackbar from 'material-ui/Snackbar';
+import Avatar from 'material-ui/Avatar';
+import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
+import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
+import ActionDelete from 'material-ui/svg-icons/action/delete';
 
-export default class Manage extends React.Component {
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
+
+export default class PolicyManager extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -28,10 +40,8 @@ export default class Manage extends React.Component {
             policies: [],
             currentPolicy: '',
             disableSubmit: false,
-            errorMessage: '',
             forbidden: false,
-            buttonColor: 'lightgrey',
-            snackBarMsg: ''
+            buttonColor: 'lightgrey'
         };
 
         _.bindAll(
@@ -93,16 +103,12 @@ export default class Manage extends React.Component {
 
         let validateAndSubmit = () => {
             if (this.state.focusPolicy === '') {
-                this.setState({
-                    newPolicyErrorMessage: MISSING_POLICY_ERROR
-                });
+                snackBarMessage(new Error(MISSING_POLICY_ERROR));
                 return;
             }
 
             if (_.filter(this.state.policies, x => x.name === this.state.focusPolicy).length > 0) {
-                this.setState({
-                    newPolicyErrorMessage: DUPLICATE_POLICY_ERROR
-                });
+                snackBarMessage(new Error(DUPLICATE_POLICY_ERROR));
                 return;
             }
             this.updatePolicy(this.state.focusPolicy, true);
@@ -183,20 +189,16 @@ export default class Manage extends React.Component {
                     let policies = this.state.policies;
                     policies.push({ name: policyName });
                     this.setState({
-                        policies: policies,
-                        snackBarMsg: `Policy '${policyName}' added`
+                        policies: policies
                     });
+                    snackBarMessage(`Policy '${policyName}' added`);
                 } else {
-                    this.setState({ snackBarMsg: `Policy '${policyName}' updated` });
+                    snackBarMessage(`Policy '${policyName}' updated`);
                 }
             })
             .catch((err) => {
                 console.error(err.stack);
-                if (err.response.data.errors) {
-                    this.setState({
-                        errorMessage: err.response.data.errors.join('<br />')
-                    });
-                }
+                snackBarMessage(err);
             })
         this.setState({ openNewPolicyModal: false });
         this.setState({ openEditModal: false });
@@ -213,17 +215,12 @@ export default class Manage extends React.Component {
 
                 this.setState({
                     policies: policies,
-                    errorMessage: '',
                     buttonColor: green500
                 });
             })
             .catch((err) => {
                 console.error(err.response.data);
-                this.setState({
-                    errorMessage: err.response.data,
-                    forbidden: true,
-                    buttonColor: 'lightgrey'
-                });
+                snackBarMessage(err);
             });
     }
 
@@ -247,8 +244,7 @@ export default class Manage extends React.Component {
                         openEditModal: true,
                         focusPolicy: policyName,
                         currentPolicy: rules_obj,
-                        disableSubmit: true,
-                        errorMessage: '',
+                        disableSubmit: true
                     });
                 }
             })
@@ -260,27 +256,17 @@ export default class Manage extends React.Component {
     deletePolicy(policyName) {
         callVaultApi('delete', `sys/policy/${encodeURI(policyName)}`, null, null, null)
             .then((resp) => {
-                if (resp.status !== 204 && resp.status !== 200) {
-                    console.error(resp.status);
-                    this.setState({
-                        errorMessage: 'An error occurred.'
-                    });
-                } else {
-                    let policies = this.state.policies;
-                    let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
-                    policies = _.pull(policies, policyToDelete);
-                    this.setState({
-                        policies: policies,
-                        errorMessage: ''
-                    });
-                    this.setState({ snackBarMsg: `Policy '${policyName}' deleted` });
-                }
+                let policies = this.state.policies;
+                let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
+                policies = _.pull(policies, policyToDelete);
+                this.setState({
+                    policies: policies,
+                });
+                snackBarMessage(`Policy '${policyName}' deleted`);
             })
             .catch((err) => {
                 console.error(err.stack);
-                this.setState({
-                    errorMessage: err.response.data
-                });
+                snackBarMessage(err);
             });
 
         this.setState({
@@ -301,7 +287,8 @@ export default class Manage extends React.Component {
                     }
                 } }
                 >
-                <FontIcon className="fa fa-times-circle" color={red500} />
+                { window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500}/> : <ActionDelete color={red500}/>}
+                
             </IconButton>);
     }
 
@@ -309,8 +296,8 @@ export default class Manage extends React.Component {
         return _.map(this.state.policies, (policy) => {
             return (
                 <ListItem
-                    style={{ marginLeft: -17 }}
                     key={policy.name}
+                    leftAvatar={<Avatar icon={<HardwareSecurity />} />}
                     onTouchTap={() => { this.clickPolicy(policy.name) } }
                     primaryText={<div className={policy.name}>{policy.name}</div>}
                     rightIconButton={this.showDelete(policy.name)}>
@@ -325,40 +312,37 @@ export default class Manage extends React.Component {
                 {this.state.openEditModal && this.renderEditDialog()}
                 {this.state.openNewPolicyModal && this.renderNewPolicyDialog()}
                 {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
-                <h2>Manage Policies</h2>
-                <p>Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span></p>
-                {<FlatButton
-                    label="Add Policy"
-                    disabled={this.state.forbidden}
-                    backgroundColor={this.state.buttonColor}
-                    hoverColor={green400}
-                    labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({
-                        openNewPolicyModal: true,
-                        errorMessage: '',
-                        newPolicyErrorMessage: '',
-                        newPolicyNameErrorMessage: '',
-                        disableSubmit: true,
-                        focusPolicy: '',
-                        currentPolicy: { path: { 'sample/path': { capabilities: ['read'] } } }
-                    })} />}
-                {this.state.errorMessage &&
-                    <div className={styles.error}>
-                        <FontIcon className="fa fa-exclamation-triangle" color={red500} style={{ marginRight: 10 }} />
-                        {this.state.errorMessage}
-                    </div>
-                }
-                <List>
-                    {this.renderPolicies()}
-                </List>
-                <Snackbar
-                    open={this.state.snackBarMsg != ''}
-                    message={this.state.snackBarMsg}
-                    action="OK"
-                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
-                    autoHideDuration={4000}
-                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
-                    />
+                <Tabs>
+                    <Tab label="Manage Access Control Policies" >
+                        <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
+                            Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span>
+                        </Paper>
+                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                            <Toolbar>
+                                <ToolbarGroup firstChild={true}>
+                                    <FlatButton
+                                        label="Add Policy"
+                                        disabled={this.state.forbidden}
+                                        backgroundColor={this.state.buttonColor}
+                                        hoverColor={green400}
+                                        labelStyle={{ color: white }}
+                                        onTouchTap={() => this.setState({
+                                            openNewPolicyModal: true,
+                                            newPolicyErrorMessage: '',
+                                            newPolicyNameErrorMessage: '',
+                                            disableSubmit: true,
+                                            focusPolicy: '',
+                                            currentPolicy: { path: { 'sample/path': { capabilities: ['read'] } } }
+                                        })}
+                                    />
+                                </ToolbarGroup>
+                            </Toolbar>
+                            <List className={sharedStyles.listStyle}>
+                                {this.renderPolicies()}
+                            </List>
+                        </Paper>
+                    </Tab>
+                </Tabs>
             </div>
         );
     }
