@@ -313,7 +313,13 @@ export default class TokenManage extends React.Component {
                     this.setState({
                         roleList: resp.data.data.keys
                     });
-                });
+                })
+                .catch((err) => {
+                    // This endpoint returns 404 when no roles are configured
+                    if (err.response.status != 404) {
+                        snackBarMessage(err);
+                    }
+                })
             })
             .catch(() => {
                 snackBarMessage(new Error('You don\' have enough permissions to list roles'));
@@ -382,7 +388,7 @@ export default class TokenManage extends React.Component {
         let handlePoliciesCheckUncheck = (policy, isInputChecked) => {
             let role = this.state.roleAttributes
             if (isInputChecked) {
-                role.allowed_policies = _.union(role.allowed_policies, policy);
+                role.allowed_policies = _.union(role.allowed_policies, [policy]);
             } else {
                 role.allowed_policies = _.without(role.allowed_policies, policy);
             }
