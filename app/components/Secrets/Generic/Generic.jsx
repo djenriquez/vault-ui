@@ -174,11 +174,7 @@ class GenericSecretBackend extends React.Component {
         callVaultApi('post', fullpath, null, secret, null)
             .then((resp) => {
                 if (this.state.newSecretName) {
-                    let secrets = this.state.secretList;
-                    secrets.push(this.state.newSecretName);
-                    this.setState({
-                        secretList: secrets,
-                    });
+                    this.loadSecretsList();
                     snackBarMessage(`Secret ${fullpath} added`);
                 } else {
                     snackBarMessage(`Secret ${fullpath} updated`);
