@@ -1,6 +1,6 @@
 import React from 'react'
 import _ from 'lodash';
-import styles from './tokens.css';
+import styles from './token.css';
 import { red500, orange500, red300, white } from 'material-ui/styles/colors.js'
 import RaisedButton from 'material-ui/RaisedButton';
 import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
@@ -21,12 +21,12 @@ import {List, ListItem} from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
 import FontIcon from 'material-ui/FontIcon';
-import {tokenHasCapabilities, callVaultApi} from '../shared/VaultUtils.jsx'
-import JsonEditor from '../shared/JsonEditor.jsx';
+import {tokenHasCapabilities, callVaultApi} from '../../shared/VaultUtils.jsx'
+import JsonEditor from '../../shared/JsonEditor.jsx';
 import UltimatePagination from 'react-ultimate-pagination-material-ui'
 
 
-export default class TokenManage extends React.Component {
+export default class TokenAuthBackend extends React.Component {
     constructor(props) {
         super(props);
         

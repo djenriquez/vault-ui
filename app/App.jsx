@@ -11,7 +11,7 @@ import Health from './components/Health/Health.jsx';
 import Policies from './components/Policies/Home.jsx';
 import Settings from './components/Settings/Settings.jsx';
 import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
-import TokenManage from './components/Tokens/Manage.jsx'
+import TokenAuthBackend from './components/Authentication/Token/Token.jsx'
 
 injectTapEventPlugin();
 
@@ -53,7 +53,7 @@ ReactDOM.render((
                 <Route path="/settings" component={Settings}/>
                 <Route path="/responsewrapper" component={ResponseWrapper}/>
                 <Route path="/policies/:policy" component={Policies}/>
-                <Route path="/tokens" component={TokenManage}/>
+                <Route path="/auth/token/:namespace" component={TokenAuthBackend}/>
             </Route>
         </Router>
     </MuiThemeProvider>

@@ -65,6 +65,29 @@ class Menu extends React.Component {
                 // Not allowed to list secret backends, using default
                 console.log("unable to list: " + err);
             })
+
+
+        tokenHasCapabilities(['read'], 'sys/auth/')
+            .then(() => {
+                return callVaultApi('get', 'sys/auth').then((resp) => {
+                    let entries = _.get(resp, 'data.data', _.get(resp, 'data', {}));
+                    let discoveredAuthBackends = _.map(entries, (v, k) => {
+                        if ( _.indexOf(supported_auth_backend_types, v.type) != -1 ) {
+                            let entry = {
+                                path: k,
+                                type: v.type,
+                                description: v.description
+                            }
+                            return entry;
+                        }
+                    }).filter(Boolean);
+                    this.setState({authBackends: discoveredAuthBackends});
+                });
+            })
+            .catch((err) => {
+                // Not allowed to list secret backends, using default
+                console.log("unable to list: " + err);
+            })
     }
 
 
@@ -74,6 +97,14 @@ class Menu extends React.Component {
             return _.map(this.state.secretBackends, (backend, idx) => {
                 return (
                     <ListItem primaryText={backend.path} secondaryText={backend.type} value={`/secrets/${backend.type}/${backend.path}`} />
+                )
+            })
+        }
+
+        let renderAuthBackendList = () => {
+            return _.map(this.state.authBackends, (backend, idx) => {
+                return (
+                    <ListItem primaryText={backend.path} secondaryText={backend.type} value={`/auth/${backend.type}/${backend.path}`} />
                 )
             })
         }
@@ -92,10 +123,7 @@ class Menu extends React.Component {
                         primaryText="Auth Backends"
                         primaryTogglesNestedList={true}
                         initiallyOpen={true}
-                        nestedItems={[
-                            <ListItem primaryText="Token" secondaryText="Builtin Token Backend" value="/tokens" />,
-                            <ListItem primaryText="Github" secondaryText="Github Backend" value="/policies/github" />
-                        ]}
+                        nestedItems={renderAuthBackendList()}
                     />
                     <ListItem
                         primaryText="System"
