@@ -200,7 +200,7 @@ export default class TokenManage extends React.Component {
                     .catch(snackBarMessage)
             })
             .catch(() => {
-                snackBarMessage(new Error(`No permissions to read content of role ${his.state.selectedRole}`));
+                snackBarMessage(`No permissions to read content of role ${his.state.selectedRole}`);
                 this.setState({ selectedRole: '' });
             })
     }
@@ -296,7 +296,7 @@ export default class TokenManage extends React.Component {
 
         tokenHasCapabilities(['sudo', 'list'], 'auth/token/accessors')
             .then(() => {
-                return callVaultApi('get', 'auth/token/accessors', { 'list': true }).then((resp) => {
+                return callVaultApi('get', 'auth/token/accessors', { list: true }).then((resp) => {
                     this.setState({
                         fullAccessorList: resp.data.data.keys,
                         totalPages: Math.ceil(resp.data.data.keys.length / this.state.maxItemsPerPage)
@@ -304,12 +304,12 @@ export default class TokenManage extends React.Component {
                 });
             })
             .catch(() => {
-                snackBarMessage(new Error('You don\' have enough permissions to list accessors'));
+                snackBarMessage('You don\' have enough permissions to list accessors');
             });
 
         tokenHasCapabilities(['list'], 'auth/token/roles')
             .then(() => {
-                return callVaultApi('get', 'auth/token/roles', { 'list': true }).then((resp) => {
+                return callVaultApi('get', 'auth/token/roles', { list: true }).then((resp) => {
                     this.setState({
                         roleList: resp.data.data.keys
                     });
@@ -317,12 +317,12 @@ export default class TokenManage extends React.Component {
                 .catch((err) => {
                     // This endpoint returns 404 when no roles are configured
                     if (err.response.status != 404) {
-                        snackBarMessage(err);
+                        snackBarMessage(err.toString());
                     }
                 })
             })
             .catch(() => {
-                snackBarMessage(new Error('You don\' have enough permissions to list roles'));
+                snackBarMessage('You don\' have enough permissions to list roles');
             });
     }
 
@@ -398,10 +398,14 @@ export default class TokenManage extends React.Component {
         let handleSubmitAction = () => {
             this.setState({ loading: true });
             let vault_endpoint;
-            if (this.state.newRoleName)
+            let message;
+            if (this.state.newRoleName) {
                 vault_endpoint = 'auth/token/roles/' + this.state.newRoleName;
-            else
+                message = `Role ${this.state.newRoleName} created`;
+            } else {
                 vault_endpoint = 'auth/token/roles/' + this.state.selectedRole;
+                message = `Role ${this.state.selectedRole} updated`;
+            }
 
             let role = this.state.roleAttributes;
             delete role.name;
@@ -416,7 +420,7 @@ export default class TokenManage extends React.Component {
                         selectedRole: '',
                         roleDialogOpen: false,
                     });
-                    snackBarMessage("DONE")
+                    snackBarMessage(message);
                 })
                 .catch((error) => {
                     // Despite our efforts, the request failed. show why
