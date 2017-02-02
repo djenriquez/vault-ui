@@ -266,7 +266,7 @@ class GenericSecretBackend extends React.Component {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => {
                 this.setState({ openEditObjectModal: false, secretContent: '' });
-                browserHistory.goBack();
+                browserHistory.push(this.getBaseDir(this.props.location.pathname));
             }
             } />,
             <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
@@ -275,7 +275,7 @@ class GenericSecretBackend extends React.Component {
         let submitUpdate = () => {
             this.CreateUpdateObject();
             this.setState({ openEditObjectModal: false, secretContent: '' });
-            browserHistory.goBack();
+            browserHistory.push(this.getBaseDir(this.props.location.pathname));
         }
 
         var objectIsBasicRootKey = _.size(this.state.secretContent) == 1 && this.state.secretContent.hasOwnProperty(this.state.rootKey);
@@ -414,7 +414,7 @@ class GenericSecretBackend extends React.Component {
                 <Tabs>
                     <Tab label="Browse Secrets" >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
-                            Here you can create browse, edit, create and delete secrets.
+                            Here you can browse, edit, create and delete secrets.
                         </Paper>
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <Toolbar>
