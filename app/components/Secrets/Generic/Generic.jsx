@@ -10,6 +10,7 @@ import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
+import Divider from 'material-ui/Divider';
 import { List, ListItem } from 'material-ui/List';
 import { Step, Stepper, StepLabel } from 'material-ui/Stepper';
 import Checkbox from 'material-ui/Checkbox';
@@ -436,9 +437,9 @@ class GenericSecretBackend extends React.Component {
                                         {renderBreadcrumb()}
                                     </Stepper>
                                 </Subheader>
-                                <Subheader inset={false}>Directories</Subheader>
+                                <Divider inset={false}/>
                                 {renderSecretListItems(true, false)}
-                                <Subheader inset={false}>Objects</Subheader>
+                                <Divider inset={true}/>
                                 {renderSecretListItems(false, true)}
                             </List>
                         </Paper>

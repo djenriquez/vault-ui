@@ -27,6 +27,8 @@ class Menu extends React.Component {
     }
 
     state = {
+        selectedPath: this.props.pathname,
+
         authBackends: [
             {
                 path: 'token/',
@@ -109,10 +111,15 @@ class Menu extends React.Component {
             })
         }
 
+        let handleMenuChange = (e, v) => {
+                this.setState({selectedPath: v});
+                browserHistory.push(v)
+        }
+
 
         return (
             <Drawer containerClassName={styles.root} docked={true} open={true} >
-                <SelectableList value={this.props.pathname} onChange={(e,v) => browserHistory.push(v)}>
+                <SelectableList value={this.state.selectedPath} onChange={handleMenuChange}>
                     <ListItem
                         primaryText="Secret Backends"
                         primaryTogglesNestedList={true}
