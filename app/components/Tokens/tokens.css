@@ -51,3 +51,9 @@ span.policiesList > div > div > div {
     right: 4px;
     top: 0px;
 }
+
+.TokenFromRoleBtn {
+    position: absolute;
+    right: 64px;
+    bottom: 10px;
+}
