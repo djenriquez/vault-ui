@@ -17,6 +17,7 @@ exec_in_vault() {
 exec_in_vault vault auth "$(docker-compose logs vault | grep 'Root Token:' | tail -n 1 | awk '{ print $NF }')"
 exec_in_vault vault status
 exec_in_vault vault auth-enable userpass
+exec_in_vault vault auth-enable github
 exec_in_vault vault policy-write admin /app/admin.hcl
 exec_in_vault vault write auth/userpass/users/test password=test policies=admin
 exec_in_vault vault write secret/test somekey=somedata
