@@ -27,6 +27,7 @@ import UltimatePagination from 'react-ultimate-pagination-material-ui'
 import Avatar from 'material-ui/Avatar';
 import ActionClass from 'material-ui/svg-icons/action/class';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
+import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -36,6 +37,17 @@ function snackBarMessage(message) {
 export default class TokenManage extends React.Component {
     constructor(props) {
         super(props);
+
+        this.defaultRoleAttributes = {
+            name: '',
+            allowed_policies: [],
+            disallowed_policies: [],
+            orphan: false,
+            period: 0,
+            renewable: true,
+            path_suffix: '',
+            explicit_max_ttl: 0
+        };
 
         this.state = {
             loading: false,
@@ -65,19 +77,11 @@ export default class TokenManage extends React.Component {
             maxItemsPerPage: 10,
             revokeBtnDisabled: true,
             roleList: [],
-            roleAttributes: {
-                name: '',
-                allowed_policies: [],
-                disallowed_policies: [],
-                orphan: false,
-                period: 0,
-                renewable: true,
-                path_suffix: '',
-                explicit_max_ttl: ''
-            },
+            roleAttributes: this.defaultRoleAttributes,
             selectedRole: '',
             newRoleName: '',
-            roleDialogOpen: false
+            roleDialogOpen: false,
+            roleDeleteDialogOpen: false,
         };
 
         this.styles = {
@@ -99,7 +103,11 @@ export default class TokenManage extends React.Component {
             'renderRevokeConfirmDialog',
             'revokeAccessor',
             'renderAccessorInfoDialog',
-            'renderNewTokenDialog'
+            'renderNewTokenDialog',
+            'reloadRoles',
+            'reloadAccessors',
+            'renderRoleDeleteConfirmDialog',
+            'DeleteRole'
         )
     }
 
@@ -159,8 +167,21 @@ export default class TokenManage extends React.Component {
         return _.map(this.state.roleList, (role) => {
 
             let action = (
-                <IconButton tooltip="Delete">
-                    <ActionDelete color={red500} />
+                <IconButton
+                    tooltip="Delete"
+                    onTouchTap={() => {
+                        tokenHasCapabilities(['delete'], 'auth/token/roles/' + role).then(() => {
+                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                                this.DeleteRole(role);
+                            } else {
+                                this.setState({ roleDeleteDialogOpen: true, selectedRole: role })
+                            }
+                        }).catch(() => {
+                            snackBarMessage(new Error("Access denied").toString());
+                        })
+                    } }
+                    >
+                    {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
             )
 
@@ -171,7 +192,7 @@ export default class TokenManage extends React.Component {
                     leftAvatar={<Avatar icon={<ActionClass />} />}
                     rightIconButton={action}
                     onTouchTap={(e, v) => {
-                        this.setState({ selectedRole: role });
+                        this.setState({ selectedRole: role, newRoleName: '' });
                     } }
                     >
                     <div className={styles.TokenFromRoleBtn}>
@@ -179,6 +200,24 @@ export default class TokenManage extends React.Component {
                             hoverColor={green100}
                             label="Create token from role"
                             primary={true}
+                            onTouchTap={(e) => {
+                                e.stopPropagation();
+                                tokenHasCapabilities(['update'], 'auth/token/roles/' + role).then(() => {
+                                    callVaultApi('post', 'auth/token/create/' + role, null, null)
+                                        .then((resp) => {
+                                            this.reloadAccessors();
+                                            this.setState({
+                                                newTokenCode: resp.data.auth.client_token
+                                            });
+                                        })
+                                        .catch((error) => {
+                                            // Despite our efforts, the request failed. show why
+                                            snackBarMessage(error.toString());
+                                        });
+                                }).catch(() => {
+                                    snackBarMessage(new Error("Access denied").toString());
+                                })
+                            } }
                             />
                     </div>
                 </ListItem>
@@ -210,7 +249,7 @@ export default class TokenManage extends React.Component {
             this.updateAccessorList(this.state.currentPage);
         }
 
-        if (this.state.selectedRole && this.state.selectedRole !== prevState.selectedRole) {
+        if (this.state.selectedRole && !this.state.roleDeleteDialogOpen && this.state.selectedRole !== prevState.selectedRole) {
             this.displayRole()
         }
     }
@@ -256,6 +295,42 @@ export default class TokenManage extends React.Component {
         }
     }
 
+    reloadRoles() {
+        tokenHasCapabilities(['list'], 'auth/token/roles')
+            .then(() => {
+                return callVaultApi('get', 'auth/token/roles', { list: true }).then((resp) => {
+                    this.setState({
+                        roleList: resp.data.data.keys
+                    });
+                })
+                    .catch((err) => {
+                        // This endpoint returns 404 when no roles are configured
+                        if (err.response.status != 404) {
+                            snackBarMessage(err.toString());
+                        }
+                    })
+            })
+            .catch(() => {
+                snackBarMessage('You don\' have enough permissions to list roles');
+            });
+    }
+
+    reloadAccessors() {
+        tokenHasCapabilities(['sudo', 'list'], 'auth/token/accessors')
+            .then(() => {
+                return callVaultApi('get', 'auth/token/accessors', { list: true }).then((resp) => {
+                    this.setState({
+                        fullAccessorList: resp.data.data.keys,
+                        accessorList: [],
+                        totalPages: Math.ceil(resp.data.data.keys.length / this.state.maxItemsPerPage)
+                    });
+                });
+            })
+            .catch(() => {
+                snackBarMessage('You don\' have enough permissions to list accessors');
+            });
+    }
+
     componentDidMount() {
 
         // Check if user is allowed to create new tokens
@@ -293,38 +368,10 @@ export default class TokenManage extends React.Component {
                 // Not allowed to create. Disable button
                 this.setState({ newTokenBtnDisabled: true });
             })
-
-        tokenHasCapabilities(['sudo', 'list'], 'auth/token/accessors')
-            .then(() => {
-                return callVaultApi('get', 'auth/token/accessors', { list: true }).then((resp) => {
-                    this.setState({
-                        fullAccessorList: resp.data.data.keys,
-                        totalPages: Math.ceil(resp.data.data.keys.length / this.state.maxItemsPerPage)
-                    });
-                });
-            })
-            .catch(() => {
-                snackBarMessage('You don\' have enough permissions to list accessors');
-            });
-
-        tokenHasCapabilities(['list'], 'auth/token/roles')
-            .then(() => {
-                return callVaultApi('get', 'auth/token/roles', { list: true }).then((resp) => {
-                    this.setState({
-                        roleList: resp.data.data.keys
-                    });
-                })
-                .catch((err) => {
-                    // This endpoint returns 404 when no roles are configured
-                    if (err.response.status != 404) {
-                        snackBarMessage(err.toString());
-                    }
-                })
-            })
-            .catch(() => {
-                snackBarMessage('You don\' have enough permissions to list roles');
-            });
+        this.reloadRoles();
+        this.reloadAccessors();
     }
+
 
     revokeAccessor(id) {
         tokenHasCapabilities(['update'], 'auth/token/revoke-accessor').then(() => {
@@ -382,6 +429,41 @@ export default class TokenManage extends React.Component {
         )
     }
 
+    DeleteRole(rolename) {
+        callVaultApi('delete', 'auth/token/roles/' + rolename, null, null, null)
+            .then((resp) => {
+                this.reloadRoles()
+                snackBarMessage(`Role ${rolename} deleted`);
+            })
+            .catch((err) => {
+                snackBarMessage(err.toString());
+            })
+    }
+
+    renderRoleDeleteConfirmDialog() {
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ roleDeleteDialogOpen: false, selectedRole: '' })} />,
+            <FlatButton label="Revoke" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => submitDelete()} />
+        ];
+
+        let submitDelete = () => {
+            this.DeleteRole(this.state.selectedRole);
+            this.setState({ roleDeleteDialogOpen: false, selectedRole: '' });
+        }
+
+        return (
+            <Dialog
+                title={`Delete Confirmation`}
+                modal={false}
+                actions={actions}
+                open={this.state.roleDeleteDialogOpen}
+                onRequestClose={() => this.setState({ roleDeleteDialogOpen: false })}
+                >
+                <p>You are about to permanently delete {this.state.selectedRole}.  Are you sure?</p>
+                <em>To disable this prompt, visit the settings page.</em>
+            </Dialog>
+        )
+    }
 
     renderRoleDialog() {
 
@@ -396,6 +478,17 @@ export default class TokenManage extends React.Component {
         };
 
         let handleSubmitAction = () => {
+
+            if (_.indexOf(this.state.roleList, this.state.newRoleName) !== -1) {
+                snackBarMessage("A role with the same name already exists");
+                return;
+            }
+
+            if (!this.state.selectedRole && !this.state.newRoleName) {
+                snackBarMessage("Role name cannot be empty");
+                return;
+            }
+
             this.setState({ loading: true });
             let vault_endpoint;
             let message;
@@ -419,7 +512,9 @@ export default class TokenManage extends React.Component {
                         loading: false,
                         selectedRole: '',
                         roleDialogOpen: false,
+                        newRoleName: ''
                     });
+                    this.reloadRoles();
                     snackBarMessage(message);
                 })
                 .catch((error) => {
@@ -453,7 +548,7 @@ export default class TokenManage extends React.Component {
         return (
             <div>
                 <Dialog
-                    title="Create/Edit Role"
+                    title={this.state.selectedRole ? `Edit role ${this.state.selectedRole}` : "Create new role"}
                     autoScrollBodyContent={true}
                     modal={false}
                     actions={RoleDialogAction}
@@ -461,6 +556,19 @@ export default class TokenManage extends React.Component {
                     onRequestClose={() => this.setState({ roleDialogOpen: false })}
                     >
                     <Divider />
+                    {this.state.selectedRole == '' ?
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="Enter the new role name"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Role Name"
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleName: e.target.value });
+                            } }
+                            />
+                        : ''}
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Enter the TTL in seconds"
@@ -581,6 +689,7 @@ export default class TokenManage extends React.Component {
 
             callVaultApi('post', vault_endpoint, {}, params)
                 .then((resp) => {
+                    this.reloadAccessors();
                     this.setState({
                         loading: false,
                         newTokenCode: resp.data.auth.client_token
@@ -721,6 +830,7 @@ export default class TokenManage extends React.Component {
                 {this.renderAccessorInfoDialog()}
                 {this.renderNewTokenDialog()}
                 {this.renderRoleDialog()}
+                {this.renderRoleDeleteConfirmDialog()}
                 <Paper zDepth={5}>
                     <Tabs>
                         <Tab label="Manage Tokens" >
@@ -807,7 +917,15 @@ export default class TokenManage extends React.Component {
                                             primary={true}
                                             label="NEW ROLE"
                                             disabled={this.state.newTokenBtnDisabled}
+                                            onTouchTap={() => {
 
+                                                this.setState({
+                                                    selectedRole: '',
+                                                    newRoleName: '',
+                                                    roleAttributes: this.defaultRoleAttributes,
+                                                    roleDialogOpen: true
+                                                })
+                                            } }
                                             />
                                     </ToolbarGroup>
                                 </Toolbar>
