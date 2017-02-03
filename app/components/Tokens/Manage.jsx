@@ -500,7 +500,7 @@ export default class TokenManage extends React.Component {
                 message = `Role ${this.state.selectedRole} updated`;
             }
 
-            let role = this.state.roleAttributes;
+            let role = _.clone(this.state.roleAttributes);
             delete role.name;
             role.allowed_policies = role.allowed_policies.join(',');
             role.disallowed_policies = role.disallowed_policies.join(',');
@@ -922,7 +922,7 @@ export default class TokenManage extends React.Component {
                                                 this.setState({
                                                     selectedRole: '',
                                                     newRoleName: '',
-                                                    roleAttributes: this.defaultRoleAttributes,
+                                                    roleAttributes: _.clone(this.defaultRoleAttributes),
                                                     roleDialogOpen: true
                                                 })
                                             } }
