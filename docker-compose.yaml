@@ -3,6 +3,7 @@ version: '2'
 services:
   vault:
     image: vault
+    privileged: true
     volumes:
       - .:/app
     ports:

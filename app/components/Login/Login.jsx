@@ -7,9 +7,11 @@ import Dialog from 'material-ui/Dialog';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
+import Snackbar from 'material-ui/Snackbar';
 import { browserHistory } from 'react-router';
 import axios from 'axios';
 import _ from 'lodash';
+import { callVaultApi } from '../shared/VaultUtils.jsx'
 
 export default class Login extends React.Component {
     constructor(props) {
@@ -26,7 +28,7 @@ export default class Login extends React.Component {
             password: "",
             loginMethodType: this.getVaultAuthMethod(),
             tmpLoginMethodType: this.getVaultAuthMethod(),
-            settingsChanged: false
+            settingsChanged: false,
         };
 
         _.bindAll(
@@ -37,14 +39,15 @@ export default class Login extends React.Component {
             'renderSettingsDialog',
             'renderSelectedLoginOption',
             'validateUsernamePassword',
-            'checkSettings'
+            'checkSettings',
+            'login'
         )
 
         // If a token was supplied in the window.suppliedAuthToken variable, then simulate a login
-        if ( window.suppliedAuthToken && this.state.vaultUrl ) {
+        if (window.suppliedAuthToken && this.state.vaultUrl) {
             this.state.loginMethodType = 'TOKEN';
             this.state.authToken = window.suppliedAuthToken;
-            this.validateToken({keyCode: 13});
+            this.validateToken({ keyCode: 13 });
         }
 
     }
@@ -59,17 +62,76 @@ export default class Login extends React.Component {
     }
 
     getVaultUrl() {
-      if (window.localStorage.getItem("vaultUrl"))
-        return window.localStorage.getItem("vaultUrl");
-      else
-        return window.defaultUrl;
+        if (window.localStorage.getItem("vaultUrl"))
+            return window.localStorage.getItem("vaultUrl");
+        else
+            return window.defaultUrl;
     }
 
     getVaultAuthMethod() {
-      if (window.localStorage.getItem("loginMethodType"))
-        return window.localStorage.getItem("loginMethodType");
-      else
-        return window.defaultAuth;
+        if (window.localStorage.getItem("loginMethodType"))
+            return window.localStorage.getItem("loginMethodType");
+        else
+            return window.defaultAuth;
+    }
+
+    login() {
+        let method = '';
+        let uri = '';
+        let query = null;
+        let data = null;
+        let headers = null;
+
+        switch (this.state.loginMethodType) {
+            case "TOKEN":
+                method = 'get';
+                uri = 'auth/token/lookup-self';
+                headers = { "X-Vault-Token": this.state.authToken };
+                break;
+            case "GITHUB":
+                method = 'post';
+                uri = `auth/github/login`;
+                data = { token: this.state.authToken };
+                break;
+            case "LDAP":
+                method = 'post';
+                uri = `auth/ldap/login/${this.state.username}`;
+                data = { password: this.state.password };
+                break;
+            case "USERNAMEPASSWORD":
+                method = 'post';
+                uri = `auth/userpass/login/${this.state.username}`;
+                data = { password: this.state.password };
+                break;
+            default:
+                throw new Error(`Login method type: '${this.state.loginMethodType}' is not supported`);
+        }
+
+        let instance = axios.create({
+            baseURL: '/v1/'
+        });
+
+        instance.request({
+            url: uri,
+            method: method,
+            data: data,
+            params: { "vaultaddr": this.state.vaultUrl },
+            headers: headers
+        })
+            .then((resp) => {
+                //console.log(resp);
+                if (this.state.loginMethodType == "TOKEN") {
+                    this.setAccessToken({
+                        client_token: resp.data.data.id,
+                        lease_duration: resp.data.lease_duration
+                    });
+                } else {
+                    this.setAccessToken(resp.data.auth);
+                }
+            })
+            .catch((error) => {
+                this.setState({ errorMessage: `Error: ${error}` });
+            });
     }
 
     validateUsernamePassword(e) {
@@ -87,21 +149,8 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No password provided." });
                 return;
             }
-            axios.post('/login', {
-                "VaultUrl": this.getVaultUrl(),
-                "Creds": {
-                    "Type": this.getVaultAuthMethod(),
-                    "Username": this.state.username,
-                    "Password": this.state.password
-                }
-            })
-                .then((resp) => {
-                    this.setAccessToken(resp);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    this.setState({ errorMessage: err.response.data })
-                });
+
+            this.login();
         }
     }
 
@@ -115,17 +164,7 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No auth token provided." });
                 return;
             }
-            axios.post('/login', { "VaultUrl": this.getVaultUrl(), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
-                .then((resp) => {
-                    this.setAccessToken(resp);
-                })
-                .catch((err) => {
-                    console.error(err.stack);
-                    this.setState({
-                        errorMessage: `${window.suppliedAuthToken ? 'Login was attempted using a server supplied token. Please contact your network administrator. -- ' :  ''}${err.response.data}`,
-                        loginMethodType: this.getVaultAuthMethod()
-                    });
-                });
+            this.login();
         }
     }
 
@@ -139,29 +178,17 @@ export default class Login extends React.Component {
                 this.setState({ errorMessage: "No auth token provided." });
                 return;
             }
-            axios.post('/login', { "VaultUrl": this.getVaultUrl(), "Creds": { "Type": this.state.loginMethodType, "Token": this.state.authToken } })
-                .then((resp) => {
-                    this.setAccessToken(resp);
-                })
-                .catch((err) => {
-                    console.error(err.stack);
-                    this.setState({ errorMessage: err.response.data })
-                });
+
+            this.login();
         }
     }
 
     setAccessToken(resp) {
-        //  { client_token: '145a495d-dc52-4539-1de8-94e819ba1317',
-        //   accessor: '1275f43d-1287-7df2-d17a-6956181a5238',
-        //   policies: [ 'default', 'insp-power-user' ],
-        //   metadata: { org: 'Openmail', username: 'djenriquez' },
-        //   lease_duration: 3600,
-        //   renewable: true }
-        let accessToken = _.get(resp, 'data.client_token');
+        let accessToken = _.get(resp, 'client_token');
         if (accessToken) {
             window.localStorage.setItem('capability_cache', JSON.stringify({}));
             window.localStorage.setItem("vaultAccessToken", accessToken);
-            let leaseDuration = _.get(resp, 'data.lease_duration') === 0 ? -1 : _.get(resp, 'data.lease_duration') * 1000
+            let leaseDuration = _.get(resp, 'lease_duration') === 0 ? -1 : _.get(resp, 'lease_duration') * 1000
             window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
             window.localStorage.setItem('vaultUrl', this.getVaultUrl());
             window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
@@ -267,24 +294,24 @@ export default class Login extends React.Component {
                 );
             case "LDAP":
                 return (
-                  <div>
-                      <TextField
-                          fullWidth={true}
-                          className="col-xs-12"
-                          hintText="Enter LDAP username"
-                          onKeyDown={this.validateUsernamePassword}
-                          onChange={(e, v) => this.setState({ username: v })}
-                          />
-                      <TextField
-                          fullWidth={true}
-                          className="col-xs-12"
-                          type="password"
-                          hintText="Enter LDAP password"
-                          onKeyDown={this.validateUsernamePassword}
-                          onChange={(e, v) => this.setState({ password: v })}
-                          />
-                      <div className={styles.error}>{this.state.errorMessage}</div>
-                  </div>
+                    <div>
+                        <TextField
+                            fullWidth={true}
+                            className="col-xs-12"
+                            hintText="Enter LDAP username"
+                            onKeyDown={this.validateUsernamePassword}
+                            onChange={(e, v) => this.setState({ username: v })}
+                            />
+                        <TextField
+                            fullWidth={true}
+                            className="col-xs-12"
+                            type="password"
+                            hintText="Enter LDAP password"
+                            onKeyDown={this.validateUsernamePassword}
+                            onChange={(e, v) => this.setState({ password: v })}
+                            />
+                        <div className={styles.error}>{this.state.errorMessage}</div>
+                    </div>
                 );
             case "USERNAMEPASSWORD":
                 return (

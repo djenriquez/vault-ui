@@ -1,4 +1,3 @@
-import axios from 'axios';
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
 import styles from './policies.css';
@@ -12,6 +11,8 @@ import FontIcon from 'material-ui/FontIcon';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import hcltojson from 'hcl-to-json'
 import jsonschema from './vault-policy-schema.json'
+import { callVaultApi } from '../shared/VaultUtils.jsx'
+import Snackbar from 'material-ui/Snackbar';
 
 export default class Manage extends React.Component {
     constructor(props) {
@@ -29,7 +30,8 @@ export default class Manage extends React.Component {
             disableSubmit: false,
             errorMessage: '',
             forbidden: false,
-            buttonColor: 'lightgrey'
+            buttonColor: 'lightgrey',
+            snackBarMsg: ''
         };
 
         _.bindAll(
@@ -51,60 +53,11 @@ export default class Manage extends React.Component {
         this.listPolicies();
     }
 
-    updatePolicy(policyName, isNewPolicy) {
-
-        axios.put(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`, { "Policy": this.state.currentPolicy })
-            .then((resp) => {
-                if (isNewPolicy) {
-                    let policies = this.state.policies;
-                    policies.push({ name: policyName });
-                    this.setState({
-                        policies: policies
-                    });
-                }
-            })
-            .catch((err) => {
-                console.error(err.stack);
-                if(err.response.data.errors){
-                    this.setState({
-                        errorMessage: err.response.data.errors.join('<br />')
-                    });
-                }
-            })
-        this.setState({ openNewPolicyModal: false });
-        this.setState({ openEditModal: false });
-    }
-
-    listPolicies() {
-        axios.get(`/listpolicies?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
-            .then((resp) => {
-                let policies = _.map(resp.data.policies, (policy) => {
-                    return {
-                        name: policy
-                    }
-                });
-
-                this.setState({
-                    policies: policies,
-                    errorMessage: '',
-                    buttonColor: green500
-                });
-            })
-            .catch((err) => {
-                console.error(err.response.data);
-                this.setState({
-                    errorMessage: err.response.data,
-                    forbidden: true,
-                    buttonColor: 'lightgrey'
-                });
-            });
-    }
-
     policyChangeSetState(v, syntaxCheckOk, schemaCheckOk) {
         if (syntaxCheckOk && schemaCheckOk && v) {
-            this.setState({disableSubmit: false, currentPolicy: v});
+            this.setState({ disableSubmit: false, currentPolicy: v });
         } else {
-            this.setState({disableSubmit: true});
+            this.setState({ disableSubmit: true });
         }
     }
 
@@ -129,7 +82,7 @@ export default class Manage extends React.Component {
                     mode={'code'}
                     schema={jsonschema}
                     onChange={this.policyChangeSetState}
-                />
+                    />
             </Dialog>
         );
     }
@@ -164,9 +117,9 @@ export default class Manage extends React.Component {
             var pattern = /^[^\/&]+$/;
             v = v.toLowerCase();
             if (v.match(pattern)) {
-                this.setState({newPolicyNameErrorMessage: '', focusPolicy: v});
+                this.setState({ newPolicyNameErrorMessage: '', focusPolicy: v });
             } else {
-                this.setState({newPolicyNameErrorMessage: 'Policy name contains illegal characters'});
+                this.setState({ newPolicyNameErrorMessage: 'Policy name contains illegal characters' });
             }
         }
 
@@ -188,14 +141,14 @@ export default class Manage extends React.Component {
                     hintText="Name"
                     errorText={this.state.newPolicyNameErrorMessage}
                     onChange={validatePolicyName}
-                />
+                    />
                 <JsonEditor
                     rootName={this.state.focusPolicy || null}
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
                     onChange={this.policyChangeSetState}
-                />
+                    />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
         );
@@ -222,10 +175,62 @@ export default class Manage extends React.Component {
         )
     }
 
-    clickPolicy(policyName) {
-        axios.get(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+    updatePolicy(policyName, isNewPolicy) {
+        let stringifiedPolicy = JSON.stringify(this.state.currentPolicy);
+        callVaultApi('put', `sys/policy/${encodeURI(policyName)}`, null, { rules: stringifiedPolicy }, null)
             .then((resp) => {
-                let rules = resp.data.data.rules;
+                if (isNewPolicy) {
+                    let policies = this.state.policies;
+                    policies.push({ name: policyName });
+                    this.setState({
+                        policies: policies,
+                        snackBarMsg: `Policy '${policyName}' added`
+                    });
+                } else {
+                    this.setState({ snackBarMsg: `Policy '${policyName}' updated` });
+                }
+            })
+            .catch((err) => {
+                console.error(err.stack);
+                if (err.response.data.errors) {
+                    this.setState({
+                        errorMessage: err.response.data.errors.join('<br />')
+                    });
+                }
+            })
+        this.setState({ openNewPolicyModal: false });
+        this.setState({ openEditModal: false });
+    }
+
+    listPolicies() {
+        callVaultApi('get', `sys/policy`, null, null, null)
+            .then((resp) => {
+                let policies = _.map(resp.data.policies, (policy) => {
+                    return {
+                        name: policy
+                    }
+                });
+
+                this.setState({
+                    policies: policies,
+                    errorMessage: '',
+                    buttonColor: green500
+                });
+            })
+            .catch((err) => {
+                console.error(err.response.data);
+                this.setState({
+                    errorMessage: err.response.data,
+                    forbidden: true,
+                    buttonColor: 'lightgrey'
+                });
+            });
+    }
+
+    clickPolicy(policyName) {
+        callVaultApi('get', `sys/policy/${encodeURI(policyName)}`, null, null, null)
+            .then((resp) => {
+                let rules = _.get(resp, 'data.data.rules', _.get(resp, 'data.rules', {}));
                 let rules_obj;
                 // Attempt to parse into JSON incase a stringified JSON was sent
                 try {
@@ -237,7 +242,7 @@ export default class Manage extends React.Component {
                     rules_obj = hcltojson(rules);
                 }
 
-                if(rules_obj) {
+                if (rules_obj) {
                     this.setState({
                         openEditModal: true,
                         focusPolicy: policyName,
@@ -253,9 +258,9 @@ export default class Manage extends React.Component {
     }
 
     deletePolicy(policyName) {
-        axios.delete(`/policy?vaultaddr=${encodeURI(window.localStorage.getItem("vaultUrl"))}&policy=${encodeURI(policyName)}&token=${encodeURI(window.localStorage.getItem("vaultAccessToken"))}`)
+        callVaultApi('delete', `sys/policy/${encodeURI(policyName)}`, null, null, null)
             .then((resp) => {
-                if (resp.status !== 204) {
+                if (resp.status !== 204 && resp.status !== 200) {
                     console.error(resp.status);
                     this.setState({
                         errorMessage: 'An error occurred.'
@@ -268,6 +273,7 @@ export default class Manage extends React.Component {
                         policies: policies,
                         errorMessage: ''
                     });
+                    this.setState({ snackBarMsg: `Policy '${policyName}' deleted` });
                 }
             })
             .catch((err) => {
@@ -334,7 +340,7 @@ export default class Manage extends React.Component {
                         newPolicyNameErrorMessage: '',
                         disableSubmit: true,
                         focusPolicy: '',
-                        currentPolicy: { path: { 'sample/path' : { capabilities: ['read'] }} }
+                        currentPolicy: { path: { 'sample/path': { capabilities: ['read'] } } }
                     })} />}
                 {this.state.errorMessage &&
                     <div className={styles.error}>
@@ -345,6 +351,14 @@ export default class Manage extends React.Component {
                 <List>
                     {this.renderPolicies()}
                 </List>
+                <Snackbar
+                    open={this.state.snackBarMsg != ''}
+                    message={this.state.snackBarMsg}
+                    action="OK"
+                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
+                    autoHideDuration={4000}
+                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
+                    />
             </div>
         );
     }

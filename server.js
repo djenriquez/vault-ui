@@ -33,58 +33,6 @@ app.listen(PORT, function () {
     console.log('Vault UI listening on: ' + PORT);
 });
 
-app.get('/listauthbackends', function (req, res) {
-    routeHandler.listAuthBackends(req, res);
-});
-
-app.post('/login', function (req, res) {
-    routeHandler.login(req, res);
-});
-
-app.get('/listsecretbackends', function (req, res) {
-    routeHandler.listSecretBackends(req, res);
-});
-
-app.get('/listsecrets', function (req, res) {
-    routeHandler.listSecrets(req, res);
-});
-
-app.get('/secret', function (req, res) {
-    routeHandler.getSecret(req, res);
-});
-
-app.post('/secret', function (req, res) {
-    routeHandler.writeSecret(req, res);
-});
-
-app.delete('/secret', function (req, res) {
-    routeHandler.deleteSecret(req, res);
-});
-
-app.get('/listpolicies', function (req, res) {
-    routeHandler.listPolicies(req, res);
-});
-
-app.get('/policy', function (req, res) {
-    routeHandler.getPolicy(req, res);
-});
-
-app.put('/policy', function (req, res) {
-    routeHandler.updatePolicy(req, res);
-});
-
-app.delete('/policy', function (req, res) {
-    routeHandler.deletePolicy(req, res);
-});
-
-app.get('/githubteampolicy', function(req, res) {
-    routeHandler.getGithubTeamPolicy(req, res);
-});
-
-app.post('/githubteampolicy', function(req, res) {
-    routeHandler.setGithubTeamPolicy(req, res);
-});
-
 app.post('/wrap', function(req,res) {
     routeHandler.wrapValue(req, res);
 });
