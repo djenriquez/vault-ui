@@ -1,10 +1,10 @@
 import React from 'react'
 import _ from 'lodash';
 import styles from './token.css';
-import { red500, orange500, red300, white } from 'material-ui/styles/colors.js'
+import { red500, orange500, green100, green400, red300, white } from 'material-ui/styles/colors.js'
 import RaisedButton from 'material-ui/RaisedButton';
-import {Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn} from 'material-ui/Table';
-import {Toolbar, ToolbarGroup, ToolbarSeparator} from 'material-ui/Toolbar';
+import { Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
+import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
 import copy from 'copy-to-clipboard';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
@@ -13,23 +13,42 @@ import Dialog from 'material-ui/Dialog';
 import Subheader from 'material-ui/Subheader';
 import Divider from 'material-ui/Divider';
 import LinearProgress from 'material-ui/LinearProgress';
-import Snackbar from 'material-ui/Snackbar';
+import { Tabs, Tab } from 'material-ui/Tabs';
 import Checkbox from 'material-ui/Checkbox';
 import Toggle from 'material-ui/Toggle';
 import Paper from 'material-ui/Paper';
-import {List, ListItem} from 'material-ui/List';
+import { List, ListItem } from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
 import FontIcon from 'material-ui/FontIcon';
 import {tokenHasCapabilities, callVaultApi} from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import UltimatePagination from 'react-ultimate-pagination-material-ui'
+import Avatar from 'material-ui/Avatar';
+import ActionClass from 'material-ui/svg-icons/action/class';
+import ActionDelete from 'material-ui/svg-icons/action/delete';
+import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
 
 export default class TokenAuthBackend extends React.Component {
     constructor(props) {
         super(props);
-        
+
+        this.defaultRoleAttributes = {
+            name: '',
+            allowed_policies: [],
+            disallowed_policies: [],
+            orphan: false,
+            period: 0,
+            renewable: true,
+            path_suffix: '',
+            explicit_max_ttl: 0
+        };
+
         this.state = {
             loading: false,
             accessorListError: "",
@@ -57,16 +76,21 @@ export default class TokenAuthBackend extends React.Component {
             totalPages: 1,
             maxItemsPerPage: 10,
             revokeBtnDisabled: true,
-            snackBarMsg:''
+            roleList: [],
+            roleAttributes: this.defaultRoleAttributes,
+            selectedRole: '',
+            newRoleName: '',
+            roleDialogOpen: false,
+            roleDeleteDialogOpen: false,
         };
-        
+
         this.styles = {
             chip: {
                 margin: '6px 6px 0 0',
                 border: '1px solid black',
             }
         };
-        
+
         _.bindAll(
             this,
             'onTotalPagesChange',
@@ -79,48 +103,52 @@ export default class TokenAuthBackend extends React.Component {
             'renderRevokeConfirmDialog',
             'revokeAccessor',
             'renderAccessorInfoDialog',
-            'renderNewTokenDialog'
+            'renderNewTokenDialog',
+            'reloadRoles',
+            'reloadAccessors',
+            'renderRoleDeleteConfirmDialog',
+            'DeleteRole'
         )
     }
-    
-    onTotalPagesChange(event) {
-       this.setState({totalPages: +event.target.value});
-     }
 
-     onPageChangeFromPagination(newPage) {
-         this.setState({
-             currentPage: newPage,
-             accessorList: [],
-             selectedAccessor: '',
-             revokeBtnDisabled: true,
-         });
-       
-     }
+    onTotalPagesChange(event) {
+        this.setState({ totalPages: +event.target.value });
+    }
+
+    onPageChangeFromPagination(newPage) {
+        this.setState({
+            currentPage: newPage,
+            accessorList: [],
+            selectedAccessor: '',
+            revokeBtnDisabled: true,
+        });
+
+    }
 
     renderAccessorTableItems() {
         return _.map(this.state.accessorList, (acc_id) => {
             if (acc_id in this.state.accessorDetails) {
-                
-                let policies = _.map(this.state.accessorDetails[acc_id].policies,(policy) => {
+
+                let policies = _.map(this.state.accessorDetails[acc_id].policies, (policy) => {
                     if (policy != "default") {
                         return (<ListItem key={policy} className={styles.policiesList} secondaryText={policy} />)
                     }
                 });
-                
+
                 let getDateStr = (epoch) => {
                     let locale = navigator.languages ? navigator.languages[0] : (navigator.language || navigator.userLanguage)
                     let d = new Date(0);
                     d.setUTCSeconds(epoch);
                     return d.toLocaleString(locale);
                 }
-                
+
                 return (
                     <TableRow selected={acc_id == this.state.selectedAccessor} key={acc_id}>
                         <TableRowColumn colSpan="2" >{acc_id}</TableRowColumn>
                         <TableRowColumn>{this.state.accessorDetails[acc_id].display_name}</TableRowColumn>
                         <TableRowColumn><List>{policies}</List></TableRowColumn>
-                        <TableRowColumn style={{whiteSpace: 'normal'}}>{getDateStr(this.state.accessorDetails[acc_id].creation_time)}</TableRowColumn>
-                        <TableRowColumn style={{width: 40}}>{this.state.accessorDetails[acc_id].orphan &&
+                        <TableRowColumn style={{ whiteSpace: 'normal' }}>{getDateStr(this.state.accessorDetails[acc_id].creation_time)}</TableRowColumn>
+                        <TableRowColumn style={{ width: 40 }}>{this.state.accessorDetails[acc_id].orphan &&
                             <FontIcon className="fa fa-check"></FontIcon>
                         }</TableRowColumn>
                     </TableRow>
@@ -134,28 +162,113 @@ export default class TokenAuthBackend extends React.Component {
             }
         });
     }
-    
-    componentDidUpdate() {
-        if(this.state.fullAccessorList.length > 0 && this.state.accessorList.length == 0) {
+
+    renderRoleListItems() {
+        return _.map(this.state.roleList, (role) => {
+
+            let action = (
+                <IconButton
+                    tooltip="Delete"
+                    onTouchTap={() => {
+                        tokenHasCapabilities(['delete'], 'auth/token/roles/' + role).then(() => {
+                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                                this.DeleteRole(role);
+                            } else {
+                                this.setState({ roleDeleteDialogOpen: true, selectedRole: role })
+                            }
+                        }).catch(() => {
+                            snackBarMessage(new Error("Access denied").toString());
+                        })
+                    } }
+                    >
+                    {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
+                </IconButton>
+            )
+
+            return (
+                <ListItem
+                    key={role}
+                    primaryText={role}
+                    leftAvatar={<Avatar icon={<ActionClass />} />}
+                    rightIconButton={action}
+                    onTouchTap={(e, v) => {
+                        this.setState({ selectedRole: role, newRoleName: '' });
+                    } }
+                    >
+                    <div className={styles.TokenFromRoleBtn}>
+                        <FlatButton
+                            hoverColor={green100}
+                            label="Create token from role"
+                            primary={true}
+                            onTouchTap={(e) => {
+                                e.stopPropagation();
+                                tokenHasCapabilities(['update'], 'auth/token/roles/' + role).then(() => {
+                                    callVaultApi('post', 'auth/token/create/' + role, null, null)
+                                        .then((resp) => {
+                                            this.reloadAccessors();
+                                            this.setState({
+                                                newTokenCode: resp.data.auth.client_token
+                                            });
+                                        })
+                                        .catch((error) => {
+                                            // Despite our efforts, the request failed. show why
+                                            snackBarMessage(error.toString());
+                                        });
+                                }).catch(() => {
+                                    snackBarMessage(new Error("Access denied").toString());
+                                })
+                            } }
+                            />
+                    </div>
+                </ListItem>
+            )
+        });
+    }
+
+    displayRole() {
+        tokenHasCapabilities(['read'], 'auth/token/roles/' + this.state.selectedRole)
+            .then(() => {
+                // Load content of the role
+                callVaultApi('get', 'auth/token/roles/' + this.state.selectedRole, null, null, null)
+                    .then((resp) => {
+                        this.setState({
+                            roleAttributes: _.clone(resp.data.data),
+                            roleDialogOpen: true
+                        });
+                    })
+                    .catch(snackBarMessage)
+            })
+            .catch(() => {
+                snackBarMessage(`No permissions to read content of role ${his.state.selectedRole}`);
+                this.setState({ selectedRole: '' });
+            })
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.fullAccessorList.length > 0 && this.state.accessorList.length == 0) {
             this.updateAccessorList(this.state.currentPage);
         }
+
+        if (this.state.selectedRole && !this.state.roleDeleteDialogOpen && this.state.selectedRole !== prevState.selectedRole) {
+            this.displayRole()
+        }
     }
-    
+
     updateAccessorList(page) {
-        let offset = (page -1) * this.state.maxItemsPerPage;
+        let offset = (page - 1) * this.state.maxItemsPerPage;
         let displayedAccessorList = _.slice(
             this.state.fullAccessorList,
             offset,
             offset + this.state.maxItemsPerPage
         )
-        
+
         _.map(displayedAccessorList, ((id) => {
-            if(!(id in this.state.accessorDetails)) {
+            if (!(id in this.state.accessorDetails)) {
                 tokenHasCapabilities(['update'], 'auth/token/lookup-accessor').then(() => {
-                    return callVaultApi('post', 'auth/token/lookup-accessor', {}, {accessor: id}).then((resp) => {
+                    return callVaultApi('post', 'auth/token/lookup-accessor', {}, { accessor: id }).then((resp) => {
                         let current_list = this.state.accessorDetails;
                         current_list[id] = resp.data.data;
-                        this.setState({accessorDetails: current_list});
+                        this.setState({ accessorDetails: current_list });
                     });
                 }).catch();
             }
@@ -165,14 +278,14 @@ export default class TokenAuthBackend extends React.Component {
             accessorList: displayedAccessorList,
         });
     }
-    
+
     onRowSelection(selectedRows) {
-        if(selectedRows.length){
-            this.setState({selectedAccessor: this.state.accessorList[selectedRows[0]]});
+        if (selectedRows.length) {
+            this.setState({ selectedAccessor: this.state.accessorList[selectedRows[0]] });
             tokenHasCapabilities(['update'], 'auth/token/revoke-accessor').then(() => {
-                this.setState({revokeBtnDisabled: false});
+                this.setState({ revokeBtnDisabled: false });
             }).catch(() => {
-                this.setState({revokeBtnDisabled: true});
+                this.setState({ revokeBtnDisabled: true });
             });
         } else {
             this.setState({
@@ -182,61 +295,87 @@ export default class TokenAuthBackend extends React.Component {
         }
     }
 
+    reloadRoles() {
+        tokenHasCapabilities(['list'], 'auth/token/roles')
+            .then(() => {
+                return callVaultApi('get', 'auth/token/roles', { list: true }).then((resp) => {
+                    this.setState({
+                        roleList: resp.data.data.keys
+                    });
+                })
+                    .catch((err) => {
+                        // This endpoint returns 404 when no roles are configured
+                        if (err.response.status != 404) {
+                            snackBarMessage(err.toString());
+                        }
+                    })
+            })
+            .catch(() => {
+                snackBarMessage('You don\' have enough permissions to list roles');
+            });
+    }
+
+    reloadAccessors() {
+        tokenHasCapabilities(['sudo', 'list'], 'auth/token/accessors')
+            .then(() => {
+                return callVaultApi('get', 'auth/token/accessors', { list: true }).then((resp) => {
+                    this.setState({
+                        fullAccessorList: resp.data.data.keys,
+                        accessorList: [],
+                        totalPages: Math.ceil(resp.data.data.keys.length / this.state.maxItemsPerPage)
+                    });
+                });
+            })
+            .catch(() => {
+                snackBarMessage('You don\' have enough permissions to list accessors');
+            });
+    }
+
     componentDidMount() {
-        
+
         // Check if user is allowed to create new tokens
         tokenHasCapabilities(['update'], 'auth/token/create')
             .then(() => {
-                this.setState({newTokenBtnDisabled: false});
+                this.setState({ newTokenBtnDisabled: false });
                 // Check if user has sudo capability on the path
                 return tokenHasCapabilities(['sudo'], 'auth/token/create')
                     .then(() => {
                         // sudo users can use the `no_parent` attribute to create orphan tokens
-                        this.setState({'canCreateOrphan': 'no_parent'});
+                        this.setState({ 'canCreateOrphan': 'no_parent' });
                         // sudo users can assign any policy to a token. load the full list, if possible
                         return tokenHasCapabilities(['read'], 'sys/policy').then(() => {
                             return callVaultApi('get', 'sys/policy').then((resp) => {
-                                this.setState({newTokenAvailablePolicies: resp.data.data.keys});
+                                this.setState({ newTokenAvailablePolicies: resp.data.data.keys });
                             });
                         });
                     })
                     .catch(() => {
                         // User doesnt have sudo or policy list failed, either way use user assigned policies
                         let p1 = callVaultApi('get', 'auth/token/lookup-self').then((resp) => {
-                            this.setState({newTokenAvailablePolicies: resp.data.data.policies});
+                            this.setState({ newTokenAvailablePolicies: resp.data.data.policies });
                         }).catch(); // <- This shouldnt have failed
 
                         // Altough sudo was not granted, we could still create orphans using a different endpoint
                         let p2 = tokenHasCapabilities(['update'], 'auth/token/create-orphan').then(() => {
                             // Turns out we can
-                            this.setState({'canCreateOrphan': 'create_orphan'});
+                            this.setState({ 'canCreateOrphan': 'create_orphan' });
                         }).catch(); // <- Nothing we can really do at this point
 
-                        return Promise.all([p1,p2]);
+                        return Promise.all([p1, p2]);
                     });
             })
             .catch(() => {
                 // Not allowed to create. Disable button
-                this.setState({newTokenBtnDisabled: true});
+                this.setState({ newTokenBtnDisabled: true });
             })
-        
-        tokenHasCapabilities(['sudo','list'], 'auth/token/accessors')
-            .then(() => {
-                return callVaultApi('get', 'auth/token/accessors', {'list': true} ).then((resp) => {
-                    this.setState({
-                        fullAccessorList: resp.data.data.keys,
-                        totalPages: Math.ceil(resp.data.data.keys.length/this.state.maxItemsPerPage)
-                    });
-                });
-            })
-            .catch(() => {
-                this.setState({snackBarMsg: 'You don\' have enough permissions to list accessors'});
-            });
+        this.reloadRoles();
+        this.reloadAccessors();
     }
-    
+
+
     revokeAccessor(id) {
         tokenHasCapabilities(['update'], 'auth/token/revoke-accessor').then(() => {
-            callVaultApi('post', 'auth/token/revoke-accessor', {}, {accessor: id}).then(() => {
+            callVaultApi('post', 'auth/token/revoke-accessor', {}, { accessor: id }).then(() => {
                 let list = this.state.accessorList
                 list.splice(list.indexOf(id), 1);
                 this.setState({
@@ -246,7 +385,7 @@ export default class TokenAuthBackend extends React.Component {
             });
         });
     }
-    
+
     renderRevokeConfirmDialog() {
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ revokeConfirmDialog: false, selectedAccessor: '' })} />,
@@ -259,17 +398,17 @@ export default class TokenAuthBackend extends React.Component {
                 modal={false}
                 actions={actions}
                 open={this.state.revokeConfirmDialog}
-                onRequestClose={() => this.setState({ revokeConfirmDialog: false})}
+                onRequestClose={() => this.setState({ revokeConfirmDialog: false })}
                 >
                 <p>You are about to permanently delete {this.state.revokeAccessorId}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
             </Dialog>
         )
     }
-    
+
     renderAccessorInfoDialog() {
         const actions = [
-            <FlatButton label="Ok" primary={true} keyboardFocused={true} onTouchTap={() => this.setState({accessorInfoDialog: false})} />
+            <FlatButton label="Ok" primary={true} keyboardFocused={true} onTouchTap={() => this.setState({ accessorInfoDialog: false })} />
         ];
 
         return (
@@ -278,31 +417,250 @@ export default class TokenAuthBackend extends React.Component {
                 modal={false}
                 actions={actions}
                 open={this.state.accessorInfoDialog}
-                onRequestClose={() => this.setState({ accessorInfoDialog: false})}
-            >
+                onRequestClose={() => this.setState({ accessorInfoDialog: false })}
+                >
                 <JsonEditor
                     rootName={`auth/token/accessors/${this.state.selectedAccessor}`}
                     value={this.state.accessorDetails[this.state.selectedAccessor]}
                     mode={'view'}
                     modes={['view']}
-                />
+                    />
             </Dialog>
         )
     }
-    
+
+    DeleteRole(rolename) {
+        callVaultApi('delete', 'auth/token/roles/' + rolename, null, null, null)
+            .then((resp) => {
+                this.reloadRoles()
+                snackBarMessage(`Role ${rolename} deleted`);
+            })
+            .catch((err) => {
+                snackBarMessage(err.toString());
+            })
+    }
+
+    renderRoleDeleteConfirmDialog() {
+        const actions = [
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ roleDeleteDialogOpen: false, selectedRole: '' })} />,
+            <FlatButton label="Revoke" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => submitDelete()} />
+        ];
+
+        let submitDelete = () => {
+            this.DeleteRole(this.state.selectedRole);
+            this.setState({ roleDeleteDialogOpen: false, selectedRole: '' });
+        }
+
+        return (
+            <Dialog
+                title={`Delete Confirmation`}
+                modal={false}
+                actions={actions}
+                open={this.state.roleDeleteDialogOpen}
+                onRequestClose={() => this.setState({ roleDeleteDialogOpen: false })}
+                >
+                <p>You are about to permanently delete {this.state.selectedRole}.  Are you sure?</p>
+                <em>To disable this prompt, visit the settings page.</em>
+            </Dialog>
+        )
+    }
+
+    renderRoleDialog() {
+
+        let handlePoliciesCheckUncheck = (policy, isInputChecked) => {
+            let role = this.state.roleAttributes
+            if (isInputChecked) {
+                role.allowed_policies = _.union(role.allowed_policies, [policy]);
+            } else {
+                role.allowed_policies = _.without(role.allowed_policies, policy);
+            }
+            this.setState({ roleAttributes: role });
+        };
+
+        let handleSubmitAction = () => {
+
+            if (_.indexOf(this.state.roleList, this.state.newRoleName) !== -1) {
+                snackBarMessage("A role with the same name already exists");
+                return;
+            }
+
+            if (!this.state.selectedRole && !this.state.newRoleName) {
+                snackBarMessage("Role name cannot be empty");
+                return;
+            }
+
+            this.setState({ loading: true });
+            let vault_endpoint;
+            let message;
+            if (this.state.newRoleName) {
+                vault_endpoint = 'auth/token/roles/' + this.state.newRoleName;
+                message = `Role ${this.state.newRoleName} created`;
+            } else {
+                vault_endpoint = 'auth/token/roles/' + this.state.selectedRole;
+                message = `Role ${this.state.selectedRole} updated`;
+            }
+
+            let role = _.clone(this.state.roleAttributes);
+            delete role.name;
+            role.allowed_policies = role.allowed_policies.join(',');
+            role.disallowed_policies = role.disallowed_policies.join(',');
+
+
+            callVaultApi('post', vault_endpoint, {}, role)
+                .then((resp) => {
+                    this.setState({
+                        loading: false,
+                        selectedRole: '',
+                        roleDialogOpen: false,
+                        newRoleName: ''
+                    });
+                    this.reloadRoles();
+                    snackBarMessage(message);
+                })
+                .catch((error) => {
+                    // Despite our efforts, the request failed. show why
+                    this.setState({
+                        loading: false
+                    });
+                    snackBarMessage(error.toString());
+                });
+        }
+
+        const RoleDialogAction = [
+            <FlatButton label="Cancel" secondary={true} onTouchTap={() => this.setState({ roleDialogOpen: false, selectedRole: '' })} />,
+            <FlatButton label="Submit" disabled={this.state.newTokenCode != ''} primary={true} onTouchTap={handleSubmitAction} />,
+            <LinearProgress mode={this.state.loading ? 'indeterminate' : 'determinate'} />
+        ];
+
+
+        let policiesItems = this.state.newTokenAvailablePolicies.map((policy, idx) => {
+            if (policy != "default" && policy != "root") {
+                return (
+                    <ListItem
+                        key={idx}
+                        leftCheckbox={<Checkbox defaultChecked={_.indexOf(this.state.roleAttributes.allowed_policies, policy) !== -1} onCheck={(e, iic) => { handlePoliciesCheckUncheck(policy, iic) } } />}
+                        primaryText={policy}
+                        />
+                )
+            }
+        });
+
+        return (
+            <div>
+                <Dialog
+                    title={this.state.selectedRole ? `Edit role ${this.state.selectedRole}` : "Create new role"}
+                    autoScrollBodyContent={true}
+                    modal={false}
+                    actions={RoleDialogAction}
+                    open={this.state.roleDialogOpen}
+                    onRequestClose={() => this.setState({ roleDialogOpen: false })}
+                    >
+                    <Divider />
+                    {this.state.selectedRole == '' ?
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="Enter the new role name"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Role Name"
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleName: e.target.value });
+                            } }
+                            />
+                        : ''}
+                    <TextField
+                        className={styles.textFieldStyle}
+                        hintText="Enter the TTL in seconds"
+                        floatingLabelFixed={true}
+                        type="number"
+                        floatingLabelText="Maximum TTL in seconds"
+                        fullWidth={false}
+                        value={this.state.roleAttributes.explicit_max_ttl}
+                        onChange={(e) => {
+                            let role = this.state.roleAttributes;
+                            role.explicit_max_ttl = Math.max(0, Number(e.target.value));
+                            this.setState({ roleAttributes: role });
+                        } }
+                        />
+                    <TextField
+                        className={styles.textFieldStyle}
+                        hintText="Set token path suffix"
+                        floatingLabelFixed={true}
+                        floatingLabelText="Path Suffix"
+                        fullWidth={false}
+                        value={this.state.roleAttributes.path_suffix}
+                        onChange={(e) => {
+                            let role = this.state.roleAttributes;
+                            role.path_suffix = e.target.value;
+                            this.setState({ roleAttributes: role });
+                        } }
+                        />
+                    <List>
+                        <Subheader>Settings</Subheader>
+                        <ListItem
+                            rightToggle={
+                                <Toggle
+                                    defaultToggled={this.state.roleAttributes.orphan}
+                                    onToggle={(e, v) => {
+                                        let role = this.state.roleAttributes;
+                                        role.orphan = v;
+                                        this.setState({ roleAttributes: role });
+                                    } }
+                                    />
+                            }
+                            primaryText="Orphan Token"
+                            />
+                        <ListItem
+                            rightToggle={
+                                <Toggle
+                                    defaultToggled={_.indexOf(this.state.roleAttributes.disallowed_policies, 'default') === -1}
+                                    onToggle={(e, v) => {
+                                        let role = this.state.roleAttributes;
+                                        role.disallowed_policies = v ? [] : ['default'];
+                                        this.setState({ roleAttributes: role });
+                                    } }
+                                    />
+                            }
+                            primaryText="Allow Default Policy"
+                            />
+                        <ListItem
+                            rightToggle={
+                                <Toggle
+                                    defaultToggled={this.state.roleAttributes.renewable}
+                                    onToggle={(e, v) => {
+                                        let role = this.state.roleAttributes;
+                                        role.renewable = v;
+                                        this.setState({ roleAttributes: role });
+                                    } }
+                                    />
+                            }
+                            primaryText="Renewable"
+                            />
+                    </List>
+                    <List>
+                        <Subheader>Allowed Policies</Subheader>
+                        {policiesItems}
+                    </List>
+
+                </Dialog>
+            </div>
+        )
+    }
+
     renderNewTokenDialog() {
 
         let handlePoliciesCheckUncheck = (policy, isInputChecked) => {
             if (isInputChecked) {
-                this.setState({newTokenSelectedPolicies: _.union(this.state.newTokenSelectedPolicies, [policy])})
+                this.setState({ newTokenSelectedPolicies: _.union(this.state.newTokenSelectedPolicies, [policy]) })
             } else {
-                this.setState({newTokenSelectedPolicies: _.without(this.state.newTokenSelectedPolicies, policy)})
+                this.setState({ newTokenSelectedPolicies: _.without(this.state.newTokenSelectedPolicies, policy) })
             }
         };
-        
+
         let handleCreateAction = () => {
-            this.setState({loading: true});
-            
+            this.setState({ loading: true });
+
             let vault_endpoint = 'auth/token/create';
 
             let params = {
@@ -311,7 +669,7 @@ export default class TokenAuthBackend extends React.Component {
                 no_default_policy: (_.indexOf(this.state.newTokenSelectedPolicies, 'default') === -1),
                 renewable: this.state.newTokenIsRenewable
             }
-            
+
             if (this.state.newTokenMaxUses) {
                 params['num_uses'] = this.state.newTokenMaxUses;
             }
@@ -331,6 +689,7 @@ export default class TokenAuthBackend extends React.Component {
 
             callVaultApi('post', vault_endpoint, {}, params)
                 .then((resp) => {
+                    this.reloadAccessors();
                     this.setState({
                         loading: false,
                         newTokenCode: resp.data.auth.client_token
@@ -339,54 +698,54 @@ export default class TokenAuthBackend extends React.Component {
                 .catch((error) => {
                     // Despite our efforts, the request failed. show why
                     this.setState({
-                        loading: false,
-                        snackBarMsg: `Server returned status ${error.response.status}: ${_.join(error.response.data.errors)}`
-                    })
+                        loading: false
+                    });
+                    snackBarMessage(error.toString());
                 });
         }
-        
+
         const NewTokenDialogAction = [
             <FlatButton label="Cancel" secondary={true} onTouchTap={() => this.setState({ newTokenDialog: false })} />,
-            <FlatButton label="Create" disabled={this.state.newTokenCode != ''} primary={true} onTouchTap={handleCreateAction}/>,
+            <FlatButton label="Create" disabled={this.state.newTokenCode != ''} primary={true} onTouchTap={handleCreateAction} />,
             <LinearProgress mode={this.state.loading ? 'indeterminate' : 'determinate'} />
         ];
-        
+
         const NewTokenCodeDialogActions = [
             <FlatButton label="Close" primary={true} onTouchTap={() => this.setState({ newTokenCode: '', newTokenDialog: false })} />
         ];
-        
+
         let policiesItems = this.state.newTokenAvailablePolicies.map((policy, idx) => {
-            if ( policy != "default" && policy != "root") {
+            if (policy != "default" && policy != "root") {
                 return (
                     <ListItem
                         key={idx}
-                        leftCheckbox={<Checkbox onCheck={(e,iic) => {handlePoliciesCheckUncheck(policy, iic)}}/>}
+                        leftCheckbox={<Checkbox onCheck={(e, iic) => { handlePoliciesCheckUncheck(policy, iic) } } />}
                         primaryText={policy}
-                    />
+                        />
                 )
             }
         });
 
         return (
             <div>
-            <Dialog
-                title="New Token"
-                autoScrollBodyContent={true}
-                modal={false}
-                actions={NewTokenDialogAction}
-                open={this.state.newTokenDialog}
-                onRequestClose={() => this.setState({ newTokenDialog: false})}
-                >
-                <Divider />
+                <Dialog
+                    title="New Token"
+                    autoScrollBodyContent={true}
+                    modal={false}
+                    actions={NewTokenDialogAction}
+                    open={this.state.newTokenDialog}
+                    onRequestClose={() => this.setState({ newTokenDialog: false })}
+                    >
+                    <Divider />
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Give this token a name"
                         floatingLabelFixed={true}
                         floatingLabelText="Token display name"
                         fullWidth={false}
-                        onChange={(e) => {this.setState({newTokenDisplayName: e.target.value})}}
+                        onChange={(e) => { this.setState({ newTokenDisplayName: e.target.value }) } }
                         autoFocus
-                    />
+                        />
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Leave blank or 0 for infinite"
@@ -394,8 +753,8 @@ export default class TokenAuthBackend extends React.Component {
                         type="number"
                         floatingLabelText="Maximum number of uses"
                         fullWidth={false}
-                        onChange={(e) => {this.setState({newTokenMaxUses:  Math.max(0,Number(e.target.value))})}}
-                    />
+                        onChange={(e) => { this.setState({ newTokenMaxUses: Math.max(0, Number(e.target.value)) }) } }
+                        />
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Enter the TTL in hours"
@@ -403,61 +762,61 @@ export default class TokenAuthBackend extends React.Component {
                         type="number"
                         floatingLabelText="Override TTL"
                         fullWidth={false}
-                        onChange={(e) => {this.setState({newTokenOverrideTTL: Math.max(0,Number(e.target.value))})}}
-                    />
+                        onChange={(e) => { this.setState({ newTokenOverrideTTL: Math.max(0, Number(e.target.value)) }) } }
+                        />
                     <List>
                         <Subheader>Settings</Subheader>
                         <ListItem
                             rightToggle={
                                 <Toggle
                                     disabled={this.state.canCreateOrphan == ''}
-                                    onToggle={(e,v) => this.setState({newTokenIsOrphan: v}) }
-                                />
+                                    onToggle={(e, v) => this.setState({ newTokenIsOrphan: v })}
+                                    />
                             }
                             primaryText="Orphan Token"
-                        />
+                            />
                         <ListItem
                             rightToggle={
                                 <Toggle
                                     defaultToggled={true}
-                                    onToggle={(e,v) => handlePoliciesCheckUncheck('default', v) }
-                                />
+                                    onToggle={(e, v) => handlePoliciesCheckUncheck('default', v)}
+                                    />
                             }
                             primaryText="Default Policy"
-                        />
+                            />
                         <ListItem
                             rightToggle={
                                 <Toggle
                                     defaultToggled={this.state.newTokenIsRenewable}
-                                    onToggle={(e,v) => this.setState({newTokenIsRenewable: v}) }
-                                />
+                                    onToggle={(e, v) => this.setState({ newTokenIsRenewable: v })}
+                                    />
                             }
                             primaryText="Renewable"
-                        />
+                            />
                     </List>
                     <List>
                         <Subheader>Assign Additional Policies</Subheader>
                         {policiesItems}
                     </List>
-                    
-            </Dialog>
+
+                </Dialog>
                 <Dialog
                     title="Token created!"
                     modal={true}
                     open={this.state.newTokenCode != ''}
                     actions={NewTokenCodeDialogActions}
                     >
-                    
+
                     <div className={styles.newTokenCodeEmitted}>
                         <TextField
                             fullWidth={true}
                             disabled={true}
                             floatingLabelText="New token code"
                             errorText="This is the last chance to save this token. Once you close the dialog you won't be able to retrieve it"
-                            errorStyle={{color: orange500,}}
+                            errorStyle={{ color: orange500, }}
                             defaultValue={this.state.newTokenCode}
-                        />
-                        <RaisedButton icon={<FontIcon className="fa fa-clipboard"/>} label="Copy to Clipboard" onTouchTap={() => { copy(this.state.newTokenCode) }} />
+                            />
+                        <RaisedButton icon={<FontIcon className="fa fa-clipboard" />} label="Copy to Clipboard" onTouchTap={() => { copy(this.state.newTokenCode) } } />
                     </div>
                 </Dialog>
             </div>
@@ -470,81 +829,113 @@ export default class TokenAuthBackend extends React.Component {
                 {this.renderRevokeConfirmDialog()}
                 {this.renderAccessorInfoDialog()}
                 {this.renderNewTokenDialog()}
-                <h1 id={styles.welcomeHeadline}>Tokens</h1>
-                <h2>Manage Tokens</h2>
-                <p>Here you can do stuff with tokens</p>
-                <Paper>
-                    <Toolbar>
-                        <ToolbarGroup firstChild={true}>
-                            <FlatButton
-                                primary={true}
-                                label="NEW TOKEN"
-                                disabled={this.state.newTokenBtnDisabled}
-                                onTouchTap={() => {this.setState({
-                                    newTokenDialog: true,
-                                    newTokenCodeDialog: false,
-                                    newTokenCode: '',
-                                    newTokenSelectedPolicies: ['default'],
-                                    newTokenIsOrphan: false,
-                                    newTokenIsRenewable: true,
-                                    newTokenMaxUses: 0,
-                                    newTokenOverrideTTL: 0
-                                })}}
-                            />
-                        </ToolbarGroup>
-                        <ToolbarGroup>
-                                <ToolbarSeparator />
-                                <IconMenu iconButtonElement={<IconButton iconClassName="fa fa-bars"/>}>
-                                    <MenuItem
-                                        primaryText="Show details"
-                                        disabled={!this.state.selectedAccessor}
-                                        onTouchTap={() => this.setState({accessorInfoDialog: true})}
-                                    />
-                                    <Divider />
-                                    <MenuItem
-                                        primaryText="Revoke Selected"
-                                        disabled={this.state.revokeBtnDisabled}
-                                        onTouchTap={() => {
-                                            this.setState({ revokeConfirmDialog: true, revokeAccessorId: this.state.selectedAccessor })
-                                        } }
-                                    />
-                                </IconMenu>    
-                            </ToolbarGroup>
-                        </Toolbar>
-                    <Table selectable={true} onRowSelection={this.onRowSelection}>
-                        <TableHeader displaySelectAll={false} adjustForCheckbox={true}>
-                            <TableRow>
-                                <TableHeaderColumn colSpan="2" >Accessor ID</TableHeaderColumn>
-                                <TableHeaderColumn>Display Name</TableHeaderColumn>
-                                <TableHeaderColumn>Additional Policies</TableHeaderColumn>
-                                <TableHeaderColumn>Created</TableHeaderColumn>
-                                <TableHeaderColumn style={{width: 40}}>Orphan</TableHeaderColumn>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody showRowHover={true} displayRowCheckbox={true} stripedRows={true} deselectOnClickaway={false}>
-                            {this.renderAccessorTableItems()}
-                        </TableBody>
-                        <TableFooter adjustForCheckbox={false}>
-                            <TableRow>
-                                <TableRowColumn style={{textAlign: 'center'}} colSpan="4">
-                                    <UltimatePagination
-                                        currentPage={this.state.currentPage}
-                                        totalPages={this.state.totalPages}
-                                        onChange={this.onPageChangeFromPagination}
-                                    />
-                                </TableRowColumn>
-                            </TableRow>
-                        </TableFooter>    
-                    </Table>
+                {this.renderRoleDialog()}
+                {this.renderRoleDeleteConfirmDialog()}
+                <Paper zDepth={5}>
+                    <Tabs>
+                        <Tab label="Manage Tokens" >
+                            <Paper className={styles.TabInfoSection} zDepth={0}>
+                                Here you can create new tokens and list active tokens.<br />
+                                Existing tokens are represented by their respective Accessor ID.
+                            </Paper>
+                            <Paper className={styles.accessorListSection} zDepth={0}>
+                                <Toolbar>
+                                    <ToolbarGroup firstChild={true}>
+                                        <FlatButton
+                                            primary={true}
+                                            label="NEW TOKEN"
+                                            disabled={this.state.newTokenBtnDisabled}
+                                            onTouchTap={() => {
+                                                this.setState({
+                                                    newTokenDialog: true,
+                                                    newTokenCodeDialog: false,
+                                                    newTokenCode: '',
+                                                    newTokenSelectedPolicies: ['default'],
+                                                    newTokenIsOrphan: false,
+                                                    newTokenIsRenewable: true,
+                                                    newTokenMaxUses: 0,
+                                                    newTokenOverrideTTL: 0
+                                                })
+                                            } }
+                                            />
+                                    </ToolbarGroup>
+                                    <ToolbarGroup>
+                                        <ToolbarSeparator />
+                                        <IconMenu iconButtonElement={<IconButton iconClassName="fa fa-bars" />}>
+                                            <MenuItem
+                                                primaryText="Show details"
+                                                disabled={!this.state.selectedAccessor}
+                                                onTouchTap={() => this.setState({ accessorInfoDialog: true })}
+                                                />
+                                            <Divider />
+                                            <MenuItem
+                                                primaryText="Revoke Selected"
+                                                disabled={this.state.revokeBtnDisabled}
+                                                onTouchTap={() => {
+                                                    this.setState({ revokeConfirmDialog: true, revokeAccessorId: this.state.selectedAccessor })
+                                                } }
+                                                />
+                                        </IconMenu>
+                                    </ToolbarGroup>
+                                </Toolbar>
+                                <Table selectable={true} onRowSelection={this.onRowSelection}>
+                                    <TableHeader displaySelectAll={false} adjustForCheckbox={true}>
+                                        <TableRow>
+                                            <TableHeaderColumn colSpan="2" >Accessor ID</TableHeaderColumn>
+                                            <TableHeaderColumn>Display Name</TableHeaderColumn>
+                                            <TableHeaderColumn>Additional Policies</TableHeaderColumn>
+                                            <TableHeaderColumn>Created</TableHeaderColumn>
+                                            <TableHeaderColumn style={{ width: 40 }}>Orphan</TableHeaderColumn>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody showRowHover={true} displayRowCheckbox={true} stripedRows={true} deselectOnClickaway={false}>
+                                        {this.renderAccessorTableItems()}
+                                    </TableBody>
+                                    <TableFooter adjustForCheckbox={false}>
+                                        <TableRow>
+                                            <TableRowColumn style={{ textAlign: 'center' }} colSpan="4">
+                                                <UltimatePagination
+                                                    currentPage={this.state.currentPage}
+                                                    totalPages={this.state.totalPages}
+                                                    onChange={this.onPageChangeFromPagination}
+                                                    />
+                                            </TableRowColumn>
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
+                            </Paper>
+                        </Tab>
+                        <Tab label="Manage Roles" >
+                            <Paper className={styles.TabInfoSection} zDepth={0}>
+                                Here you can create, list and edit token roles.<br />
+                                Roles can enforce specific behaviors when creating new tokens.
+                            </Paper>
+                            <Paper className={styles.rolesListSection} zDepth={0}>
+                                <Toolbar>
+                                    <ToolbarGroup firstChild={true}>
+                                        <FlatButton
+                                            primary={true}
+                                            label="NEW ROLE"
+                                            disabled={this.state.newTokenBtnDisabled}
+                                            onTouchTap={() => {
+
+                                                this.setState({
+                                                    selectedRole: '',
+                                                    newRoleName: '',
+                                                    roleAttributes: _.clone(this.defaultRoleAttributes),
+                                                    roleDialogOpen: true
+                                                })
+                                            } }
+                                            />
+                                    </ToolbarGroup>
+                                </Toolbar>
+                                <List>
+                                    {this.renderRoleListItems()}
+                                </List>
+                            </Paper>
+                        </Tab>
+                    </Tabs>
                 </Paper>
-                <Snackbar
-                    open={this.state.snackBarMsg != ''}
-                    message={this.state.snackBarMsg}
-                    action="OK"
-                    onActionTouchTap={() => this.setState({snackBarMsg: ''})}
-                    autoHideDuration={4000}
-                    onRequestClose={() => this.setState({snackBarMsg: ''})}
-                />
             </div>
         );
     }
