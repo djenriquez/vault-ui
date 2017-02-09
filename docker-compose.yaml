@@ -25,9 +25,9 @@ services:
       VAULT_AUTH_DEFAULT: USERNAMEPASSWORD
       VAULT_SUPPLIED_TOKEN_HEADER: 'X-Remote-User'
 
-#  webpack:
-#    build: .
-#    volumes:
-#      - .:/app
-#      - /app/node_modules
-#    command: webpack -w
+  webpack:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: webpack -w
