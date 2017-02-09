@@ -31,3 +31,29 @@ span.policiesList > div > div > div {
 .newTokenCodeEmitted {
     text-align: center;
 }
+
+.accessorListSection {
+    padding: 10px;
+}
+
+.rolesListSection {
+    padding: 10px;
+}
+
+.TabInfoSection {
+    padding: 10px;
+    text-align: center;
+    font-style: italic;
+}
+
+.classActionDelete {
+    position: absolute !important;
+    right: 4px;
+    top: 0px;
+}
+
+.TokenFromRoleBtn {
+    position: absolute;
+    right: 64px;
+    bottom: 10px;
+}
