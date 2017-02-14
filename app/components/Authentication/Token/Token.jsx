@@ -28,7 +28,6 @@ import Avatar from 'material-ui/Avatar';
 import ActionClass from 'material-ui/svg-icons/action/class';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -641,7 +640,7 @@ export default class TokenAuthBackend extends React.Component {
                     </List>
                     <List>
                         <Subheader>Allowed Policies</Subheader>
-                        <PolicyPicker />
+                        {policiesItems}
                     </List>
 
                 </Dialog>
@@ -797,7 +796,7 @@ export default class TokenAuthBackend extends React.Component {
                     </List>
                     <List>
                         <Subheader>Assign Additional Policies</Subheader>
-                        <PolicyPicker />
+                        {policiesItems}
                     </List>
 
                 </Dialog>
