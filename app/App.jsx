@@ -5,7 +5,6 @@ import { Router, Route, Link, browserHistory } from 'react-router'
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { callVaultApi } from './components/shared/VaultUtils.jsx';
 import App from './components/App/App.jsx';
 import SecretsGeneric from './components/Secrets/Generic/Generic.jsx';
 import Health from './components/Health/Health.jsx';
@@ -20,18 +19,18 @@ injectTapEventPlugin();
 
 (function () {
 
-    if (typeof window.CustomEvent === "function") return false;
+  if ( typeof window.CustomEvent === "function" ) return false;
 
-    function CustomEvent(event, params) {
-        params = params || { bubbles: false, cancelable: false, detail: undefined };
-        var evt = document.createEvent('CustomEvent');
-        evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
-        return evt;
-    }
+  function CustomEvent ( event, params ) {
+    params = params || { bubbles: false, cancelable: false, detail: undefined };
+    var evt = document.createEvent( 'CustomEvent' );
+    evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+    return evt;
+   }
 
-    CustomEvent.prototype = window.Event.prototype;
+  CustomEvent.prototype = window.Event.prototype;
 
-    window.CustomEvent = CustomEvent;
+  window.CustomEvent = CustomEvent;
 })();
 
 const checkAccessToken = (nextState, replace, callback) => {
@@ -39,40 +38,26 @@ const checkAccessToken = (nextState, replace, callback) => {
     if (!vaultAuthToken) {
         replace(`/login`)
     }
-
-    // Check if current token is actually valid
-    callVaultApi('get', 'auth/token/lookup-self')
-        .then(() => {
-            callback();
-        })
-        .catch((err) => {
-            if (err.response.status == 403) {
-                window.localStorage.removeItem('vaultAccessToken');
-                replace(`/login`);
-                callback();
-            } else {
-                callback(err);
-            }
-        });
+    callback();
 }
 
 const muiTheme = getMuiTheme({
-    fontFamily: 'Source Sans Pro, sans-serif',
+  fontFamily: 'Source Sans Pro, sans-serif',
 });
 
 ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
         <Router history={browserHistory}>
-            <Route path="/login" component={Login} />
+            <Route path="/login" component={Login}/>
             <Route path="/" component={App} onEnter={checkAccessToken}>
-                <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric} />
-                <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
-                <Route path="/auth/aws-ec2/:namespace" component={AwsEc2AuthBackend} />
-                <Route path="/auth/github/:namespace" component={GithubAuthBackend} />
-                <Route path="/health" component={Health} />
-                <Route path="/settings" component={Settings} />
-                <Route path="/responsewrapper" component={ResponseWrapper} />
-                <Route path="/policies" component={PolicyManager} />
+                <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric}/>
+                <Route path="/auth/token/:namespace" component={TokenAuthBackend}/>
+                <Route path="/auth/aws-ec2/:namespace" component={AwsEc2AuthBackend}/>
+                <Route path="/auth/github/:namespace" component={GithubAuthBackend}/>
+                <Route path="/health" component={Health}/>
+                <Route path="/settings" component={Settings}/>
+                <Route path="/responsewrapper" component={ResponseWrapper}/>
+                <Route path="/policies" component={PolicyManager}/>
             </Route>
         </Router>
     </MuiThemeProvider>
