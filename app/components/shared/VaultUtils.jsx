@@ -45,8 +45,7 @@ function callVaultApi(method, path, query = {}, data, headers = {}) {
 }
 
 function tokenHasCapabilities(capabilities, path) {
-
-    if (window.localStorage.getItem('enableCapabilitiesCache')) {
+    if (window.localStorage.getItem('enableCapabilitiesCache') == "true") {
         try {
             var cached_capabilities = getCachedCapabilities(path);
             // At this point we have a result from the cache we can return the value in a form of a resolved promise
@@ -71,7 +70,6 @@ function tokenHasCapabilities(capabilities, path) {
                 let has_cap = _.indexOf(resp.data.capabilities, v) !== -1;
                 return has_cap;
             });
-
             if (evaluation || _.indexOf(resp.data.capabilities, 'root') !== -1) {
                 return Promise.resolve(true);
             }

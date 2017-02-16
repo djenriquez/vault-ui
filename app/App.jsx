@@ -58,7 +58,7 @@ ReactDOM.render((
                 <Route path="/health" component={Health}/>
                 <Route path="/settings" component={Settings}/>
                 <Route path="/responsewrapper" component={ResponseWrapper}/>
-                <Route path="/policies" component={PolicyManager}/>
+                <Route path="/sys/policies(/**)" component={PolicyManager}/>
             </Route>
         </Router>
     </MuiThemeProvider>

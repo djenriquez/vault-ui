@@ -145,7 +145,7 @@ class Menu extends React.Component {
                         primaryTogglesNestedList={true}
                         initiallyOpen={true}
                         nestedItems={[
-                            <ListItem primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/policies" />,
+                            <ListItem primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/sys/policies" />,
                             <ListItem primaryText="Response Wrapper" secondaryText="Securely forward secrets" value="/responsewrapper" />
                         ]}
                     />

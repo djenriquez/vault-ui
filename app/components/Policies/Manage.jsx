@@ -15,11 +15,12 @@ import FontIcon from 'material-ui/FontIcon';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import hcltojson from 'hcl-to-json'
 import jsonschema from './vault-policy-schema.json'
-import { callVaultApi } from '../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities } from '../shared/VaultUtils.jsx'
 import Avatar from 'material-ui/Avatar';
 import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
+import { browserHistory, Link } from 'react-router'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -27,6 +28,10 @@ function snackBarMessage(message) {
 }
 
 export default class PolicyManager extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+    };
+
     constructor(props) {
         super(props);
         this.state = {
@@ -47,20 +52,34 @@ export default class PolicyManager extends React.Component {
         _.bindAll(
             this,
             'updatePolicy',
+            'displayPolicy',
             'listPolicies',
             'policyChangeSetState',
             'renderEditDialog',
             'renderNewPolicyDialog',
             'renderDeleteConfirmationDialog',
-            'clickPolicy',
             'showDelete',
             'renderPolicies',
             'deletePolicy'
         )
     }
 
-    componentWillMount() {
-        this.listPolicies();
+    componentDidMount() {
+        if (this.props.params.splat) {
+            this.displayPolicy();
+        } else {
+            this.listPolicies();
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (!_.isEqual(this.props.params, prevProps.params)) {
+            if (this.props.params.splat) {
+                this.displayPolicy();
+            } else {
+                this.listPolicies();
+            }
+        }
     }
 
     policyChangeSetState(v, syntaxCheckOk, schemaCheckOk) {
@@ -73,8 +92,23 @@ export default class PolicyManager extends React.Component {
 
     renderEditDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
-            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => this.updatePolicy(this.state.focusPolicy, false)} />
+            <FlatButton
+                label="Cancel"
+                primary={true}
+                onTouchTap={() => {
+                    this.setState({ openEditModal: false })
+                    browserHistory.push('/sys/policies');
+                }}
+            />,
+            <FlatButton
+                label="Submit"
+                disabled={this.state.disableSubmit}
+                primary={true}
+                onTouchTap={() => {
+                    this.updatePolicy(this.state.focusPolicy, false)
+                    browserHistory.push('/sys/policies');
+                }}
+            />
         ];
 
         return (
@@ -85,14 +119,14 @@ export default class PolicyManager extends React.Component {
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
-                >
+            >
                 <JsonEditor
                     rootName={this.state.focusPolicy}
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
                     onChange={this.policyChangeSetState}
-                    />
+                />
             </Dialog>
         );
     }
@@ -139,7 +173,7 @@ export default class PolicyManager extends React.Component {
                 onRequestClose={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })}
                 autoScrollBodyContent={true}
                 autoDetectWindowHeight={true}
-                >
+            >
                 <TextField
                     name="newName"
                     autoFocus
@@ -147,14 +181,14 @@ export default class PolicyManager extends React.Component {
                     hintText="Name"
                     errorText={this.state.newPolicyNameErrorMessage}
                     onChange={validatePolicyName}
-                    />
+                />
                 <JsonEditor
                     rootName={this.state.focusPolicy || null}
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
                     onChange={this.policyChangeSetState}
-                    />
+                />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
         );
@@ -173,7 +207,7 @@ export default class PolicyManager extends React.Component {
                 actions={actions}
                 open={this.state.openDeleteModal}
                 onRequestClose={() => this.setState({ openDeleteModal: false, newPolicyErrorMessage: '' })}
-                >
+            >
 
                 <p>You are about to permanently delete {this.state.deletingPolicy}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
@@ -224,8 +258,8 @@ export default class PolicyManager extends React.Component {
             });
     }
 
-    clickPolicy(policyName) {
-        callVaultApi('get', `sys/policy/${encodeURI(policyName)}`, null, null, null)
+    displayPolicy() {
+        callVaultApi('get', `sys/policy/${encodeURI(this.props.params.splat)}`, null, null, null)
             .then((resp) => {
                 let rules = _.get(resp, 'data.data.rules', _.get(resp, 'data.rules', {}));
                 let rules_obj;
@@ -242,15 +276,13 @@ export default class PolicyManager extends React.Component {
                 if (rules_obj) {
                     this.setState({
                         openEditModal: true,
-                        focusPolicy: policyName,
+                        focusPolicy: this.props.params.splat,
                         currentPolicy: rules_obj,
                         disableSubmit: true
                     });
                 }
             })
-            .catch((err) => {
-                console.error(err.stack);
-            });
+            .catch(snackBarMessage);
     }
 
     deletePolicy(policyName) {
@@ -285,10 +317,10 @@ export default class PolicyManager extends React.Component {
                     } else {
                         this.setState({ deletingPolicy: policyName, openDeleteModal: true })
                     }
-                } }
-                >
-                { window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500}/> : <ActionDelete color={red500}/>}
-                
+                }}
+            >
+                {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
+
             </IconButton>);
     }
 
@@ -298,7 +330,13 @@ export default class PolicyManager extends React.Component {
                 <ListItem
                     key={policy.name}
                     leftAvatar={<Avatar icon={<HardwareSecurity />} />}
-                    onTouchTap={() => { this.clickPolicy(policy.name) } }
+                    onTouchTap={() => {
+                        tokenHasCapabilities(['read'], 'sys/policy/' + policy.name).then(() => {
+                            browserHistory.push(`/sys/policies/` + policy.name);
+                        }).catch(() => {
+                            snackBarMessage(new Error("Access denied"));
+                        })
+                    }}
                     primaryText={<div className={policy.name}>{policy.name}</div>}
                     rightIconButton={this.showDelete(policy.name)}>
                 </ListItem>
