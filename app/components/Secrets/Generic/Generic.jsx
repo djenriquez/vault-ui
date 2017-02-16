@@ -402,7 +402,7 @@ class GenericSecretBackend extends React.Component {
             let components = _.initial(this.getBaseDir(this.state.currentLogicalPath).split('/'));
             return _.map(components, (dir, index) => {
                 var relativelink = [].concat(components).slice(0, index + 1).join('/') + '/';
-                return (<Step key={dir}><StepLabel><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                return (<Step key={index}><StepLabel style={{paddingLeft: '5px', paddingRight: '5px'}} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
             });
         }
 
@@ -439,9 +439,9 @@ class GenericSecretBackend extends React.Component {
                             <List className={sharedStyles.listStyle}>
                                 <Subheader inset={false}>
                                     <Stepper
-                                        style={{ justifyContent: 'flex-start', textTransform: 'uppercase', fontWeight: 600 }}
+                                        style={{justifyContent: 'flex-start', textTransform: 'uppercase', fontWeight: 600 }}
                                         linear={false}
-                                        connector={<ArrowForwardIcon />}
+                                        connector={<span>/</span>}
                                         >
                                         {renderBreadcrumb()}
                                     </Stepper>
