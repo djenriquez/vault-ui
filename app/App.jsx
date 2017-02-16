@@ -38,6 +38,7 @@ const checkAccessToken = (nextState, replace, callback) => {
     if (!vaultAuthToken) {
         replace(`/login`)
     }
+
     callback();
 }
 

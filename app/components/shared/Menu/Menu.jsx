@@ -46,6 +46,13 @@ class Menu extends React.Component {
         ]
     };
 
+    componentWillReceiveProps (nextProps) {
+        if(this.props.pathname != nextProps.pathname) {
+            this.setState({selectedPath: nextProps.pathname});
+        }
+    }
+    
+
     componentDidMount() {
         tokenHasCapabilities(['read'], 'sys/mounts')
             .then(() => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import Menu from '../shared/Menu/Menu.jsx';
 import Header from '../shared/Header/Header.jsx';
@@ -9,51 +9,40 @@ import Paper from 'material-ui/Paper';
 import { browserHistory } from 'react-router';
 import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
+import { callVaultApi } from '../shared/VaultUtils.jsx';
 
 let twoMinuteWarningTimeout;
 let logoutTimeout;
 
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
+
 export default class App extends React.Component {
+
     constructor(props) {
         super(props);
-        this.renderLogoutDialog = this.renderLogoutDialog.bind(this);
+
         this.state = {
             snackbarMessage: '',
             snackbarType: 'OK',
             snackbarStyle: {},
-            namespace: '/',
             logoutOpen: false,
-            logoutPromptSeen: false
+            logoutPromptSeen: false,
+            identity: {}
         }
+
+        _.bindAll(
+            this,
+            'reloadSessionIdentity',
+            'componentDidMount',
+            'componentWillUnmount',
+            'renderSessionExpDialog'
+        );
     }
 
-    componentDidMount() {
-        if (!window.localStorage.getItem('showDeleteModal')) {
-            window.localStorage.setItem('showDeleteModal', 'true');
-        }
-        if (!window.localStorage.getItem('enableCapabilitiesCache')) {
-            window.localStorage.setItem('enableCapabilitiesCache', 'true');
-        }
-        document.addEventListener("snackbar", (e) => {
-            let messageStyle = { backgroundColor: green500 };
-            let message = e.detail.message.toString();
-            if ( e.detail.message instanceof Error ) {
-                // Handle logical erros from vault
-                //debugger;
-                if (_.has(e.detail.message, 'response.data.errors')) 
-                    if (e.detail.message.response.data.errors.length > 0)
-                        message = e.detail.message.response.data.errors.join(',');
-                messageStyle = { backgroundColor: red500 };
-            }
-
-            this.setState({
-                snackbarMessage: message,
-                snackbarType: e.detail.type || 'OK',
-                snackbarStyle: messageStyle
-            });
-        });
-
-        let tokenExpireDate = window.localStorage.getItem('vaultAccessTokenExpiration');
+    reloadSessionIdentity() {
         let TWO_MINUTES = 1000 * 60 * 2;
 
         let twoMinuteWarningTimeout = () => {
@@ -67,11 +56,54 @@ export default class App extends React.Component {
         let logoutTimeout = () => {
             browserHistory.push('/login');
         }
-        // The upper limit of setTimeout is 0x7FFFFFFF (or 2147483647 in decimal)
-        if (tokenExpireDate >= 0 && tokenExpireDate < 2147483648) {
-            setTimeout(logoutTimeout, tokenExpireDate);
-            setTimeout(twoMinuteWarningTimeout, tokenExpireDate - TWO_MINUTES);
+
+        callVaultApi('get', 'auth/token/lookup-self')
+            .then((resp) => {
+                if (_.has(resp, 'data.data')) {
+                    this.setState({ identity: resp.data.data })
+                    let ttl = resp.data.data.ttl * 1000;
+                    // The upper limit of setTimeout is 0x7FFFFFFF (or 2147483647 in decimal)
+                    if (ttl > 0 && ttl < 2147483648) {
+                        setTimeout(logoutTimeout, ttl);
+                        setTimeout(twoMinuteWarningTimeout, ttl - TWO_MINUTES);
+                    }
+                }
+            })
+            .catch((err) => {
+                if (_.has(err, 'response.status') && err.response.status == 403) {
+                    window.localStorage.removeItem('vaultAccessToken');
+                    browserHistory.push('/login');
+                } else throw err;
+            });
+    }
+
+    componentDidMount() {
+        if (!window.localStorage.getItem('showDeleteModal')) {
+            window.localStorage.setItem('showDeleteModal', 'true');
         }
+        if (!window.localStorage.getItem('enableCapabilitiesCache')) {
+            window.localStorage.setItem('enableCapabilitiesCache', 'true');
+        }
+        document.addEventListener("snackbar", (e) => {
+            let messageStyle = { backgroundColor: green500 };
+            let message = e.detail.message.toString();
+            if (e.detail.message instanceof Error) {
+                // Handle logical erros from vault
+                //debugger;
+                if (_.has(e.detail.message, 'response.data.errors'))
+                    if (e.detail.message.response.data.errors.length > 0)
+                        message = e.detail.message.response.data.errors.join(',');
+                messageStyle = { backgroundColor: red500 };
+            }
+
+            this.setState({
+                snackbarMessage: message,
+                snackbarType: e.detail.type || 'OK',
+                snackbarStyle: messageStyle
+            });
+        });
+
+        this.reloadSessionIdentity()
     }
 
     componentWillUnmount() {
@@ -79,20 +111,33 @@ export default class App extends React.Component {
         clearTimeout(twoMinuteWarningTimeout);
     }
 
-    renderLogoutDialog() {
+    renderSessionExpDialog() {
         const actions = [
-            <FlatButton label="OK" primary={true} onTouchTap={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })} />
+            <FlatButton
+                label="RENEW"
+                primary={true}
+                onTouchTap={() => {
+                    callVaultApi('post', 'auth/token/renew-self')
+                        .then(() => {
+                            this.reloadSessionIdentity();
+                            snackBarMessage("Session renewed");
+                        })
+                        .catch(snackBarMessage)
+                    this.setState({ logoutOpen: false })
+                }}
+            />,
+            <FlatButton label="DISMISS" primary={false} onTouchTap={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })} />
         ];
 
         return (
             <Dialog
-                title={`Logout`}
+                title="Your session is about to expire!"
                 modal={true}
                 actions={actions}
                 open={this.state.logoutOpen}
                 onRequestClose={() => this.setState({ logoutOpen: false, logoutPromptSeen: true })}
-                >
-                <div className={styles.error}>Your token will expire in 2 minutes.  You will want to finish up what you are working on!</div>
+            >
+                <div className={styles.error}>Your session token will expire soon. Use the renew button to request a lease extension</div>
             </Dialog>
         );
     }
@@ -114,9 +159,9 @@ export default class App extends React.Component {
                 autoHideDuration={3000}
                 onRequestClose={() => this.setState({ snackbarMessage: '' })}
                 onActionTouchTap={() => this.setState({ snackbarMessage: '' })}
-                />
-                {this.state.logoutOpen && this.renderLogoutDialog()}
-            <Header />
+            />
+            {this.state.logoutOpen && this.renderSessionExpDialog()}
+            <Header tokenIdentity={this.state.identity} />
             <Menu pathname={this.props.location.pathname} />
             <div id={styles.content}>
                 <Paper zDepth={5}>
