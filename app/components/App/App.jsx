@@ -85,7 +85,7 @@ export default class App extends React.Component {
             .catch((err) => {
                 if (_.has(err, 'response.status') && err.response.status >= 400) {
                     window.localStorage.removeItem('vaultAccessToken');
-                    browserHistory.push('/login');
+                    browserHistory.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
                 } else throw err;
             });
     }

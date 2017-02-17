@@ -36,7 +36,7 @@ injectTapEventPlugin();
 const checkAccessToken = (nextState, replace, callback) => {
     let vaultAuthToken = window.localStorage.getItem('vaultAccessToken');
     if (!vaultAuthToken) {
-        replace(`/login`)
+        replace(`/login?returnto=${encodeURI(nextState.location.pathname)}`)
     }
 
     callback();
