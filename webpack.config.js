@@ -14,7 +14,7 @@ module.exports = {
         publicPath: '/assets/',
         filename: 'bundle.js'
     },
-    devtool: 'source-map',
+    devtool: 'eval',
     module: {
         loaders: [{
             test: /\.jsx?$/,
@@ -39,19 +39,6 @@ module.exports = {
     },
     postcss: [ autoprefixer({ browsers: ['last 2 versions'] }) ],
     plugins: [
-        // new webpack.DefinePlugin({
-        //     'process.env': {
-        //        'NODE_ENV': JSON.stringify('production')
-        //     }
-        //   }),
-        // new webpack.optimize.UglifyJsPlugin({
-        //     compress: {
-        //         warnings: false,
-        //         screw_ie8: true
-        //     },
-        //     comments: false,
-        //     sourceMap: false
-        // }),
         new ExtractTextPlugin("styles.css"),
         new webpack.IgnorePlugin(/regenerator|nodent|js-beautify/, /ajv/)
     ]

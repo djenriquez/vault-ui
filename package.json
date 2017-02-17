@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon ./server.js --exec babel-node --presets es2015,stage-2",
-    "build": "babel ./server.js -d . --presets es2015,stage-2",
+    "build": "webpack --config=webpack.min.config.js",
     "serve": "nodemon ./server.js"
   },
   "repository": {
@@ -52,6 +52,7 @@
     "autoprefixer": "^6.5.3",
     "axios": "^0.15.2",
     "body-parser": "^1.15.2",
+    "compression": "^1.6.2",
     "copy-to-clipboard": "^3.0.5",
     "express": "^4.14.0",
     "hbs": "^4.0.1",
