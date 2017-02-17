@@ -18,6 +18,11 @@ const supported_auth_backend_types = [
     'aws-ec2'
 ]
 
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
+
 class Menu extends React.Component {
     static propTypes = {
         pathname: PropTypes.string.isRequired,
@@ -30,20 +35,8 @@ class Menu extends React.Component {
     state = {
         selectedPath: this.props.pathname,
 
-        authBackends: [
-            {
-                path: 'token/',
-                type: 'token',
-                description: 'token based credentials'
-            }
-        ],
-        secretBackends: [
-            {
-                path: 'secret/',
-                type: 'generic',
-                description: 'generic secret storage'
-            }
-        ]
+        authBackends: [],
+        secretBackends: []
     };
 
     componentWillReceiveProps (nextProps) {
@@ -71,13 +64,10 @@ class Menu extends React.Component {
                     this.setState({secretBackends: discoveredSecretBackends});
                 });
             })
-            .catch((err) => {
-                // Not allowed to list secret backends, using default
-                console.log("unable to list: " + err);
-            })
+            .catch((err) => {snackBarMessage(new Error("No permissions to list secret backends"))})
 
 
-        tokenHasCapabilities(['read'], 'sys/auth/')
+        tokenHasCapabilities(['read'], 'sys/auth')
             .then(() => {
                 return callVaultApi('get', 'sys/auth').then((resp) => {
                     let entries = _.get(resp, 'data.data', _.get(resp, 'data', {}));
@@ -93,11 +83,7 @@ class Menu extends React.Component {
                     }).filter(Boolean);
                     this.setState({authBackends: discoveredAuthBackends});
                 });
-            })
-            .catch((err) => {
-                // Not allowed to list secret backends, using default
-                console.log("unable to list: " + err);
-            })
+            }).catch((err) => {snackBarMessage(new Error("No permissions to list auth backends"))})
     }
 
 

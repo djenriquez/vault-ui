@@ -18,6 +18,7 @@ class JsonEditor extends React.Component {
         mode: PropTypes.oneOf(['tree', 'code', 'view']),
         modes: React.PropTypes.array,
         schema: PropTypes.object,
+        height: PropTypes.string,
         onChange: PropTypes.func,
     };
 
@@ -63,6 +64,7 @@ class JsonEditor extends React.Component {
             mode: this.props.mode,
             modes: this.props.modes,
             schema: this.props.schema,
+            height: this.props.height,
             onChange: this.handleInputChange,
         };
 
@@ -83,7 +85,7 @@ class JsonEditor extends React.Component {
 
     render() {
         return (
-              <div style={{height: '400px'}} ref={(c) => { this.editorEl = c; }} />
+              <div style={this.props.height ? {height: this.props.height} : null} ref={(c) => { this.editorEl = c; }} />
         );
     }
 }

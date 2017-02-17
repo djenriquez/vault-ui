@@ -23,7 +23,7 @@ class Header extends React.Component {
 
     static propTypes = {
         tokenIdentity: PropTypes.object
-    };
+    }
 
     render() {
 

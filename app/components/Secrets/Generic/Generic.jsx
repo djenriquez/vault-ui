@@ -240,6 +240,7 @@ class GenericSecretBackend extends React.Component {
         } else {
             content = (
                 <JsonEditor
+                    height={'400px'}
                     rootName={`${this.state.currentLogicalPath}${this.state.newSecretName}`}
                     mode={'tree'}
                     onChange={this.secretChangedJsonEditor}
@@ -298,6 +299,7 @@ class GenericSecretBackend extends React.Component {
             title = `Editing ${this.state.currentLogicalPath}`;
             content = (
                 <JsonEditor
+                    height={'500px'}
                     rootName={this.state.currentLogicalPath}
                     value={this.state.secretContent}
                     mode={'tree'}

@@ -121,6 +121,7 @@ export default class PolicyManager extends React.Component {
                 autoScrollBodyContent={true}
             >
                 <JsonEditor
+                    height={'400px'}
                     rootName={this.state.focusPolicy}
                     value={this.state.currentPolicy}
                     mode={'code'}
@@ -183,6 +184,7 @@ export default class PolicyManager extends React.Component {
                     onChange={validatePolicyName}
                 />
                 <JsonEditor
+                    height={'400px'}
                     rootName={this.state.focusPolicy || null}
                     value={this.state.currentPolicy}
                     mode={'code'}

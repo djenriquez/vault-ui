@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
+import { Tabs, Tab } from 'material-ui/Tabs';
 import Menu from '../shared/Menu/Menu.jsx';
 import Header from '../shared/Header/Header.jsx';
 import Snackbar from 'material-ui/Snackbar';
@@ -7,9 +8,12 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
 import { browserHistory } from 'react-router';
-import { green500, red500, yellow500 } from 'material-ui/styles/colors.js'
+import Warning from 'material-ui/svg-icons/alert/warning';
+import { green500, red500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
-import { callVaultApi } from '../shared/VaultUtils.jsx';
+import JsonEditor from '../shared/JsonEditor.jsx';
+import { Card, CardHeader, CardText } from 'material-ui/Card';
+import { callVaultApi, tokenHasCapabilities } from '../shared/VaultUtils.jsx'
 
 let twoMinuteWarningTimeout;
 let logoutTimeout;
@@ -20,6 +24,10 @@ function snackBarMessage(message) {
 }
 
 export default class App extends React.Component {
+    static propTypes = {
+        location: PropTypes.object.isRequired,
+        children: PropTypes.node
+    }
 
     constructor(props) {
         super(props);
@@ -30,7 +38,9 @@ export default class App extends React.Component {
             snackbarStyle: {},
             logoutOpen: false,
             logoutPromptSeen: false,
-            identity: {}
+            identity: {},
+            tokenCanListSecretBackends: true,
+            tokenCanListAuthBackends: true,
         }
 
         _.bindAll(
@@ -38,7 +48,9 @@ export default class App extends React.Component {
             'reloadSessionIdentity',
             'componentDidMount',
             'componentWillUnmount',
-            'renderSessionExpDialog'
+            'renderSessionExpDialog',
+            'renderWarningSecretBackends',
+            'renderWarningAuthBackends'
         );
     }
 
@@ -57,6 +69,7 @@ export default class App extends React.Component {
             browserHistory.push('/login');
         }
 
+        // Retrieve session identity information
         callVaultApi('get', 'auth/token/lookup-self')
             .then((resp) => {
                 if (_.has(resp, 'data.data')) {
@@ -102,7 +115,16 @@ export default class App extends React.Component {
             });
         });
 
-        this.reloadSessionIdentity()
+        this.reloadSessionIdentity();
+
+        // Check capabilities to list backends
+        tokenHasCapabilities(['read'], 'sys/mounts').catch(() => {
+            this.setState({ tokenCanListSecretBackends: false });
+        });
+        tokenHasCapabilities(['read'], 'sys/auth').catch(() => {
+            this.setState({ tokenCanListAuthBackends: false });
+        });
+
     }
 
     componentWillUnmount() {
@@ -141,12 +163,78 @@ export default class App extends React.Component {
         );
     }
 
+    renderWarningAuthBackends() {
+        return (
+            <Paper className={styles.warningMsg} zDepth={0}>
+                <Card initiallyExpanded={false}>
+                    <CardHeader
+                        title="Your token doesn't have permissions to list authentication backends"
+                        subtitle="Vault UI needs some permissions granted to your token. Tap on this message for more information"
+                        avatar={<Warning style={{ color: '#ffab00' }} />}
+                        actAsExpander={true}
+                        showExpandableButton={true}
+                    />
+                    <CardText expandable={true}>
+                        Your token has been assigned the following policies:
+                        <ul>
+                            {_.map(this.state.identity.policies, (pol, idx) => {
+                                return (<li key={idx}>{pol}</li>)
+                            })}
+                        </ul>
+                        and none of them contains the following permissions:
+                        <JsonEditor mode="text" modes={["text"]} value={{path:{"sys/auth":{capabilities:["read"]}}}} />
+                    </CardText>
+                </Card>
+            </Paper>
+        )
+    }
+
+    renderWarningSecretBackends() {
+        return (
+            <Paper className={styles.warningMsg} zDepth={0}>
+                <Card initiallyExpanded={false}>
+                    <CardHeader
+                        title="Your token doesn't have permissions to list secret backends"
+                        subtitle="Vault UI needs some permissions granted to your token. Tap on this message for more information"
+                        avatar={<Warning style={{ color: '#ffab00' }} />}
+                        actAsExpander={true}
+                        showExpandableButton={true}
+                    />
+                    <CardText expandable={true}>
+                        Your token has been assigned the following policies:
+                        <ul>
+                            {_.map(this.state.identity.policies, (pol, idx) => {
+                                return (<li key={idx}>{pol}</li>)
+                            })}
+                        </ul>
+                        and none of them contains the following permissions:
+                        <JsonEditor mode="text" modes={["text"]} value={{path:{"sys/mounts":{capabilities:["read"]}}}} />
+                    </CardText>
+                </Card>
+            </Paper>
+        )
+    }
+
     render() {
         let welcome = (
             <div>
-                <h1 id={styles.welcomeHeadline}>Welcome to Vault UI.</h1>
-                <p>From here you can manage your secrets, check the health of your Vault clusters, and more.
-                Use the menu on the left to navigate around.</p>
+                <Tabs>
+                    <Tab className={styles.welcomeTab} label="WELCOME TO VAULT-UI" >
+                        <Paper className={styles.welcomeScreen} zDepth={0}>
+                            <Paper className={styles.welcomeHeader} zDepth={0}>
+                                <h1>Get started by using the left menu to navigate your vault</h1>
+                            </Paper>
+                            {/*{ !this.state.tokenCanListSecretBackends ? 
+                                <Paper className={styles.warningMsg} zDepth={0}>
+                                    <h3>Your token doesn't have permissions to list secret backends</h3>
+                                    <div>To correctly navigate the backends, Vault UI needs the following capabilities in </div>
+                                </Paper>
+                            : null }*/}
+                            {!this.state.tokenCanListSecretBackends ? this.renderWarningSecretBackends() : null}
+                            {!this.state.tokenCanListAuthBackends ? this.renderWarningAuthBackends() : null}
+                        </Paper>
+                    </Tab>
+                </Tabs>
             </div>
         );
         return <div>
