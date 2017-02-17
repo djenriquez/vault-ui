@@ -70,7 +70,7 @@ export default class App extends React.Component {
                 }
             })
             .catch((err) => {
-                if (_.has(err, 'response.status') && err.response.status == 403) {
+                if (_.has(err, 'response.status') && err.response.status >= 400) {
                     window.localStorage.removeItem('vaultAccessToken');
                     browserHistory.push('/login');
                 } else throw err;
@@ -89,7 +89,6 @@ export default class App extends React.Component {
             let message = e.detail.message.toString();
             if (e.detail.message instanceof Error) {
                 // Handle logical erros from vault
-                //debugger;
                 if (_.has(e.detail.message, 'response.data.errors'))
                     if (e.detail.message.response.data.errors.length > 0)
                         message = e.detail.message.response.data.errors.join(',');
