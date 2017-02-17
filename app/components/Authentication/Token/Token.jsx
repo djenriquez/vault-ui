@@ -177,7 +177,7 @@ export default class TokenAuthBackend extends React.Component {
                                 this.setState({ roleDeleteDialogOpen: true, selectedRole: role })
                             }
                         }).catch(() => {
-                            snackBarMessage(new Error("Access denied").toString());
+                            snackBarMessage(new Error("Access denied"));
                         })
                     } }
                     >
@@ -210,12 +210,9 @@ export default class TokenAuthBackend extends React.Component {
                                                 newTokenCode: resp.data.auth.client_token
                                             });
                                         })
-                                        .catch((error) => {
-                                            // Despite our efforts, the request failed. show why
-                                            snackBarMessage(error.toString());
-                                        });
-                                }).catch(() => {
-                                    snackBarMessage(new Error("Access denied").toString());
+                                        .catch(snackBarMessage)
+                                }).catch((err) => {
+                                    snackBarMessage(err || new Error("Access denied"));
                                 })
                             } }
                             />
@@ -238,8 +235,8 @@ export default class TokenAuthBackend extends React.Component {
                     })
                     .catch(snackBarMessage)
             })
-            .catch(() => {
-                snackBarMessage(`No permissions to read content of role ${his.state.selectedRole}`);
+            .catch((err) => {
+                snackBarMessage(err || `No permissions to read content of role ${his.state.selectedRole}`);
                 this.setState({ selectedRole: '' });
             })
     }
@@ -306,12 +303,12 @@ export default class TokenAuthBackend extends React.Component {
                     .catch((err) => {
                         // This endpoint returns 404 when no roles are configured
                         if (err.response.status != 404) {
-                            snackBarMessage(err.toString());
+                            snackBarMessage(err);
                         }
                     })
             })
-            .catch(() => {
-                snackBarMessage('You don\' have enough permissions to list roles');
+            .catch((err) => {
+                snackBarMessage(err || 'You don\' have enough permissions to list roles');
             });
     }
 
@@ -326,8 +323,8 @@ export default class TokenAuthBackend extends React.Component {
                     });
                 });
             })
-            .catch(() => {
-                snackBarMessage('You don\' have enough permissions to list accessors');
+            .catch((err) => {
+                snackBarMessage(err || new Error('You don\' have enough permissions to list accessors'));
             });
     }
 
@@ -435,9 +432,7 @@ export default class TokenAuthBackend extends React.Component {
                 this.reloadRoles()
                 snackBarMessage(`Role ${rolename} deleted`);
             })
-            .catch((err) => {
-                snackBarMessage(err.toString());
-            })
+            .catch(snackBarMessage)
     }
 
     renderRoleDeleteConfirmDialog() {
@@ -480,12 +475,12 @@ export default class TokenAuthBackend extends React.Component {
         let handleSubmitAction = () => {
 
             if (_.indexOf(this.state.roleList, this.state.newRoleName) !== -1) {
-                snackBarMessage("A role with the same name already exists");
+                snackBarMessage(new Error("A role with the same name already exists"));
                 return;
             }
 
             if (!this.state.selectedRole && !this.state.newRoleName) {
-                snackBarMessage("Role name cannot be empty");
+                snackBarMessage(new Error("Role name cannot be empty"));
                 return;
             }
 
@@ -522,7 +517,7 @@ export default class TokenAuthBackend extends React.Component {
                     this.setState({
                         loading: false
                     });
-                    snackBarMessage(error.toString());
+                    snackBarMessage(error);
                 });
         }
 
@@ -700,7 +695,7 @@ export default class TokenAuthBackend extends React.Component {
                     this.setState({
                         loading: false
                     });
-                    snackBarMessage(error.toString());
+                    snackBarMessage(error);
                 });
         }
 
