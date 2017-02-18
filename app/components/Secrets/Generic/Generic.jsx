@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
+import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
 import Paper from 'material-ui/Paper';
 import Avatar from 'material-ui/Avatar';
@@ -8,20 +8,16 @@ import FileFolder from 'material-ui/svg-icons/file/folder';
 import ActionAssignment from 'material-ui/svg-icons/action/assignment';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import ArrowForwardIcon from 'material-ui/svg-icons/navigation/arrow-forward';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import Divider from 'material-ui/Divider';
 import { List, ListItem } from 'material-ui/List';
 import { Step, Stepper, StepLabel } from 'material-ui/Stepper';
-import Checkbox from 'material-ui/Checkbox';
-import styles from './generic.css';
 import sharedStyles from '../../shared/styles.css';
 import _ from 'lodash';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
+import { green500, green400, red500, red300, white } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
@@ -36,6 +32,7 @@ function snackBarMessage(message) {
 class GenericSecretBackend extends React.Component {
     static propTypes = {
         params: PropTypes.object.isRequired,
+        location: PropTypes.object.isRequired
     };
 
     constructor(props) {
@@ -145,7 +142,7 @@ class GenericSecretBackend extends React.Component {
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
             if (this.isPathDirectory(this.props.params.splat)) {
                 this.loadSecretsList();
@@ -174,7 +171,7 @@ class GenericSecretBackend extends React.Component {
         let secret = this.state.secretContent;
         let fullpath = this.state.currentLogicalPath + this.state.newSecretName;
         callVaultApi('post', fullpath, null, secret, null)
-            .then((resp) => {
+            .then(() => {
                 if (this.state.newSecretName) {
                     this.loadSecretsList();
                     snackBarMessage(`Secret ${fullpath} added`);
@@ -188,7 +185,7 @@ class GenericSecretBackend extends React.Component {
     DeleteObject(key) {
         let fullpath = this.state.currentLogicalPath + key;
         callVaultApi('delete', fullpath, null, null, null)
-            .then((resp) => {
+            .then(() => {
                 let secrets = this.state.secretList;
                 let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete == key; });
                 secrets = _.pull(secrets, secretToDelete);
@@ -205,7 +202,7 @@ class GenericSecretBackend extends React.Component {
         const MISSING_KEY_ERROR = "Key cannot be empty.";
         const DUPLICATE_KEY_ERROR = `Key '${this.state.currentLogicalPath}${this.state.newSecretName}' already exists.`;
 
-        let validateAndSubmit = (e, v) => {
+        let validateAndSubmit = () => {
             if (this.state.newSecretName === '') {
                 snackBarMessage(new Error(MISSING_KEY_ERROR));
                 return;

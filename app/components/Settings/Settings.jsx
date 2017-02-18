@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
 import TextField from 'material-ui/TextField';
 import Checkbox from 'material-ui/Checkbox';
 import styles from './settings.css';

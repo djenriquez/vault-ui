@@ -1,20 +1,12 @@
 import React, { PropTypes } from 'react';
 import { callVaultApi, tokenHasCapabilities } from '../VaultUtils.jsx'
 import _ from 'lodash';
-import { browserHistory } from 'react-router';
 import { List, ListItem } from 'material-ui/List';
-import Subheader from 'material-ui/Subheader';
 import styles from './policypicker.css';
-import { lightBlue50, indigo400 } from 'material-ui/styles/colors.js'
 import KeyboardArrowRight from 'material-ui/svg-icons/hardware/keyboard-arrow-right';
-import KeyboardArrowLeft from 'material-ui/svg-icons/hardware/keyboard-arrow-left';
 import AutoComplete from 'material-ui/AutoComplete';
-import Search from 'material-ui/svg-icons/action/search';
-import Paper from 'material-ui/Paper';
 import Clear from 'material-ui/svg-icons/content/clear';
-import { Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle } from 'material-ui/Toolbar';
-import TextField from 'material-ui/TextField';
-import { Menu, MenuItem } from 'material-ui/Menu';
+import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 
 class PolicyPicker extends React.Component {
     static propTypes = {
@@ -27,7 +19,7 @@ class PolicyPicker extends React.Component {
 
     static defaultProps = {
         onError: (err) => { console.error(err) },
-        onSelectedChange: (selectedPolicies) => {},
+        onSelectedChange: () => {},
         excludePolicies: ['default'],
         title: "Policy Picker",
         height: "300px",
@@ -51,7 +43,7 @@ class PolicyPicker extends React.Component {
             'selectedPolicyAdd',
             'selectedPolicyRemove'
         )
-    };
+    }
 
     reloadPolicyList() {
         tokenHasCapabilities(['read'], 'sys/policy')
@@ -189,7 +181,7 @@ class PolicyPicker extends React.Component {
                                         searchText: searchText
                                     });
                                 } }
-                                onNewRequest={(chosenRequest, index) => {
+                                onNewRequest={(chosenRequest) => {
                                     if (
                                         (!_.includes(this.props.excludePolicies, chosenRequest)) &&
                                         (chosenRequest !== 'root')
@@ -211,8 +203,7 @@ class PolicyPicker extends React.Component {
                 </div>
             </div>
         )
-    };
-
+    }
 }
 
 export default PolicyPicker;

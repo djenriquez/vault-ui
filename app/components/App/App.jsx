@@ -182,7 +182,7 @@ export default class App extends React.Component {
                             })}
                         </ul>
                         and none of them contains the following permissions:
-                        <JsonEditor mode="text" modes={["text"]} value={{path:{"sys/auth":{capabilities:["read"]}}}} />
+                        <JsonEditor mode="text" modes={["text"]} value={{ path: { "sys/auth": { capabilities: ["read"] } } }} />
                     </CardText>
                 </Card>
             </Paper>
@@ -208,7 +208,7 @@ export default class App extends React.Component {
                             })}
                         </ul>
                         and none of them contains the following permissions:
-                        <JsonEditor mode="text" modes={["text"]} value={{path:{"sys/mounts":{capabilities:["read"]}}}} />
+                        <JsonEditor mode="text" modes={["text"]} value={{ path: { "sys/mounts": { capabilities: ["read"] } } }} />
                     </CardText>
                 </Card>
             </Paper>
@@ -255,7 +255,6 @@ export default class App extends React.Component {
                     {this.props.children || welcome}
                 </Paper>
             </div>
-
-        </div>;
+        </div>
     }
 }

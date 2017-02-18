@@ -58,8 +58,6 @@ class CountDown extends Component {
     }
 
     render() {
-        const time = this.state.time / 10
-        const seconds = Math.floor(time)
         return <span className={this.props.className}>{this.splitTimeComponents()}</span>
     }
 }

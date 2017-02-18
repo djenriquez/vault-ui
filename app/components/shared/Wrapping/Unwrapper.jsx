@@ -1,12 +1,5 @@
 import React, { PropTypes, Component } from 'react'
-import _ from 'lodash';
 import { callVaultApi } from '../VaultUtils.jsx'
-import Dialog from 'material-ui/Dialog';
-import TextField from 'material-ui/TextField';
-import RaisedButton from 'material-ui/RaisedButton';
-import copy from 'copy-to-clipboard';
-import FontIcon from 'material-ui/FontIcon';
-import FlatButton from 'material-ui/FlatButton';
 import JsonEditor from '../JsonEditor.jsx';
 import styles from './unwrapper.css';
 
@@ -24,8 +17,6 @@ export default class SecretUnwrapper extends Component {
             error: false,
         };
     }
-
-    
 
     componentDidMount() {
         callVaultApi('post', 'sys/wrapping/unwrap', null, null, null, this.props.location.query.token, this.props.location.query.vaultUrl)

@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import { browserHistory } from 'react-router';
 import JSONEditor from 'jsoneditor';
 import 'jsoneditor/src/css/reset.css';
 import 'jsoneditor/src/css/jsoneditor.css';
@@ -9,7 +8,7 @@ import 'jsoneditor/src/css/contextmenu.css';
 
 function isValid(value) {
     return value !== '' && value !== undefined && value !== null;
-};
+}
 
 class JsonEditor extends React.Component {
     static propTypes = {

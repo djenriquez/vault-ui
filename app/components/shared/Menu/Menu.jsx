@@ -1,12 +1,12 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
+import _ from 'lodash';
 import styles from './menu.css';
 import Drawer from 'material-ui/Drawer';
 import { browserHistory } from 'react-router';
 import { List, ListItem, makeSelectable } from 'material-ui/List';
-import {tokenHasCapabilities, callVaultApi} from '../VaultUtils.jsx'
+import { tokenHasCapabilities, callVaultApi } from '../VaultUtils.jsx'
 
 const SelectableList = makeSelectable(List);
-
 
 const supported_secret_backend_types = [
     'generic'
@@ -26,25 +26,24 @@ function snackBarMessage(message) {
 class Menu extends React.Component {
     static propTypes = {
         pathname: PropTypes.string.isRequired,
-    };
+    }
 
     constructor(props) {
         super(props);
+
+        this.state = {
+            selectedPath: this.props.pathname,
+            authBackends: [],
+            secretBackends: []
+        };
     }
 
-    state = {
-        selectedPath: this.props.pathname,
-
-        authBackends: [],
-        secretBackends: []
-    };
-
-    componentWillReceiveProps (nextProps) {
-        if(this.props.pathname != nextProps.pathname) {
-            this.setState({selectedPath: nextProps.pathname});
+    componentWillReceiveProps(nextProps) {
+        if (this.props.pathname != nextProps.pathname) {
+            this.setState({ selectedPath: nextProps.pathname });
         }
     }
-    
+
 
     componentDidMount() {
         tokenHasCapabilities(['read'], 'sys/mounts')
@@ -52,7 +51,7 @@ class Menu extends React.Component {
                 return callVaultApi('get', 'sys/mounts').then((resp) => {
                     let entries = _.get(resp, 'data.data', _.get(resp, 'data', {}));
                     let discoveredSecretBackends = _.map(entries, (v, k) => {
-                        if ( _.indexOf(supported_secret_backend_types, v.type) != -1 ) {
+                        if (_.indexOf(supported_secret_backend_types, v.type) != -1) {
                             let entry = {
                                 path: k,
                                 type: v.type,
@@ -61,10 +60,10 @@ class Menu extends React.Component {
                             return entry;
                         }
                     }).filter(Boolean);
-                    this.setState({secretBackends: discoveredSecretBackends});
+                    this.setState({ secretBackends: discoveredSecretBackends });
                 });
             })
-            .catch((err) => {snackBarMessage(new Error("No permissions to list secret backends"))})
+            .catch(() => { snackBarMessage(new Error("No permissions to list secret backends")) })
 
 
         tokenHasCapabilities(['read'], 'sys/auth')
@@ -72,7 +71,7 @@ class Menu extends React.Component {
                 return callVaultApi('get', 'sys/auth').then((resp) => {
                     let entries = _.get(resp, 'data.data', _.get(resp, 'data', {}));
                     let discoveredAuthBackends = _.map(entries, (v, k) => {
-                        if ( _.indexOf(supported_auth_backend_types, v.type) != -1 ) {
+                        if (_.indexOf(supported_auth_backend_types, v.type) != -1) {
                             let entry = {
                                 path: k,
                                 type: v.type,
@@ -81,18 +80,16 @@ class Menu extends React.Component {
                             return entry;
                         }
                     }).filter(Boolean);
-                    this.setState({authBackends: discoveredAuthBackends});
+                    this.setState({ authBackends: discoveredAuthBackends });
                 });
-            }).catch((err) => {snackBarMessage(new Error("No permissions to list auth backends"))})
+            }).catch(() => { snackBarMessage(new Error("No permissions to list auth backends")) })
     }
 
-
     render() {
-
         let renderSecretBackendList = () => {
             return _.map(this.state.secretBackends, (backend, idx) => {
                 return (
-                    <ListItem primaryText={backend.path} secondaryText={`type: ${backend.type}`} value={`/secrets/${backend.type}/${backend.path}`} />
+                    <ListItem key={idx} primaryText={backend.path} secondaryText={`type: ${backend.type}`} value={`/secrets/${backend.type}/${backend.path}`} />
                 )
             })
         }
@@ -100,16 +97,15 @@ class Menu extends React.Component {
         let renderAuthBackendList = () => {
             return _.map(this.state.authBackends, (backend, idx) => {
                 return (
-                    <ListItem primaryText={backend.path} secondaryText={`type: ${backend.type}`} value={`/auth/${backend.type}/${backend.path}`} />
+                    <ListItem key={idx} primaryText={backend.path} secondaryText={`type: ${backend.type}`} value={`/auth/${backend.type}/${backend.path}`} />
                 )
             })
         }
 
         let handleMenuChange = (e, v) => {
-                this.setState({selectedPath: v});
-                browserHistory.push(v)
+            this.setState({ selectedPath: v });
+            browserHistory.push(v)
         }
-
 
         return (
             <Drawer containerClassName={styles.root} docked={true} open={true} >
@@ -144,8 +140,7 @@ class Menu extends React.Component {
 
                 </SelectableList>
             </Drawer>
-
-        );
+        )
     }
 }
 
