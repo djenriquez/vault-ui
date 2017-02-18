@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react'
 import { callVaultApi } from '../VaultUtils.jsx'
 import JsonEditor from '../JsonEditor.jsx';
-import styles from './unwrapper.css';
+import styles from './wrapping.css';
 
 export default class SecretUnwrapper extends Component {
     static propTypes = {

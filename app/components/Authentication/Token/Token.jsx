@@ -2,7 +2,7 @@ import React from 'react'
 import _ from 'lodash';
 import styles from './token.css';
 import sharedStyles from '../../shared/styles.css';
-import { red500, orange500, green100, green400, red300, white } from 'material-ui/styles/colors.js'
+import { red500, orange500, green100, red300, white } from 'material-ui/styles/colors.js'
 import RaisedButton from 'material-ui/RaisedButton';
 import { Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
 import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
@@ -15,20 +15,20 @@ import Subheader from 'material-ui/Subheader';
 import Divider from 'material-ui/Divider';
 import LinearProgress from 'material-ui/LinearProgress';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import Checkbox from 'material-ui/Checkbox';
 import Toggle from 'material-ui/Toggle';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
 import FontIcon from 'material-ui/FontIcon';
-import {tokenHasCapabilities, callVaultApi} from '../../shared/VaultUtils.jsx'
+import { tokenHasCapabilities, callVaultApi } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import UltimatePagination from 'react-ultimate-pagination-material-ui'
 import Avatar from 'material-ui/Avatar';
 import ActionClass from 'material-ui/svg-icons/action/class';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
+import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -180,8 +180,8 @@ export default class TokenAuthBackend extends React.Component {
                         }).catch(() => {
                             snackBarMessage(new Error("Access denied"));
                         })
-                    } }
-                    >
+                    }}
+                >
                     {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
             )
@@ -192,10 +192,10 @@ export default class TokenAuthBackend extends React.Component {
                     primaryText={role}
                     leftAvatar={<Avatar icon={<ActionClass />} />}
                     rightIconButton={action}
-                    onTouchTap={(e, v) => {
+                    onTouchTap={() => {
                         this.setState({ selectedRole: role, newRoleName: '' });
-                    } }
-                    >
+                    }}
+                >
                     <div className={styles.TokenFromRoleBtn}>
                         <FlatButton
                             hoverColor={green100}
@@ -215,8 +215,8 @@ export default class TokenAuthBackend extends React.Component {
                                 }).catch((err) => {
                                     snackBarMessage(err || new Error("Access denied"));
                                 })
-                            } }
-                            />
+                            }}
+                        />
                     </div>
                 </ListItem>
             )
@@ -237,7 +237,7 @@ export default class TokenAuthBackend extends React.Component {
                     .catch(snackBarMessage)
             })
             .catch((err) => {
-                snackBarMessage(err || `No permissions to read content of role ${his.state.selectedRole}`);
+                snackBarMessage(err || `No permissions to read content of role ${this.state.selectedRole}`);
                 this.setState({ selectedRole: '' });
             })
     }
@@ -340,15 +340,9 @@ export default class TokenAuthBackend extends React.Component {
                     .then(() => {
                         // sudo users can use the `no_parent` attribute to create orphan tokens
                         this.setState({ 'canCreateOrphan': 'no_parent' });
-                        // sudo users can assign any policy to a token. load the full list, if possible
-                        return tokenHasCapabilities(['read'], 'sys/policy').then(() => {
-                            return callVaultApi('get', 'sys/policy').then((resp) => {
-                                this.setState({ newTokenAvailablePolicies: resp.data.data.keys });
-                            });
-                        });
                     })
                     .catch(() => {
-                        // User doesnt have sudo or policy list failed, either way use user assigned policies
+                        // User doesnt have sudo, use user assigned policies
                         let p1 = callVaultApi('get', 'auth/token/lookup-self').then((resp) => {
                             this.setState({ newTokenAvailablePolicies: resp.data.data.policies });
                         }).catch(); // <- This shouldnt have failed
@@ -397,7 +391,7 @@ export default class TokenAuthBackend extends React.Component {
                 actions={actions}
                 open={this.state.revokeConfirmDialog}
                 onRequestClose={() => this.setState({ revokeConfirmDialog: false })}
-                >
+            >
                 <p>You are about to permanently delete {this.state.revokeAccessorId}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
             </Dialog>
@@ -416,20 +410,20 @@ export default class TokenAuthBackend extends React.Component {
                 actions={actions}
                 open={this.state.accessorInfoDialog}
                 onRequestClose={() => this.setState({ accessorInfoDialog: false })}
-                >
+            >
                 <JsonEditor
                     rootName={`auth/token/accessors/${this.state.selectedAccessor}`}
                     value={this.state.accessorDetails[this.state.selectedAccessor]}
                     mode={'view'}
                     modes={['view']}
-                    />
+                />
             </Dialog>
         )
     }
 
     DeleteRole(rolename) {
         callVaultApi('delete', 'auth/token/roles/' + rolename, null, null, null)
-            .then((resp) => {
+            .then(() => {
                 this.reloadRoles()
                 snackBarMessage(`Role ${rolename} deleted`);
             })
@@ -454,7 +448,7 @@ export default class TokenAuthBackend extends React.Component {
                 actions={actions}
                 open={this.state.roleDeleteDialogOpen}
                 onRequestClose={() => this.setState({ roleDeleteDialogOpen: false })}
-                >
+            >
                 <p>You are about to permanently delete {this.state.selectedRole}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
             </Dialog>
@@ -462,17 +456,6 @@ export default class TokenAuthBackend extends React.Component {
     }
 
     renderRoleDialog() {
-
-        let handlePoliciesCheckUncheck = (policy, isInputChecked) => {
-            let role = this.state.roleAttributes
-            if (isInputChecked) {
-                role.allowed_policies = _.union(role.allowed_policies, [policy]);
-            } else {
-                role.allowed_policies = _.without(role.allowed_policies, policy);
-            }
-            this.setState({ roleAttributes: role });
-        };
-
         let handleSubmitAction = () => {
 
             if (_.indexOf(this.state.roleList, this.state.newRoleName) !== -1) {
@@ -503,7 +486,7 @@ export default class TokenAuthBackend extends React.Component {
 
 
             callVaultApi('post', vault_endpoint, {}, role)
-                .then((resp) => {
+                .then(() => {
                     this.setState({
                         loading: false,
                         selectedRole: '',
@@ -528,19 +511,6 @@ export default class TokenAuthBackend extends React.Component {
             <LinearProgress mode={this.state.loading ? 'indeterminate' : 'determinate'} />
         ];
 
-
-        let policiesItems = this.state.newTokenAvailablePolicies.map((policy, idx) => {
-            if (policy != "default" && policy != "root") {
-                return (
-                    <ListItem
-                        key={idx}
-                        leftCheckbox={<Checkbox defaultChecked={_.indexOf(this.state.roleAttributes.allowed_policies, policy) !== -1} onCheck={(e, iic) => { handlePoliciesCheckUncheck(policy, iic) } } />}
-                        primaryText={policy}
-                        />
-                )
-            }
-        });
-
         return (
             <div>
                 <Dialog
@@ -550,7 +520,7 @@ export default class TokenAuthBackend extends React.Component {
                     actions={RoleDialogAction}
                     open={this.state.roleDialogOpen}
                     onRequestClose={() => this.setState({ roleDialogOpen: false })}
-                    >
+                >
                     <Divider />
                     {this.state.selectedRole == '' ?
                         <TextField
@@ -562,8 +532,8 @@ export default class TokenAuthBackend extends React.Component {
                             autoFocus
                             onChange={(e) => {
                                 this.setState({ newRoleName: e.target.value });
-                            } }
-                            />
+                            }}
+                        />
                         : ''}
                     <TextField
                         className={styles.textFieldStyle}
@@ -577,8 +547,8 @@ export default class TokenAuthBackend extends React.Component {
                             let role = this.state.roleAttributes;
                             role.explicit_max_ttl = Math.max(0, Number(e.target.value));
                             this.setState({ roleAttributes: role });
-                        } }
-                        />
+                        }}
+                    />
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Set token path suffix"
@@ -590,8 +560,8 @@ export default class TokenAuthBackend extends React.Component {
                             let role = this.state.roleAttributes;
                             role.path_suffix = e.target.value;
                             this.setState({ roleAttributes: role });
-                        } }
-                        />
+                        }}
+                    />
                     <List>
                         <Subheader>Settings</Subheader>
                         <ListItem
@@ -602,24 +572,11 @@ export default class TokenAuthBackend extends React.Component {
                                         let role = this.state.roleAttributes;
                                         role.orphan = v;
                                         this.setState({ roleAttributes: role });
-                                    } }
-                                    />
+                                    }}
+                                />
                             }
                             primaryText="Orphan Token"
-                            />
-                        <ListItem
-                            rightToggle={
-                                <Toggle
-                                    defaultToggled={_.indexOf(this.state.roleAttributes.disallowed_policies, 'default') === -1}
-                                    onToggle={(e, v) => {
-                                        let role = this.state.roleAttributes;
-                                        role.disallowed_policies = v ? [] : ['default'];
-                                        this.setState({ roleAttributes: role });
-                                    } }
-                                    />
-                            }
-                            primaryText="Allow Default Policy"
-                            />
+                        />
                         <ListItem
                             rightToggle={
                                 <Toggle
@@ -628,31 +585,30 @@ export default class TokenAuthBackend extends React.Component {
                                         let role = this.state.roleAttributes;
                                         role.renewable = v;
                                         this.setState({ roleAttributes: role });
-                                    } }
-                                    />
+                                    }}
+                                />
                             }
                             primaryText="Renewable"
-                            />
+                        />
                     </List>
                     <List>
                         <Subheader>Allowed Policies</Subheader>
-                        {policiesItems}
+                        <PolicyPicker
+                            height="120px"
+                            selectedPolicies={this.state.roleAttributes.allowed_policies}
+                            onSelectedChange={(policies) => {
+                                let role = this.state.roleAttributes;
+                                role.allowed_policies = policies;
+                                this.setState({ roleAttributes: role });
+                            }}
+                        />
                     </List>
-
                 </Dialog>
             </div>
         )
     }
 
     renderNewTokenDialog() {
-
-        let handlePoliciesCheckUncheck = (policy, isInputChecked) => {
-            if (isInputChecked) {
-                this.setState({ newTokenSelectedPolicies: _.union(this.state.newTokenSelectedPolicies, [policy]) })
-            } else {
-                this.setState({ newTokenSelectedPolicies: _.without(this.state.newTokenSelectedPolicies, policy) })
-            }
-        };
 
         let handleCreateAction = () => {
             this.setState({ loading: true });
@@ -710,18 +666,6 @@ export default class TokenAuthBackend extends React.Component {
             <FlatButton label="Close" primary={true} onTouchTap={() => this.setState({ newTokenCode: '', newTokenDialog: false })} />
         ];
 
-        let policiesItems = this.state.newTokenAvailablePolicies.map((policy, idx) => {
-            if (policy != "default" && policy != "root") {
-                return (
-                    <ListItem
-                        key={idx}
-                        leftCheckbox={<Checkbox onCheck={(e, iic) => { handlePoliciesCheckUncheck(policy, iic) } } />}
-                        primaryText={policy}
-                        />
-                )
-            }
-        });
-
         return (
             <div>
                 <Dialog
@@ -731,7 +675,7 @@ export default class TokenAuthBackend extends React.Component {
                     actions={NewTokenDialogAction}
                     open={this.state.newTokenDialog}
                     onRequestClose={() => this.setState({ newTokenDialog: false })}
-                    >
+                >
                     <Divider />
                     <TextField
                         className={styles.textFieldStyle}
@@ -739,9 +683,9 @@ export default class TokenAuthBackend extends React.Component {
                         floatingLabelFixed={true}
                         floatingLabelText="Token display name"
                         fullWidth={false}
-                        onChange={(e) => { this.setState({ newTokenDisplayName: e.target.value }) } }
+                        onChange={(e) => { this.setState({ newTokenDisplayName: e.target.value }) }}
                         autoFocus
-                        />
+                    />
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Leave blank or 0 for infinite"
@@ -749,8 +693,8 @@ export default class TokenAuthBackend extends React.Component {
                         type="number"
                         floatingLabelText="Maximum number of uses"
                         fullWidth={false}
-                        onChange={(e) => { this.setState({ newTokenMaxUses: Math.max(0, Number(e.target.value)) }) } }
-                        />
+                        onChange={(e) => { this.setState({ newTokenMaxUses: Math.max(0, Number(e.target.value)) }) }}
+                    />
                     <TextField
                         className={styles.textFieldStyle}
                         hintText="Enter the TTL in hours"
@@ -758,8 +702,8 @@ export default class TokenAuthBackend extends React.Component {
                         type="number"
                         floatingLabelText="Override TTL"
                         fullWidth={false}
-                        onChange={(e) => { this.setState({ newTokenOverrideTTL: Math.max(0, Number(e.target.value)) }) } }
-                        />
+                        onChange={(e) => { this.setState({ newTokenOverrideTTL: Math.max(0, Number(e.target.value)) }) }}
+                    />
                     <List>
                         <Subheader>Settings</Subheader>
                         <ListItem
@@ -767,42 +711,37 @@ export default class TokenAuthBackend extends React.Component {
                                 <Toggle
                                     disabled={this.state.canCreateOrphan == ''}
                                     onToggle={(e, v) => this.setState({ newTokenIsOrphan: v })}
-                                    />
+                                />
                             }
                             primaryText="Orphan Token"
-                            />
-                        <ListItem
-                            rightToggle={
-                                <Toggle
-                                    defaultToggled={true}
-                                    onToggle={(e, v) => handlePoliciesCheckUncheck('default', v)}
-                                    />
-                            }
-                            primaryText="Default Policy"
-                            />
+                        />
                         <ListItem
                             rightToggle={
                                 <Toggle
                                     defaultToggled={this.state.newTokenIsRenewable}
                                     onToggle={(e, v) => this.setState({ newTokenIsRenewable: v })}
-                                    />
+                                />
                             }
                             primaryText="Renewable"
-                            />
+                        />
                     </List>
                     <List>
-                        <Subheader>Assign Additional Policies</Subheader>
-                        {policiesItems}
+                        <Subheader>Assign Policies</Subheader>
+                        <PolicyPicker
+                            height="120px"
+                            selectedPolicies={this.state.newTokenSelectedPolicies}
+                            onSelectedChange={(policies) => {
+                                this.setState({ newTokenSelectedPolicies: policies });
+                            }}
+                        />
                     </List>
-
                 </Dialog>
                 <Dialog
                     title="Token created!"
                     modal={true}
                     open={this.state.newTokenCode != ''}
                     actions={NewTokenCodeDialogActions}
-                    >
-
+                >
                     <div className={sharedStyles.newTokenCodeEmitted}>
                         <TextField
                             fullWidth={true}
@@ -811,8 +750,8 @@ export default class TokenAuthBackend extends React.Component {
                             errorText="This is the last chance to save this token. Once you close the dialog you won't be able to retrieve it"
                             errorStyle={{ color: orange500, }}
                             defaultValue={this.state.newTokenCode}
-                            />
-                        <RaisedButton icon={<FontIcon className="fa fa-clipboard" />} label="Copy to Clipboard" onTouchTap={() => { copy(this.state.newTokenCode) } } />
+                        />
+                        <RaisedButton icon={<FontIcon className="fa fa-clipboard" />} label="Copy to Clipboard" onTouchTap={() => { copy(this.state.newTokenCode) }} />
                     </div>
                 </Dialog>
             </div>
@@ -852,8 +791,8 @@ export default class TokenAuthBackend extends React.Component {
                                                     newTokenMaxUses: 0,
                                                     newTokenOverrideTTL: 0
                                                 })
-                                            } }
-                                            />
+                                            }}
+                                        />
                                     </ToolbarGroup>
                                     <ToolbarGroup>
                                         <ToolbarSeparator />
@@ -862,15 +801,15 @@ export default class TokenAuthBackend extends React.Component {
                                                 primaryText="Show details"
                                                 disabled={!this.state.selectedAccessor}
                                                 onTouchTap={() => this.setState({ accessorInfoDialog: true })}
-                                                />
+                                            />
                                             <Divider />
                                             <MenuItem
                                                 primaryText="Revoke Selected"
                                                 disabled={this.state.revokeBtnDisabled}
                                                 onTouchTap={() => {
                                                     this.setState({ revokeConfirmDialog: true, revokeAccessorId: this.state.selectedAccessor })
-                                                } }
-                                                />
+                                                }}
+                                            />
                                         </IconMenu>
                                     </ToolbarGroup>
                                 </Toolbar>
@@ -894,7 +833,7 @@ export default class TokenAuthBackend extends React.Component {
                                                     currentPage={this.state.currentPage}
                                                     totalPages={this.state.totalPages}
                                                     onChange={this.onPageChangeFromPagination}
-                                                    />
+                                                />
                                             </TableRowColumn>
                                         </TableRow>
                                     </TableFooter>
@@ -921,8 +860,8 @@ export default class TokenAuthBackend extends React.Component {
                                                     roleAttributes: _.clone(this.defaultRoleAttributes),
                                                     roleDialogOpen: true
                                                 })
-                                            } }
-                                            />
+                                            }}
+                                        />
                                     </ToolbarGroup>
                                 </Toolbar>
                                 <List>

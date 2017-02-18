@@ -10,7 +10,7 @@ import FlatButton from 'material-ui/FlatButton';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
-import styles from './Unwrapper.css'
+import styles from './wrapping.css'
 import sharedStyles from '../styles.css';
 
 export default class SecretWrapper extends Component {

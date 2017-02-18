@@ -13,15 +13,17 @@ class PolicyPicker extends React.Component {
         onError: PropTypes.func,
         onSelectedChange: PropTypes.func,
         excludePolicies: PropTypes.array,
-        title: PropTypes.string,
+        selectedPolicies: PropTypes.array,
+        fixedPolicyList: PropTypes.array,
         height: PropTypes.string,
     };
 
     static defaultProps = {
+        fixedPolicyList: [],
+        selectedPolicies: [],
         onError: (err) => { console.error(err) },
         onSelectedChange: () => {},
-        excludePolicies: ['default'],
-        title: "Policy Picker",
+        excludePolicies: [],
         height: "300px",
     };
 
@@ -29,9 +31,9 @@ class PolicyPicker extends React.Component {
         super(props);
 
         this.state = {
-            availablePolicies: [],
+            availablePolicies: this.props.fixedPolicyList,
             displayedAvailPolicies: [],
-            selectedPolicies: [],
+            selectedPolicies: this.props.selectedPolicies,
             manualPolicies: [],
             policyListAvailable: true,
             searchText: ''
@@ -68,7 +70,9 @@ class PolicyPicker extends React.Component {
     }
 
     componentDidMount() {
-        this.reloadPolicyList();
+        if(_.isEmpty(this.props.fixedPolicyList)) {
+            this.reloadPolicyList();
+        }
     }
 
     componentWillUpdate(nextProps, nextState) {
