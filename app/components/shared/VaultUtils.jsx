@@ -27,12 +27,12 @@ function getCachedCapabilities(path) {
     }
 }
 
-function callVaultApi(method, path, query = {}, data, headers = {}) {
+function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken = null, vaultUrl = null) {
 
     var instance = axios.create({
         baseURL: '/v1/',
-        params: { "vaultaddr": window.localStorage.getItem("vaultUrl") },
-        headers: { "X-Vault-Token": window.localStorage.getItem("vaultAccessToken") }
+        params: { "vaultaddr": vaultUrl || window.localStorage.getItem("vaultUrl") },
+        headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
     });
 
     return instance.request({

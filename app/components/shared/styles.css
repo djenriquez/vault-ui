@@ -11,3 +11,25 @@
 .listStyle span {
     font-family: monospace !important;
 }
+
+.newTokenCodeEmitted {
+    /*text-align: center;*/
+}
+
+.newTokenCodeEmitted input {
+    /*text-align: center;*/
+    font-family: monospace !important;
+    font-size: 150% !important;
+    color: black !important;
+    cursor: crosshair !important;
+}
+
+.newUrlEmitted {
+    /*text-align: center;*/
+}
+
+.newUrlEmitted input {
+    font-size: 15px !important;
+    color: black !important;
+    cursor: crosshair !important;
+}

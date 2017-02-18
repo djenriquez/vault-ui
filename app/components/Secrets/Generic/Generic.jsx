@@ -24,6 +24,7 @@ import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
+import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
 import { browserHistory, Link } from 'react-router'
 
 
@@ -51,6 +52,7 @@ class GenericSecretBackend extends React.Component {
             openEditObjectModal: false,
             openDeleteModal: false,
             deletingKey: '',
+            wrapPath: null,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
         }
@@ -265,6 +267,10 @@ class GenericSecretBackend extends React.Component {
 
     renderEditObjectDialog() {
         const actions = [
+            <FlatButton label="Wrap" primary={false} onTouchTap={() => {
+                this.setState({ wrapPath: this.state.currentLogicalPath });
+            }
+            } />,
             <FlatButton label="Cancel" primary={true} onTouchTap={() => {
                 this.setState({ openEditObjectModal: false, secretContent: '' });
                 browserHistory.push(this.getBaseDir(this.props.location.pathname));
@@ -413,6 +419,9 @@ class GenericSecretBackend extends React.Component {
                 {this.renderEditObjectDialog()}
                 {this.renderNewObjectDialog()}
                 {this.renderDeleteConfirmationDialog()}
+                <SecretWrapper path={this.state.wrapPath} onModalClose={() => {
+                    this.setState({wrapPath: null})
+                }}/>
                 <Tabs>
                     <Tab label="Browse Secrets" >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>

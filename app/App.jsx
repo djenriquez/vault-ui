@@ -11,9 +11,10 @@ import Health from './components/Health/Health.jsx';
 import PolicyManager from './components/Policies/Manage.jsx';
 import Settings from './components/Settings/Settings.jsx';
 import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
-import TokenAuthBackend from './components/Authentication/Token/Token.jsx'
-import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx'
-import GithubAuthBackend from './components/Authentication/Github/Github.jsx'
+import TokenAuthBackend from './components/Authentication/Token/Token.jsx';
+import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
+import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
+import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
 
 injectTapEventPlugin();
 
@@ -50,6 +51,7 @@ ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
         <Router history={browserHistory}>
             <Route path="/login" component={Login}/>
+            <Route path="/unwrap" component={SecretUnwrapper}/>
             <Route path="/" component={App} onEnter={checkAccessToken}>
                 <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric}/>
                 <Route path="/auth/token/:namespace" component={TokenAuthBackend}/>

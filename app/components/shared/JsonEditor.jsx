@@ -64,7 +64,6 @@ class JsonEditor extends React.Component {
             mode: this.props.mode,
             modes: this.props.modes,
             schema: this.props.schema,
-            height: this.props.height,
             onChange: this.handleInputChange,
         };
 

@@ -20,32 +20,6 @@ span.policiesList > div > div > div {
     padding-right: 3%;
 }
 
-.newTokenCodeEmitted input {
-    text-align: center;
-    font-family: monospace !important;
-    font-size: 150% !important;
-    color: black !important;
-    cursor: crosshair !important;
-}
-
-.newTokenCodeEmitted {
-    text-align: center;
-}
-
-.accessorListSection {
-    padding: 10px;
-}
-
-.rolesListSection {
-    padding: 10px;
-}
-
-.TabInfoSection {
-    padding: 10px;
-    text-align: center;
-    font-style: italic;
-}
-
 .classActionDelete {
     position: absolute !important;
     right: 4px;

@@ -1,6 +1,7 @@
 import React from 'react'
 import _ from 'lodash';
 import styles from './token.css';
+import sharedStyles from '../../shared/styles.css';
 import { red500, orange500, green100, green400, red300, white } from 'material-ui/styles/colors.js'
 import RaisedButton from 'material-ui/RaisedButton';
 import { Table, TableBody, TableFooter, TableHeader, TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
@@ -802,7 +803,7 @@ export default class TokenAuthBackend extends React.Component {
                     actions={NewTokenCodeDialogActions}
                     >
 
-                    <div className={styles.newTokenCodeEmitted}>
+                    <div className={sharedStyles.newTokenCodeEmitted}>
                         <TextField
                             fullWidth={true}
                             disabled={true}
@@ -829,11 +830,11 @@ export default class TokenAuthBackend extends React.Component {
                 <Paper zDepth={5}>
                     <Tabs>
                         <Tab label="Manage Tokens" >
-                            <Paper className={styles.TabInfoSection} zDepth={0}>
+                            <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                                 Here you can create new tokens and list active tokens.<br />
                                 Existing tokens are represented by their respective Accessor ID.
                             </Paper>
-                            <Paper className={styles.accessorListSection} zDepth={0}>
+                            <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                                 <Toolbar>
                                     <ToolbarGroup firstChild={true}>
                                         <FlatButton
@@ -901,11 +902,11 @@ export default class TokenAuthBackend extends React.Component {
                             </Paper>
                         </Tab>
                         <Tab label="Manage Roles" >
-                            <Paper className={styles.TabInfoSection} zDepth={0}>
+                            <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                                 Here you can create, list and edit token roles.<br />
                                 Roles can enforce specific behaviors when creating new tokens.
                             </Paper>
-                            <Paper className={styles.rolesListSection} zDepth={0}>
+                            <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                                 <Toolbar>
                                     <ToolbarGroup firstChild={true}>
                                         <FlatButton
