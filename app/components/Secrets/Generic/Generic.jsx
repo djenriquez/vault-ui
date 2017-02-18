@@ -218,7 +218,7 @@ class GenericSecretBackend extends React.Component {
 
         const actions = [
             <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openNewObjectModal: false, secretContent: '' })} />,
-            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={validateAndSubmit} />
+            <FlatButton label="Save" disabled={this.state.disableSubmit} primary={true} onTouchTap={validateAndSubmit} />
         ];
 
         var rootKeyInfo;
@@ -234,7 +234,7 @@ class GenericSecretBackend extends React.Component {
                     hintText="Value"
                     autoFocus
                     onChange={this.secretChangedTextEditor}
-                    />
+                />
             );
         } else {
             content = (
@@ -243,18 +243,19 @@ class GenericSecretBackend extends React.Component {
                     rootName={`${this.state.currentLogicalPath}${this.state.newSecretName}`}
                     mode={'tree'}
                     onChange={this.secretChangedJsonEditor}
-                    />
+                />
             );
         }
 
         return (
             <Dialog
                 title={`Create new secret`}
-                modal={true}
+                modal={false}
+                onRequestClose={() => { this.setState({ openNewObjectModal: false, secretContent: '' }) }}
                 actions={actions}
                 open={this.state.openNewObjectModal}
                 autoScrollBodyContent={true}
-                >
+            >
                 <TextField name="newKey" autoFocus fullWidth={true} hintText="Insert object key" onChange={(e, v) => this.setState({ newSecretName: v })} />
                 {content}
                 <div>{rootKeyInfo}</div>
@@ -264,16 +265,13 @@ class GenericSecretBackend extends React.Component {
 
     renderEditObjectDialog() {
         const actions = [
-            <FlatButton label="Wrap" primary={false} onTouchTap={() => {
-                this.setState({ wrapPath: this.state.currentLogicalPath });
-            }
-            } />,
+            <SecretWrapper buttonLabel="Wrap Secret" path={this.state.currentLogicalPath} />,
             <FlatButton label="Cancel" primary={true} onTouchTap={() => {
                 this.setState({ openEditObjectModal: false, secretContent: '' });
                 browserHistory.push(this.getBaseDir(this.props.location.pathname));
             }
             } />,
-            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
+            <FlatButton label="Save" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
         ];
 
         let submitUpdate = () => {
@@ -296,7 +294,7 @@ class GenericSecretBackend extends React.Component {
                     multiLine={true}
                     defaultValue={this.state.secretContent[this.state.rootKey]}
                     fullWidth={true}
-                    />
+                />
             );
         } else {
             title = `Editing ${this.state.currentLogicalPath}`;
@@ -307,17 +305,21 @@ class GenericSecretBackend extends React.Component {
                     value={this.state.secretContent}
                     mode={'tree'}
                     onChange={this.secretChangedJsonEditor}
-                    />
+                />
             );
         }
         return (
             <Dialog
                 title={title}
-                modal={true}
+                modal={false}
                 actions={actions}
                 open={this.state.openEditObjectModal}
                 autoScrollBodyContent={true}
-                >
+                onRequestClose={() => {
+                    this.setState({ openEditObjectModal: false, secretContent: '' })
+                    browserHistory.push(this.getBaseDir(this.props.location.pathname))
+                }}
+            >
                 {content}
             </Dialog>
         );
@@ -340,7 +342,7 @@ class GenericSecretBackend extends React.Component {
                 modal={false}
                 actions={actions}
                 open={this.state.openDeleteModal}
-                >
+            >
 
                 <p>You are about to permanently delete {this.state.currentLogicalPath}{this.state.deletingKey}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
@@ -367,8 +369,8 @@ class GenericSecretBackend extends React.Component {
                             }).catch(() => {
                                 snackBarMessage(new Error("Access denied"));
                             })
-                        } }
-                        >
+                        }}
+                    >
                         {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                     </IconButton>
                 );
@@ -395,8 +397,8 @@ class GenericSecretBackend extends React.Component {
                                 snackBarMessage(new Error("Access denied"));
                             })
 
-                        } }
-                        />
+                        }}
+                    />
                 )
                 if (this.isPathDirectory(key) && returndirs) { return item }
                 if (!this.isPathDirectory(key) && returnobjs) { return item }
@@ -407,7 +409,7 @@ class GenericSecretBackend extends React.Component {
             let components = _.initial(this.getBaseDir(this.state.currentLogicalPath).split('/'));
             return _.map(components, (dir, index) => {
                 var relativelink = [].concat(components).slice(0, index + 1).join('/') + '/';
-                return (<Step key={index}><StepLabel style={{paddingLeft: '5px', paddingRight: '5px'}} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                return (<Step key={index}><StepLabel style={{ paddingLeft: '5px', paddingRight: '5px' }} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
             });
         }
 
@@ -416,9 +418,6 @@ class GenericSecretBackend extends React.Component {
                 {this.renderEditObjectDialog()}
                 {this.renderNewObjectDialog()}
                 {this.renderDeleteConfirmationDialog()}
-                <SecretWrapper path={this.state.wrapPath} onModalClose={() => {
-                    this.setState({wrapPath: null})
-                }}/>
                 <Tabs>
                     <Tab label="Browse Secrets" >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
@@ -440,17 +439,17 @@ class GenericSecretBackend extends React.Component {
                                                 newSecretName: '',
                                                 secretContent: ''
                                             })
-                                        } }
-                                        />
+                                        }}
+                                    />
                                 </ToolbarGroup>
                             </Toolbar>
                             <List className={sharedStyles.listStyle}>
                                 <Subheader inset={false}>
                                     <Stepper
-                                        style={{justifyContent: 'flex-start', textTransform: 'uppercase', fontWeight: 600 }}
+                                        style={{ justifyContent: 'flex-start', textTransform: 'uppercase', fontWeight: 600 }}
                                         linear={false}
                                         connector={<span>/</span>}
-                                        >
+                                    >
                                         {renderBreadcrumb()}
                                     </Stepper>
                                 </Subheader>

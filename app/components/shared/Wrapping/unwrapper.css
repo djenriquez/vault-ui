@@ -31,12 +31,11 @@
 }
 
 #content {
-    /*display: inline-block;
-    text-align: center;
-    align-content: center;*/
-    
     width: 80%;
     margin: 0 auto; 
-    
-    /*margin: auto;*/
+}
+
+.ttlList {
+    line-height: 24px !important;
+    min-height: 24px !important;
 }
