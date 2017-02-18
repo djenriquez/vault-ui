@@ -1,6 +1,9 @@
 import React from 'react';
 import TextField from 'material-ui/TextField';
 import Checkbox from 'material-ui/Checkbox';
+import { Tabs, Tab } from 'material-ui/Tabs';
+import sharedStyles from '../shared/styles.css';
+import Paper from 'material-ui/Paper';
 import styles from './settings.css';
 import _ from 'lodash';
 
@@ -42,36 +45,40 @@ class Settings extends React.Component {
     render() {
         return (
             <div>
-                <h1 id={styles.welcomeHeadline}>Settings</h1>
-                <p>Customize your settings here.</p>
-                <p>You are currently connected to the Vault cluster on
-                    <span className={styles.code}>{window.localStorage.getItem('vaultUrl')}</span>.
-                To switch this, you will need to logout.</p>
-                <div>
-                    <h2>General</h2>
-                    <Checkbox
-                        label="Warn Dialog Before Delete"
-                        onCheck={this.setDeleteDialogPreference}
-                        defaultChecked={window.localStorage.getItem('showDeleteModal') === 'true'} />
-                    <Checkbox
-                        label="Enable capabilities cache"
-                        onCheck={this.setCapCachePreference}
-                        defaultChecked={window.localStorage.getItem('enableCapabilitiesCache') === 'true'} />
-                </div>
-                <div>
-                    <h2>Secrets</h2>
-                    <Checkbox
-                        label="Use Root Key"
-                        onCheck={this.setRootKeyPreference}
-                        defaultChecked={window.localStorage.getItem('useRootKey') === 'true'} />
-                    <TextField
-                        fullWidth={true}
-                        className="col-xs-12"
-                        defaultValue={this.state.rootKey}
-                        hintText="Root Key"
-                        onChange={this.setRootKey}
-                        />
-                </div>
+                <Tabs>
+                    <Tab label="VAULT UI SETTINGS" >
+                        <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
+                            Here you can customize your Vault UI settings.
+                        </Paper>
+                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                            <div>
+                                <h2>General</h2>
+                                <Checkbox
+                                    label="Warn Dialog Before Delete"
+                                    onCheck={this.setDeleteDialogPreference}
+                                    defaultChecked={window.localStorage.getItem('showDeleteModal') === 'true'} />
+                                <Checkbox
+                                    label="Enable capabilities cache"
+                                    onCheck={this.setCapCachePreference}
+                                    defaultChecked={window.localStorage.getItem('enableCapabilitiesCache') === 'true'} />
+                            </div>
+                            <div>
+                                <h2>Secrets</h2>
+                                <Checkbox
+                                    label="Use Root Key"
+                                    onCheck={this.setRootKeyPreference}
+                                    defaultChecked={window.localStorage.getItem('useRootKey') === 'true'} />
+                                <TextField
+                                    fullWidth={true}
+                                    className="col-xs-12"
+                                    defaultValue={this.state.rootKey}
+                                    hintText="Root Key"
+                                    onChange={this.setRootKey}
+                                />
+                            </div>
+                        </Paper>
+                    </Tab>
+                </Tabs>
             </div>
         )
     }
