@@ -7,7 +7,6 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import App from './components/App/App.jsx';
 import SecretsGeneric from './components/Secrets/Generic/Generic.jsx';
-import Health from './components/Health/Health.jsx';
 import PolicyManager from './components/Policies/Manage.jsx';
 import Settings from './components/Settings/Settings.jsx';
 import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
@@ -57,7 +56,6 @@ ReactDOM.render((
                 <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
                 <Route path="/auth/aws-ec2/:namespace" component={AwsEc2AuthBackend} />
                 <Route path="/auth/github/:namespace" component={GithubAuthBackend} />
-                <Route path="/health" component={Health} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/responsewrapper" component={ResponseWrapper} />
                 <Route path="/sys/policies(/**)" component={PolicyManager} />
