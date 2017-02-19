@@ -251,7 +251,7 @@ export default class App extends React.Component {
             <Header tokenIdentity={this.state.identity} />
             <Menu pathname={this.props.location.pathname} />
             <div id={styles.content}>
-                <Paper zDepth={5}>
+                <Paper zDepth={1}>
                     {this.props.children || welcome}
                 </Paper>
             </div>

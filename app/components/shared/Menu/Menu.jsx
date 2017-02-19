@@ -131,8 +131,8 @@ class Menu extends React.Component {
                         ]}
                     />
                     <ListItem
-                        primaryText="Preferencies"
-                        secondaryText="Customise Vault-UI"
+                        primaryText="Preferences"
+                        secondaryText="Customize Vault-UI"
                         primaryTogglesNestedList={false}
                         value="/settings"
                     />
