@@ -37,9 +37,30 @@ class Menu extends React.Component {
         };
     }
 
+    getCurrentMenuItemFromPath(path) {
+        if (path.startsWith('/secret')) {
+            let res = _.find(this.state.secretBackends, (backend) => {
+                return path.startsWith(`/secrets/${backend.type}/${backend.path}`)
+            });
+            if (res) {
+                return `/secrets/${res.type}/${res.path}`;
+            }
+        }
+        else if (path.startsWith('/auth')) {
+            let res = _.find(this.state.authBackends, (backend) => {
+                return path.startsWith(`/auth/${backend.type}/${backend.path}`)
+            });
+            if (res) {
+                return `/auth/${res.type}/${res.path}`;
+            }
+        } else {
+            return path;
+        }
+    }
+
     componentWillReceiveProps(nextProps) {
         if (this.props.pathname != nextProps.pathname) {
-            this.setState({ selectedPath: nextProps.pathname });
+            this.setState({ selectedPath: this.getCurrentMenuItemFromPath(nextProps.pathname) });
         }
     }
 
@@ -59,10 +80,9 @@ class Menu extends React.Component {
                             return entry;
                         }
                     }).filter(Boolean);
-                    this.setState({ secretBackends: discoveredSecretBackends });
-                });
-            })
-            .catch(() => { snackBarMessage(new Error("No permissions to list secret backends")) })
+                    this.setState({ secretBackends: discoveredSecretBackends }, () => this.getCurrentMenuItemFromPath(this.props.pathname));
+                }).catch(snackBarMessage)
+            }).catch(() => { snackBarMessage(new Error("No permissions to list secret backends")) })
 
 
         tokenHasCapabilities(['read'], 'sys/auth')
@@ -79,8 +99,8 @@ class Menu extends React.Component {
                             return entry;
                         }
                     }).filter(Boolean);
-                    this.setState({ authBackends: discoveredAuthBackends });
-                });
+                    this.setState({ authBackends: discoveredAuthBackends }, () => this.getCurrentMenuItemFromPath(this.props.pathname));
+                }).catch(snackBarMessage)
             }).catch(() => { snackBarMessage(new Error("No permissions to list auth backends")) })
     }
 
@@ -102,7 +122,6 @@ class Menu extends React.Component {
         }
 
         let handleMenuChange = (e, v) => {
-            this.setState({ selectedPath: v });
             browserHistory.push(v)
         }
 
