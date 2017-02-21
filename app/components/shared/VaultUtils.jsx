@@ -27,16 +27,16 @@ function getCachedCapabilities(path) {
     }
 }
 
-function callVaultApi(method, path, query = {}, data, headers = {}) {
+function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken = null, vaultUrl = null) {
 
     var instance = axios.create({
         baseURL: '/v1/',
-        params: { "vaultaddr": window.localStorage.getItem("vaultUrl") },
-        headers: { "X-Vault-Token": window.localStorage.getItem("vaultAccessToken") }
+        params: { "vaultaddr": vaultUrl || window.localStorage.getItem("vaultUrl") },
+        headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
     });
 
     return instance.request({
-        url: path,
+        url: encodeURI(path),
         method: method,
         data: data,
         params: query,
@@ -45,8 +45,7 @@ function callVaultApi(method, path, query = {}, data, headers = {}) {
 }
 
 function tokenHasCapabilities(capabilities, path) {
-
-    if (window.localStorage.getItem('enableCapabilitiesCache')) {
+    if (window.localStorage.getItem('enableCapabilitiesCache') == "true") {
         try {
             var cached_capabilities = getCachedCapabilities(path);
             // At this point we have a result from the cache we can return the value in a form of a resolved promise
@@ -71,7 +70,6 @@ function tokenHasCapabilities(capabilities, path) {
                 let has_cap = _.indexOf(resp.data.capabilities, v) !== -1;
                 return has_cap;
             });
-
             if (evaluation || _.indexOf(resp.data.capabilities, 'root') !== -1) {
                 return Promise.resolve(true);
             }

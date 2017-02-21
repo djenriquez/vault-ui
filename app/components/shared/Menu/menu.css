@@ -1,13 +1,12 @@
-#root {
-    padding-left: 63px;
-    padding-top: 20px;
-    font-size: 20px;
-    font-weight: 200;
-    border-right: 1px solid black;
-    height: calc(100vh - 80px);
-    width: 200px;
-    position: fixed;
-    top: 60px;
+.root {
+    padding-left: 16px;
+    margin-top: 64px;
+    height: calc(100% - 60px) !important;
+}
+
+.root span {
+    font-size: 20px !important;
+    font-weight: 200 !important;
 }
 
 .link {

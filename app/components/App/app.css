@@ -1,9 +1,9 @@
 #content {
-    padding-left: 50px;
-    width: calc(100vw - 305px - 50px);
+    padding-left: 30px;
+    width: calc(100vw - 305px);
     display: inline-block;
     margin-left: 250px;
-    margin-top: 60px;
+    margin-top: 80px;
 }
 
 #welcomeHeadline {
@@ -13,4 +13,29 @@
 
 .snackbar {
     text-align: center;
+}
+
+.welcomeScreen {
+   padding-bottom: 21px;
+}
+
+.welcomeTab > div > div {
+    font-weight: 800;
+    letter-spacing: 6px;
+    font-size: 25px;
+}
+
+.welcomeHeader {
+    /*text-shadow: 0px 1px 1px #4d4d4d;*/
+    text-align: center;
+}
+
+.warningMsg {
+    border: 1px solid transparent;
+    border-radius: 4px !important;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+    margin: 20px 15%;
+    border-color: #f39c12;
+    background-color: #fef5e6 !important;
+    /*text-align: center;*/
 }
