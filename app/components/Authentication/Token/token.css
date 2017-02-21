@@ -20,14 +20,14 @@ span.policiesList > div > div > div {
     padding-right: 3%;
 }
 
-.newTokenCodeEmitted input {
-    text-align: center;
-    font-family: monospace !important;
-    font-size: 150% !important;
-    color: black !important;
-    cursor: crosshair !important;
+.classActionDelete {
+    position: absolute !important;
+    right: 4px;
+    top: 0px;
 }
 
-.newTokenCodeEmitted {
-    text-align: center;
+.TokenFromRoleBtn {
+    position: absolute;
+    right: 64px;
+    bottom: 10px;
 }

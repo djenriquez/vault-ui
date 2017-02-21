@@ -1,0 +1,41 @@
+#container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+#cell {
+    text-align: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.bwgradient {
+    background: radial-gradient(circle, black, black, white);
+}
+
+.redgradient {
+    background: radial-gradient(circle, darkred, darkred, white);
+}
+
+#cell h4 {
+    color: lightgray;
+    text-transform: full-width;
+}
+
+#cell h2 {
+    font-family: monospace;
+    color: #c2daff;
+}
+
+#content {
+    width: 80%;
+    margin: 0 auto; 
+}
+
+.ttlList {
+    line-height: 24px !important;
+    min-height: 24px !important;
+}

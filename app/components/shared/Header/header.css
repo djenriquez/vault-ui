@@ -1,5 +1,6 @@
-#title {
+.title {
     cursor: pointer;
+    color: white !important;
 }
 
 #headerWrapper {
@@ -7,4 +8,19 @@
     width: 100%;
     top: 0;
     z-index: 1;
+}
+
+.infoSectionItem {
+    color: white;
+    padding: 0px 10px 0px 10px;
+}
+
+.infoSectionItemKey {
+    font-variant: small-caps;
+    padding-right: 5px;
+    color: darkgrey;
+}
+
+.infoSectionItemValue {
+    font-family: monospace;
 }

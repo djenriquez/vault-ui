@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import { browserHistory } from 'react-router';
 import JSONEditor from 'jsoneditor';
 import 'jsoneditor/src/css/reset.css';
 import 'jsoneditor/src/css/jsoneditor.css';
@@ -9,7 +8,7 @@ import 'jsoneditor/src/css/contextmenu.css';
 
 function isValid(value) {
     return value !== '' && value !== undefined && value !== null;
-};
+}
 
 class JsonEditor extends React.Component {
     static propTypes = {
@@ -18,6 +17,7 @@ class JsonEditor extends React.Component {
         mode: PropTypes.oneOf(['tree', 'code', 'view']),
         modes: React.PropTypes.array,
         schema: PropTypes.object,
+        height: PropTypes.string,
         onChange: PropTypes.func,
     };
 
@@ -83,7 +83,7 @@ class JsonEditor extends React.Component {
 
     render() {
         return (
-              <div style={{height: '400px'}} ref={(c) => { this.editorEl = c; }} />
+              <div style={this.props.height ? {height: this.props.height} : null} ref={(c) => { this.editorEl = c; }} />
         );
     }
 }

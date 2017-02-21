@@ -14,6 +14,10 @@ import _ from 'lodash';
 import { callVaultApi } from '../shared/VaultUtils.jsx'
 
 export default class Login extends React.Component {
+    static propTypes = {
+        location: PropTypes.object.isRequired
+    }
+
     constructor(props) {
         super(props);
 
@@ -188,11 +192,12 @@ export default class Login extends React.Component {
         if (accessToken) {
             window.localStorage.setItem('capability_cache', JSON.stringify({}));
             window.localStorage.setItem("vaultAccessToken", accessToken);
-            let leaseDuration = _.get(resp, 'lease_duration') === 0 ? -1 : _.get(resp, 'lease_duration') * 1000
-            window.localStorage.setItem('vaultAccessTokenExpiration', leaseDuration)
             window.localStorage.setItem('vaultUrl', this.getVaultUrl());
             window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
-            window.location.href = '/';
+            if (this.props.location.query.returnto && this.props.location.query.returnto.indexOf('/') === 0)
+                window.location.href = this.props.location.query.returnto;
+            else
+                window.location.href = '/';
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })
         }

@@ -1,6 +1,10 @@
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
+import { Tabs, Tab } from 'material-ui/Tabs';
+import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
+import Paper from 'material-ui/Paper';
 import styles from './policies.css';
+import sharedStyles from '../shared/styles.css';
 import FlatButton from 'material-ui/FlatButton';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
 import { List, ListItem } from 'material-ui/List';
@@ -11,10 +15,23 @@ import FontIcon from 'material-ui/FontIcon';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import hcltojson from 'hcl-to-json'
 import jsonschema from './vault-policy-schema.json'
-import { callVaultApi } from '../shared/VaultUtils.jsx'
-import Snackbar from 'material-ui/Snackbar';
+import { callVaultApi, tokenHasCapabilities } from '../shared/VaultUtils.jsx'
+import Avatar from 'material-ui/Avatar';
+import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
+import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
+import ActionDelete from 'material-ui/svg-icons/action/delete';
+import { browserHistory, Link } from 'react-router'
 
-export default class Manage extends React.Component {
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
+
+export default class PolicyManager extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+    };
+
     constructor(props) {
         super(props);
         this.state = {
@@ -28,29 +45,41 @@ export default class Manage extends React.Component {
             policies: [],
             currentPolicy: '',
             disableSubmit: false,
-            errorMessage: '',
             forbidden: false,
-            buttonColor: 'lightgrey',
-            snackBarMsg: ''
+            buttonColor: 'lightgrey'
         };
 
         _.bindAll(
             this,
             'updatePolicy',
+            'displayPolicy',
             'listPolicies',
             'policyChangeSetState',
             'renderEditDialog',
             'renderNewPolicyDialog',
             'renderDeleteConfirmationDialog',
-            'clickPolicy',
             'showDelete',
             'renderPolicies',
             'deletePolicy'
         )
     }
 
-    componentWillMount() {
-        this.listPolicies();
+    componentDidMount() {
+        if (this.props.params.splat) {
+            this.displayPolicy();
+        } else {
+            this.listPolicies();
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (!_.isEqual(this.props.params, prevProps.params)) {
+            if (this.props.params.splat) {
+                this.displayPolicy();
+            } else {
+                this.listPolicies();
+            }
+        }
     }
 
     policyChangeSetState(v, syntaxCheckOk, schemaCheckOk) {
@@ -63,8 +92,23 @@ export default class Manage extends React.Component {
 
     renderEditDialog() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openEditModal: false })} />,
-            <FlatButton label="Submit" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => this.updatePolicy(this.state.focusPolicy, false)} />
+            <FlatButton
+                label="Cancel"
+                primary={true}
+                onTouchTap={() => {
+                    this.setState({ openEditModal: false })
+                    browserHistory.push('/sys/policies');
+                }}
+            />,
+            <FlatButton
+                label="Submit"
+                disabled={this.state.disableSubmit}
+                primary={true}
+                onTouchTap={() => {
+                    this.updatePolicy(this.state.focusPolicy, false)
+                    browserHistory.push('/sys/policies');
+                }}
+            />
         ];
 
         return (
@@ -75,14 +119,15 @@ export default class Manage extends React.Component {
                 open={this.state.openEditModal}
                 onRequestClose={() => this.setState({ openEditModal: false })}
                 autoScrollBodyContent={true}
-                >
+            >
                 <JsonEditor
+                    height={'400px'}
                     rootName={this.state.focusPolicy}
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
                     onChange={this.policyChangeSetState}
-                    />
+                />
             </Dialog>
         );
     }
@@ -93,16 +138,12 @@ export default class Manage extends React.Component {
 
         let validateAndSubmit = () => {
             if (this.state.focusPolicy === '') {
-                this.setState({
-                    newPolicyErrorMessage: MISSING_POLICY_ERROR
-                });
+                snackBarMessage(new Error(MISSING_POLICY_ERROR));
                 return;
             }
 
             if (_.filter(this.state.policies, x => x.name === this.state.focusPolicy).length > 0) {
-                this.setState({
-                    newPolicyErrorMessage: DUPLICATE_POLICY_ERROR
-                });
+                snackBarMessage(new Error(DUPLICATE_POLICY_ERROR));
                 return;
             }
             this.updatePolicy(this.state.focusPolicy, true);
@@ -133,7 +174,7 @@ export default class Manage extends React.Component {
                 onRequestClose={() => this.setState({ openNewPolicyModal: false, newPolicyErrorMessage: '' })}
                 autoScrollBodyContent={true}
                 autoDetectWindowHeight={true}
-                >
+            >
                 <TextField
                     name="newName"
                     autoFocus
@@ -141,14 +182,15 @@ export default class Manage extends React.Component {
                     hintText="Name"
                     errorText={this.state.newPolicyNameErrorMessage}
                     onChange={validatePolicyName}
-                    />
+                />
                 <JsonEditor
+                    height={'400px'}
                     rootName={this.state.focusPolicy || null}
                     value={this.state.currentPolicy}
                     mode={'code'}
                     schema={jsonschema}
                     onChange={this.policyChangeSetState}
-                    />
+                />
                 <div className={styles.error}>{this.state.newPolicyErrorMessage}</div>
             </Dialog>
         );
@@ -167,7 +209,7 @@ export default class Manage extends React.Component {
                 actions={actions}
                 open={this.state.openDeleteModal}
                 onRequestClose={() => this.setState({ openDeleteModal: false, newPolicyErrorMessage: '' })}
-                >
+            >
 
                 <p>You are about to permanently delete {this.state.deletingPolicy}.  Are you sure?</p>
                 <em>To disable this prompt, visit the settings page.</em>
@@ -183,20 +225,16 @@ export default class Manage extends React.Component {
                     let policies = this.state.policies;
                     policies.push({ name: policyName });
                     this.setState({
-                        policies: policies,
-                        snackBarMsg: `Policy '${policyName}' added`
+                        policies: policies
                     });
+                    snackBarMessage(`Policy '${policyName}' added`);
                 } else {
-                    this.setState({ snackBarMsg: `Policy '${policyName}' updated` });
+                    snackBarMessage(`Policy '${policyName}' updated`);
                 }
             })
             .catch((err) => {
                 console.error(err.stack);
-                if (err.response.data.errors) {
-                    this.setState({
-                        errorMessage: err.response.data.errors.join('<br />')
-                    });
-                }
+                snackBarMessage(err);
             })
         this.setState({ openNewPolicyModal: false });
         this.setState({ openEditModal: false });
@@ -213,22 +251,17 @@ export default class Manage extends React.Component {
 
                 this.setState({
                     policies: policies,
-                    errorMessage: '',
                     buttonColor: green500
                 });
             })
             .catch((err) => {
                 console.error(err.response.data);
-                this.setState({
-                    errorMessage: err.response.data,
-                    forbidden: true,
-                    buttonColor: 'lightgrey'
-                });
+                snackBarMessage(err);
             });
     }
 
-    clickPolicy(policyName) {
-        callVaultApi('get', `sys/policy/${encodeURI(policyName)}`, null, null, null)
+    displayPolicy() {
+        callVaultApi('get', `sys/policy/${encodeURI(this.props.params.splat)}`, null, null, null)
             .then((resp) => {
                 let rules = _.get(resp, 'data.data.rules', _.get(resp, 'data.rules', {}));
                 let rules_obj;
@@ -245,42 +278,29 @@ export default class Manage extends React.Component {
                 if (rules_obj) {
                     this.setState({
                         openEditModal: true,
-                        focusPolicy: policyName,
+                        focusPolicy: this.props.params.splat,
                         currentPolicy: rules_obj,
-                        disableSubmit: true,
-                        errorMessage: '',
+                        disableSubmit: true
                     });
                 }
             })
-            .catch((err) => {
-                console.error(err.stack);
-            });
+            .catch(snackBarMessage);
     }
 
     deletePolicy(policyName) {
         callVaultApi('delete', `sys/policy/${encodeURI(policyName)}`, null, null, null)
             .then((resp) => {
-                if (resp.status !== 204 && resp.status !== 200) {
-                    console.error(resp.status);
-                    this.setState({
-                        errorMessage: 'An error occurred.'
-                    });
-                } else {
-                    let policies = this.state.policies;
-                    let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
-                    policies = _.pull(policies, policyToDelete);
-                    this.setState({
-                        policies: policies,
-                        errorMessage: ''
-                    });
-                    this.setState({ snackBarMsg: `Policy '${policyName}' deleted` });
-                }
+                let policies = this.state.policies;
+                let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
+                policies = _.pull(policies, policyToDelete);
+                this.setState({
+                    policies: policies,
+                });
+                snackBarMessage(`Policy '${policyName}' deleted`);
             })
             .catch((err) => {
                 console.error(err.stack);
-                this.setState({
-                    errorMessage: err.response.data
-                });
+                snackBarMessage(err);
             });
 
         this.setState({
@@ -299,9 +319,10 @@ export default class Manage extends React.Component {
                     } else {
                         this.setState({ deletingPolicy: policyName, openDeleteModal: true })
                     }
-                } }
-                >
-                <FontIcon className="fa fa-times-circle" color={red500} />
+                }}
+            >
+                {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
+
             </IconButton>);
     }
 
@@ -309,9 +330,15 @@ export default class Manage extends React.Component {
         return _.map(this.state.policies, (policy) => {
             return (
                 <ListItem
-                    style={{ marginLeft: -17 }}
                     key={policy.name}
-                    onTouchTap={() => { this.clickPolicy(policy.name) } }
+                    leftAvatar={<Avatar icon={<HardwareSecurity />} />}
+                    onTouchTap={() => {
+                        tokenHasCapabilities(['read'], 'sys/policy/' + policy.name).then(() => {
+                            browserHistory.push(`/sys/policies/` + policy.name);
+                        }).catch(() => {
+                            snackBarMessage(new Error("Access denied"));
+                        })
+                    }}
                     primaryText={<div className={policy.name}>{policy.name}</div>}
                     rightIconButton={this.showDelete(policy.name)}>
                 </ListItem>
@@ -325,40 +352,37 @@ export default class Manage extends React.Component {
                 {this.state.openEditModal && this.renderEditDialog()}
                 {this.state.openNewPolicyModal && this.renderNewPolicyDialog()}
                 {this.state.openDeleteModal && this.renderDeleteConfirmationDialog()}
-                <h2>Manage Policies</h2>
-                <p>Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span></p>
-                {<FlatButton
-                    label="Add Policy"
-                    disabled={this.state.forbidden}
-                    backgroundColor={this.state.buttonColor}
-                    hoverColor={green400}
-                    labelStyle={{ color: white }}
-                    onTouchTap={() => this.setState({
-                        openNewPolicyModal: true,
-                        errorMessage: '',
-                        newPolicyErrorMessage: '',
-                        newPolicyNameErrorMessage: '',
-                        disableSubmit: true,
-                        focusPolicy: '',
-                        currentPolicy: { path: { 'sample/path': { capabilities: ['read'] } } }
-                    })} />}
-                {this.state.errorMessage &&
-                    <div className={styles.error}>
-                        <FontIcon className="fa fa-exclamation-triangle" color={red500} style={{ marginRight: 10 }} />
-                        {this.state.errorMessage}
-                    </div>
-                }
-                <List>
-                    {this.renderPolicies()}
-                </List>
-                <Snackbar
-                    open={this.state.snackBarMsg != ''}
-                    message={this.state.snackBarMsg}
-                    action="OK"
-                    onActionTouchTap={() => this.setState({ snackBarMsg: '' })}
-                    autoHideDuration={4000}
-                    onRequestClose={() => this.setState({ snackBarMsg: '' })}
-                    />
+                <Tabs>
+                    <Tab label="Manage Access Control Policies" >
+                        <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
+                            Here you can view, update, and delete policies stored in your Vault.  Just remember, <span className={styles.error}>deleting policies cannot be undone!</span>
+                        </Paper>
+                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                            <Toolbar>
+                                <ToolbarGroup firstChild={true}>
+                                    <FlatButton
+                                        label="Add Policy"
+                                        disabled={this.state.forbidden}
+                                        backgroundColor={this.state.buttonColor}
+                                        hoverColor={green400}
+                                        labelStyle={{ color: white }}
+                                        onTouchTap={() => this.setState({
+                                            openNewPolicyModal: true,
+                                            newPolicyErrorMessage: '',
+                                            newPolicyNameErrorMessage: '',
+                                            disableSubmit: true,
+                                            focusPolicy: '',
+                                            currentPolicy: { path: { 'sample/path': { capabilities: ['read'] } } }
+                                        })}
+                                    />
+                                </ToolbarGroup>
+                            </Toolbar>
+                            <List className={sharedStyles.listStyle}>
+                                {this.renderPolicies()}
+                            </List>
+                        </Paper>
+                    </Tab>
+                </Tabs>
             </div>
         );
     }
