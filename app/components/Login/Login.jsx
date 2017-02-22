@@ -134,7 +134,7 @@ export default class Login extends React.Component {
                 }
             })
             .catch((error) => {
-                this.setState({ errorMessage: `Error: ${error}` });
+                this.setState({ errorMessage: `${error}` });
             });
     }
 
