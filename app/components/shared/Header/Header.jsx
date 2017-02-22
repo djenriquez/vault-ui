@@ -7,6 +7,7 @@ import FontIcon from 'material-ui/FontIcon';
 import { browserHistory } from 'react-router';
 import CountDown from './countdown.js'
 import styles from './header.css';
+import { callVaultApi } from '../../shared/VaultUtils.jsx'
 
 var logout = () => {
     window.localStorage.removeItem('vaultAccessToken');
@@ -17,12 +18,22 @@ class Header extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            serverAddr: window.localStorage.getItem('vaultUrl')
+            serverAddr: window.localStorage.getItem('vaultUrl'),
+            version: ''
         }
     }
 
     static propTypes = {
         tokenIdentity: PropTypes.object
+    }
+
+    componentWillMount() {
+        callVaultApi('get', 'sys/health', null, null, null)
+            .then((resp) => {
+                this.setState({
+                    version: resp.data.version,
+                });
+            });
     }
 
     render() {
@@ -60,6 +71,15 @@ class Header extends React.Component {
                         <span className={styles.infoSectionItemValue}>
                             <CountDown startTime={this.props.tokenIdentity.ttl} />
                         </span>
+                    </span>
+                )
+            }
+
+            if (this.state.version) {
+                infoSectionItems.push(
+                    <span key="infoVersion" className={styles.infoSectionItem}>
+                        <span className={styles.infoSectionItemKey}>vault version</span>
+                        <span className={styles.infoSectionItemValue}>{this.state.version}</span>
                     </span>
                 )
             }
