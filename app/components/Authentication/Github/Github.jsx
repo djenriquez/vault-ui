@@ -128,7 +128,7 @@ export default class GithubAuthBackend extends React.Component {
     }
 
     getTeamPolicy(teamName) {
-        let uri = encodeURI(`auth/github/map/teams/${this.state.teamName}`);
+        let uri = `auth/github/map/teams/${this.state.teamName}`;
         callVaultApi('get', uri, null, null, null)
             .then((resp) => {
                 let policyNames = _.get(resp, "data.data.value").split(',');

@@ -219,7 +219,7 @@ export default class PolicyManager extends React.Component {
 
     updatePolicy(policyName, isNewPolicy) {
         let stringifiedPolicy = JSON.stringify(this.state.currentPolicy);
-        callVaultApi('put', `sys/policy/${encodeURI(policyName)}`, null, { rules: stringifiedPolicy }, null)
+        callVaultApi('put', `sys/policy/${policyName}`, null, { rules: stringifiedPolicy }, null)
             .then((resp) => {
                 if (isNewPolicy) {
                     let policies = this.state.policies;
@@ -261,7 +261,7 @@ export default class PolicyManager extends React.Component {
     }
 
     displayPolicy() {
-        callVaultApi('get', `sys/policy/${encodeURI(this.props.params.splat)}`, null, null, null)
+        callVaultApi('get', `sys/policy/${this.props.params.splat}`, null, null, null)
             .then((resp) => {
                 let rules = _.get(resp, 'data.data.rules', _.get(resp, 'data.rules', {}));
                 let rules_obj;
@@ -288,7 +288,7 @@ export default class PolicyManager extends React.Component {
     }
 
     deletePolicy(policyName) {
-        callVaultApi('delete', `sys/policy/${encodeURI(policyName)}`, null, null, null)
+        callVaultApi('delete', `sys/policy/${policyName}`, null, null, null)
             .then((resp) => {
                 let policies = this.state.policies;
                 let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
