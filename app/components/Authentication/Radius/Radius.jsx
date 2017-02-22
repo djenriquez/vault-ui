@@ -4,14 +4,11 @@ import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
 import Paper from 'material-ui/Paper';
 import Avatar from 'material-ui/Avatar';
-import FileFolder from 'material-ui/svg-icons/file/folder';
 import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import IconButton from 'material-ui/IconButton';
-import Divider from 'material-ui/Divider';
 import { List, ListItem } from 'material-ui/List';
-import { Step, Stepper, StepLabel } from 'material-ui/Stepper';
 import sharedStyles from '../../shared/styles.css';
 import styles from './radius.css';
 import _ from 'lodash';
@@ -20,10 +17,8 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, white } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
-import JsonEditor from '../../shared/JsonEditor.jsx';
-import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import { browserHistory, Link } from 'react-router'
+import { browserHistory } from 'react-router'
 
 
 function snackBarMessage(message) {
@@ -54,13 +49,17 @@ class RadiusAuthBackend extends React.Component {
             newUserObject: {},
             selectedUserId: '',
             selectedUserObject: {},
+            deleteUserId: '',
             openNewUserDialog: false,
-            openEditUserDialog: false
+            openEditUserDialog: false,
+            openDeleteModal: false
         }
 
         _.bindAll(
             this,
-            'loadUserList'
+            'loadUserList',
+            'DeleteUser',
+            'CreateUpdateUser'
         );
     }
 
@@ -128,19 +127,33 @@ class RadiusAuthBackend extends React.Component {
     CreateUpdateUser(userid, userobj, create = false) {
         let fullpath = `${this.state.baseVaultPath}/users/${userid}`;
         let policiesStr = userobj.policies.join(',');
-        callVaultApi('post', fullpath, null, {policies: policiesStr}, null)
+        callVaultApi('post', fullpath, null, { policies: policiesStr }, null)
             .then(() => {
                 if (create) {
                     this.loadUserList();
-                    this.setState({ openNewUserDialog: false, newUserId: ''});
-                    snackBarMessage(`User ${fullpath} has been registered`);
+                    this.setState({ openNewUserDialog: false, newUserId: '' });
+                    snackBarMessage(`User ${userid} has been registered`);
                 } else {
                     browserHistory.push(this.state.baseUrl);
-                    this.setState({ openEditUserDialog: false, selectedUserId: ''});
-                    snackBarMessage(`User ${fullpath} has been updated`);
+                    this.setState({ openEditUserDialog: false, selectedUserId: '' });
+                    snackBarMessage(`User ${userid} has been updated`);
                 }
             })
             .catch(console.log.bind(console))
+    }
+
+    DeleteUser(userid) {
+        let fullpath = `${this.state.baseVaultPath}/users/${userid}`;
+        tokenHasCapabilities(['delete'], fullpath).then(() => {
+            callVaultApi('delete', fullpath)
+                .then(() => {
+                    this.loadUserList();
+                    this.setState({openDeleteModal: false, deleteUserId: ''})
+                    snackBarMessage(`User ${userid} has been deleted`);
+                })
+                .catch(console.log.bind(console))
+        }).catch(() => snackBarMessage("Permission denied"))
+
     }
 
     render() {
@@ -151,15 +164,11 @@ class RadiusAuthBackend extends React.Component {
                     <IconButton
                         tooltip="Delete"
                         onTouchTap={() => {
-                            tokenHasCapabilities(['delete'], userobj.path).then(() => {
-                                if (window.localStorage.getItem("showDeleteModal") === 'false') {
-                                    {/*this.DeleteObject(key);*/ }
-                                } else {
-                                    {/*this.setState({ openDeleteModal: true, deletingKey: key })*/ }
-                                }
-                            }).catch(() => {
-                                snackBarMessage(new Error("Access denied"));
-                            })
+                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
+                                this.DeleteUser(userobj.id);
+                            } else {
+                                this.setState({ openDeleteModal: true, deleteUserId: userobj.id })
+                            }
                         }}
                     >
                         {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
@@ -220,7 +229,7 @@ class RadiusAuthBackend extends React.Component {
                     <List>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
-                            height="120px"
+                            height="250px"
                             selectedPolicies={this.state.selectedUserObject.policies}
                             onSelectedChange={(policies) => {
                                 let user = this.state.selectedUserObject;
@@ -234,10 +243,14 @@ class RadiusAuthBackend extends React.Component {
         }
 
         let renderNewUserDialog = () => {
-
             let validateAndSubmit = () => {
                 if (this.state.newUserId === '') {
                     snackBarMessage(new Error("User Name cannot be empty"));
+                    return;
+                }
+
+                if (!_.every(this.state.userList, (k) => { return k.id != this.state.newUserId })) {
+                    snackBarMessage(new Error("User already exists"));
                     return;
                 }
 
@@ -296,11 +309,32 @@ class RadiusAuthBackend extends React.Component {
             );
         }
 
+        let renderDeleteConfirmationDialog = () => {
+            const actions = [
+                <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deleteUserId: '' })} />,
+                <FlatButton label="Delete" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => this.DeleteUser(this.state.deleteUserId)} />
+            ];
+
+            return (
+                <Dialog
+                    title={`Delete Confirmation`}
+                    modal={false}
+                    actions={actions}
+                    open={this.state.openDeleteModal}
+                >
+
+                    <p>You are about to permanently delete user {this.state.deleteUserId}.  Are you sure?</p>
+                    <em>To disable this prompt, visit the settings page.</em>
+                </Dialog>
+            )
+        }
+
 
         return (
             <div>
                 {this.state.openEditUserDialog && renderEditUserDialog()}
                 {this.state.openNewUserDialog && renderNewUserDialog()}
+                {this.state.openDeleteModal && renderDeleteConfirmationDialog()}
                 <Tabs>
                     <Tab label="Manage users" >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
