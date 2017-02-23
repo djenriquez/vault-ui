@@ -135,9 +135,8 @@ export default class Login extends React.Component {
             })
             .catch((error) => {
                 var loginErrorMessage;
-                if (error.response &&
-                    error.response.data &&
-                    error.response.data.errors) {
+                if (_.has(error, 'response.data.errors') &&
+                    error.response.data.errors.length > 0) {
                     loginErrorMessage = _.join(error.response.data.errors, ", ");
                 } else {
                     loginErrorMessage = error.message;
