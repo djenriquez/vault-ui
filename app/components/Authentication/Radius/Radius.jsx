@@ -19,6 +19,7 @@ import { green500, green400, red500, red300, white } from 'material-ui/styles/co
 import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import { browserHistory } from 'react-router'
+import update from 'immutability-helper';
 
 
 function snackBarMessage(message) {
@@ -38,6 +39,16 @@ class RadiusAuthBackend extends React.Component {
         ]
     }
 
+    radiusConfigSchema = {
+        host: '',
+        port: 1812,
+        secret: '',
+        dial_timeout: 10,
+        read_timeout: 10,
+        nas_port: 10,
+        unregistered_user_policies: [],
+    }
+
     constructor(props) {
         super(props);
 
@@ -50,6 +61,8 @@ class RadiusAuthBackend extends React.Component {
             selectedUserId: '',
             selectedUserObject: {},
             deleteUserId: '',
+            configObj: this.radiusConfigSchema,
+            newConfigObj: this.radiusConfigSchema,
             openNewUserDialog: false,
             openEditUserDialog: false,
             openDeleteModal: false
@@ -59,7 +72,9 @@ class RadiusAuthBackend extends React.Component {
             this,
             'loadUserList',
             'DeleteUser',
-            'CreateUpdateUser'
+            'CreateUpdateUser',
+            'CreateUpdateConfig',
+            'readConfig'
         );
     }
 
@@ -97,12 +112,27 @@ class RadiusAuthBackend extends React.Component {
             })
     }
 
+    readConfig() {
+        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/config`)
+            .then(() => {
+                callVaultApi('get', `${this.state.baseVaultPath}/config`, null, null, null)
+                    .then((resp) => {
+                        this.setState({ configObj: resp.data.data, newConfigObj: resp.data.data });
+                    })
+                    .catch(console.log.bind(console))
+            })
+            .catch(() => {
+                snackBarMessage(new Error(`No permissions to read backend configuration`));
+            })
+    }
+
     componentDidMount() {
         if (this.props.params.splat) {
             this.setState({ selectedUserId: this.props.params.splat });
         } else {
             this.loadUserList();
         }
+        this.readConfig();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -142,13 +172,29 @@ class RadiusAuthBackend extends React.Component {
             .catch(console.log.bind(console))
     }
 
+    CreateUpdateConfig(newConfig) {
+        let origConfig = this.state.configObj;
+        var diff = _.omitBy(newConfig, function (v, k) {
+            return origConfig[k] === v;
+        });
+        if ( _.has(diff, 'unregistered_user_policies') ) {
+            diff.unregistered_user_policies = diff.unregistered_user_policies.join(',')
+        }
+        let fullpath = `${this.state.baseVaultPath}/config`;
+        callVaultApi('post', fullpath, null, diff, null)
+            .then(() => {
+                snackBarMessage(`Backend ${fullpath} has been configured`);
+            })
+            .catch(snackBarMessage)
+    }
+
     DeleteUser(userid) {
         let fullpath = `${this.state.baseVaultPath}/users/${userid}`;
         tokenHasCapabilities(['delete'], fullpath).then(() => {
             callVaultApi('delete', fullpath)
                 .then(() => {
                     this.loadUserList();
-                    this.setState({openDeleteModal: false, deleteUserId: ''})
+                    this.setState({ openDeleteModal: false, deleteUserId: '' })
                     snackBarMessage(`User ${userid} has been deleted`);
                 })
                 .catch(console.log.bind(console))
@@ -354,7 +400,7 @@ class RadiusAuthBackend extends React.Component {
                                             this.setState({
                                                 openNewUserDialog: true,
                                                 newUserId: '',
-                                                newUserObject: this.radiusUserSchema
+                                                newUserObject: _.clone(this.radiusUserSchema)
                                             })
                                         }}
                                     />
@@ -363,6 +409,97 @@ class RadiusAuthBackend extends React.Component {
                             <List className={sharedStyles.listStyle}>
                                 {renderUserListItems()}
                             </List>
+                        </Paper>
+                    </Tab>
+                    <Tab label="Configure Backend" >
+                        <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
+                            Here you can configure connection details to your RADIUS server. Optionally you can assign a default set of policies to assign to unregistred users
+                        </Paper>
+                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                            <TextField
+                                hintText="Enter the RADIUS server host in hostname or IP form"
+                                floatingLabelText="RADIUS Server Host"
+                                fullWidth={true}
+                                floatingLabelFixed={true}
+                                value={this.state.newConfigObj.host}
+                                onChange={(e) => {
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { host: { $set: e.target.value } }) });
+                                }}
+                            />
+                            <TextField
+                                hintText="Enter the RADIUS server port"
+                                floatingLabelText="RADIUS Server Port"
+                                fullWidth={true}
+                                floatingLabelFixed={true}
+                                type="number"
+                                value={this.state.newConfigObj.port}
+                                onChange={(e) => {
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { port: { $set: e.target.value } }) });
+                                }}
+                            />
+                            <TextField
+                                hintText="Enter the RADIUS shared secret"
+                                floatingLabelText="RADIUS Shared Secret"
+                                fullWidth={true}
+                                floatingLabelFixed={true}
+                                type="password"
+                                value={this.state.newConfigObj.secret}
+                                onChange={(e) => {
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { secret: { $set: e.target.value } }) });
+                                }}
+                            />
+                            <TextField
+                                hintText="Enter the RADIUS NAS port"
+                                floatingLabelText="RADIUS NAS Port"
+                                fullWidth={true}
+                                floatingLabelFixed={true}
+                                type="number"
+                                value={this.state.newConfigObj.nas_port}
+                                onChange={(e) => {
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { nas_port: { $set: e.target.value } }) });
+                                }}
+                            />
+                            <TextField
+                                hintText="Enter the connect timeout in seconds"
+                                floatingLabelText="Connect Timeout"
+                                fullWidth={true}
+                                floatingLabelFixed={true}
+                                type="number"
+                                value={this.state.newConfigObj.dial_timeout}
+                                onChange={(e) => {
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { dial_timeout: { $set: e.target.value } }) });
+                                }}
+                            />
+                            <TextField
+                                hintText="Enter the response timeout in seconds"
+                                floatingLabelText="Response Timeout"
+                                fullWidth={true}
+                                floatingLabelFixed={true}
+                                type="number"
+                                value={this.state.newConfigObj.read_timeout}
+                                onChange={(e) => {
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { read_timeout: { $set: e.target.value } }) });
+                                }}
+                            />
+                            <PolicyPicker
+                                height="250px"
+                                selectedPolicies={this.state.newConfigObj.unregistered_user_policies}
+                                onSelectedChange={(policies) => {
+                                    let user = this.state.selectedUserObject;
+                                    user.policies = policies;
+                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { unregistered_user_policies: { $set: policies } }) });
+                                }}
+                            />
+                            <div>
+                                <FlatButton
+                                    primary={true}
+                                    label="Save"
+                                    backgroundColor={green500}
+                                    hoverColor={green400}
+                                    labelStyle={{ color: white }}
+                                    onTouchTap={() => this.CreateUpdateConfig(this.state.newConfigObj)}
+                                />
+                            </div>
                         </Paper>
                     </Tab>
                 </Tabs>
