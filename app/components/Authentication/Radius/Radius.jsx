@@ -89,7 +89,11 @@ class RadiusAuthBackend extends React.Component {
                         })
                         this.setState({ userList: userlist });
                     })
-                    .catch(snackBarMessage)
+                    .catch((err) => {
+                        // 404 is expected when no users are registered
+                        if (!_.has(err, 'response') || err.response.status != 404)
+                            snackBarMessage(err)
+                    })
             })
             .catch(() => {
                 this.setState({ userList: [] })
@@ -119,7 +123,11 @@ class RadiusAuthBackend extends React.Component {
                     .then((resp) => {
                         this.setState({ configObj: resp.data.data, newConfigObj: resp.data.data });
                     })
-                    .catch(console.log.bind(console))
+                    .catch((err) => {
+                        // 404 is expected when backend is not configured
+                        if (!_.has(err, 'response') || err.response.status != 404)
+                            snackBarMessage(err)
+                    })
             })
             .catch(() => {
                 snackBarMessage(new Error(`No permissions to read backend configuration`));
@@ -135,17 +143,24 @@ class RadiusAuthBackend extends React.Component {
         this.readConfig();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (!_.isEqual(this.props.params.namespace, prevProps.params.namespace)) {
+    componentWillReceiveProps(nextProps) {
+        if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             // Reset
             this.setState({
-                baseUrl: `/auth/radius/${this.props.params.namespace}/`,
-                baseVaultPath: `auth/${this.props.params.namespace}`,
+                baseUrl: `/auth/radius/${nextProps.params.namespace}/`,
+                baseVaultPath: `auth/${nextProps.params.namespace}`,
                 userList: [],
-                selectedUserId: ''
+                selectedUserId: '',
+                newConfigObj: this.radiusConfigSchema,
+                configObj: this.radiusConfigSchema
+            }, () => {
+                this.loadUserList();
+                this.readConfig();
             });
         }
+    }
 
+    componentDidUpdate(prevProps, prevState) {
         if (this.state.selectedUserId != prevState.selectedUserId) {
             this.loadUserList()
             if (this.state.selectedUserId) {
@@ -169,7 +184,7 @@ class RadiusAuthBackend extends React.Component {
                     snackBarMessage(`User ${userid} has been updated`);
                 }
             })
-            .catch(console.log.bind(console))
+            .catch(snackBarMessage)
     }
 
     CreateUpdateConfig(newConfig) {
@@ -177,7 +192,7 @@ class RadiusAuthBackend extends React.Component {
         var diff = _.omitBy(newConfig, function (v, k) {
             return origConfig[k] === v;
         });
-        if ( _.has(diff, 'unregistered_user_policies') ) {
+        if (_.has(diff, 'unregistered_user_policies')) {
             diff.unregistered_user_policies = diff.unregistered_user_policies.join(',')
         }
         let fullpath = `${this.state.baseVaultPath}/config`;
@@ -197,7 +212,7 @@ class RadiusAuthBackend extends React.Component {
                     this.setState({ openDeleteModal: false, deleteUserId: '' })
                     snackBarMessage(`User ${userid} has been deleted`);
                 })
-                .catch(console.log.bind(console))
+                .catch(snackBarMessage)
         }).catch(() => snackBarMessage("Permission denied"))
 
     }
@@ -416,90 +431,93 @@ class RadiusAuthBackend extends React.Component {
                             Here you can configure connection details to your RADIUS server. Optionally you can assign a default set of policies to assign to unregistred users
                         </Paper>
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
-                            <TextField
-                                hintText="Enter the RADIUS server host in hostname or IP form"
-                                floatingLabelText="RADIUS Server Host"
-                                fullWidth={true}
-                                floatingLabelFixed={true}
-                                value={this.state.newConfigObj.host}
-                                onChange={(e) => {
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { host: { $set: e.target.value } }) });
-                                }}
-                            />
-                            <TextField
-                                hintText="Enter the RADIUS server port"
-                                floatingLabelText="RADIUS Server Port"
-                                fullWidth={true}
-                                floatingLabelFixed={true}
-                                type="number"
-                                value={this.state.newConfigObj.port}
-                                onChange={(e) => {
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { port: { $set: e.target.value } }) });
-                                }}
-                            />
-                            <TextField
-                                hintText="Enter the RADIUS shared secret"
-                                floatingLabelText="RADIUS Shared Secret"
-                                fullWidth={true}
-                                floatingLabelFixed={true}
-                                type="password"
-                                value={this.state.newConfigObj.secret}
-                                onChange={(e) => {
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { secret: { $set: e.target.value } }) });
-                                }}
-                            />
-                            <TextField
-                                hintText="Enter the RADIUS NAS port"
-                                floatingLabelText="RADIUS NAS Port"
-                                fullWidth={true}
-                                floatingLabelFixed={true}
-                                type="number"
-                                value={this.state.newConfigObj.nas_port}
-                                onChange={(e) => {
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { nas_port: { $set: e.target.value } }) });
-                                }}
-                            />
-                            <TextField
-                                hintText="Enter the connect timeout in seconds"
-                                floatingLabelText="Connect Timeout"
-                                fullWidth={true}
-                                floatingLabelFixed={true}
-                                type="number"
-                                value={this.state.newConfigObj.dial_timeout}
-                                onChange={(e) => {
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { dial_timeout: { $set: e.target.value } }) });
-                                }}
-                            />
-                            <TextField
-                                hintText="Enter the response timeout in seconds"
-                                floatingLabelText="Response Timeout"
-                                fullWidth={true}
-                                floatingLabelFixed={true}
-                                type="number"
-                                value={this.state.newConfigObj.read_timeout}
-                                onChange={(e) => {
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { read_timeout: { $set: e.target.value } }) });
-                                }}
-                            />
-                            <PolicyPicker
-                                height="250px"
-                                selectedPolicies={this.state.newConfigObj.unregistered_user_policies}
-                                onSelectedChange={(policies) => {
-                                    let user = this.state.selectedUserObject;
-                                    user.policies = policies;
-                                    this.setState({ newConfigObj: update(this.state.newConfigObj, { unregistered_user_policies: { $set: policies } }) });
-                                }}
-                            />
-                            <div>
-                                <FlatButton
-                                    primary={true}
-                                    label="Save"
-                                    backgroundColor={green500}
-                                    hoverColor={green400}
-                                    labelStyle={{ color: white }}
-                                    onTouchTap={() => this.CreateUpdateConfig(this.state.newConfigObj)}
+                            <List>
+                                <TextField
+                                    hintText="Enter the RADIUS server host in hostname or IP form"
+                                    floatingLabelText="RADIUS Server Host"
+                                    fullWidth={true}
+                                    floatingLabelFixed={true}
+                                    value={this.state.newConfigObj.host}
+                                    onChange={(e) => {
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { host: { $set: e.target.value } }) });
+                                    }}
                                 />
-                            </div>
+                                <TextField
+                                    hintText="Enter the RADIUS server port"
+                                    floatingLabelText="RADIUS Server Port"
+                                    fullWidth={true}
+                                    floatingLabelFixed={true}
+                                    type="number"
+                                    value={this.state.newConfigObj.port}
+                                    onChange={(e) => {
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { port: { $set: e.target.value } }) });
+                                    }}
+                                />
+                                <TextField
+                                    hintText="Enter the RADIUS shared secret"
+                                    floatingLabelText="RADIUS Shared Secret"
+                                    fullWidth={true}
+                                    floatingLabelFixed={true}
+                                    type="password"
+                                    value={this.state.newConfigObj.secret}
+                                    onChange={(e) => {
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { secret: { $set: e.target.value } }) });
+                                    }}
+                                />
+                                <TextField
+                                    hintText="Enter the RADIUS NAS port"
+                                    floatingLabelText="RADIUS NAS Port"
+                                    fullWidth={true}
+                                    floatingLabelFixed={true}
+                                    type="number"
+                                    value={this.state.newConfigObj.nas_port}
+                                    onChange={(e) => {
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { nas_port: { $set: e.target.value } }) });
+                                    }}
+                                />
+                                <TextField
+                                    hintText="Enter the connect timeout in seconds"
+                                    floatingLabelText="Connect Timeout"
+                                    fullWidth={true}
+                                    floatingLabelFixed={true}
+                                    type="number"
+                                    value={this.state.newConfigObj.dial_timeout}
+                                    onChange={(e) => {
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { dial_timeout: { $set: e.target.value } }) });
+                                    }}
+                                />
+                                <TextField
+                                    hintText="Enter the response timeout in seconds"
+                                    floatingLabelText="Response Timeout"
+                                    fullWidth={true}
+                                    floatingLabelFixed={true}
+                                    type="number"
+                                    value={this.state.newConfigObj.read_timeout}
+                                    onChange={(e) => {
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { read_timeout: { $set: e.target.value } }) });
+                                    }}
+                                />
+                                <Subheader>Unregistered Users Policies</Subheader>
+                                <PolicyPicker
+                                    height="250px"
+                                    selectedPolicies={this.state.newConfigObj.unregistered_user_policies}
+                                    onSelectedChange={(policies) => {
+                                        let user = this.state.selectedUserObject;
+                                        user.policies = policies;
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { unregistered_user_policies: { $set: policies } }) });
+                                    }}
+                                />
+                                <div style={{paddingTop: '20px', textAlign: 'center'}}>
+                                    <FlatButton
+                                        primary={true}
+                                        label="Save"
+                                        backgroundColor={green500}
+                                        hoverColor={green400}
+                                        labelStyle={{ color: white }}
+                                        onTouchTap={() => this.CreateUpdateConfig(this.state.newConfigObj)}
+                                    />
+                                </div>
+                            </List>
                         </Paper>
                     </Tab>
                 </Tabs>
