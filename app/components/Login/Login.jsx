@@ -134,7 +134,14 @@ export default class Login extends React.Component {
                 }
             })
             .catch((error) => {
-                this.setState({ errorMessage: `Error: ${error}` });
+                var loginErrorMessage;
+                if (_.has(error, 'response.data.errors') &&
+                    error.response.data.errors.length > 0) {
+                    loginErrorMessage = _.join(error.response.data.errors, ", ");
+                } else {
+                    loginErrorMessage = error.message;
+                }
+                this.setState({ errorMessage: `Error: ${loginErrorMessage}` });
             });
     }
 
