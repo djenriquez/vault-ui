@@ -29,13 +29,17 @@ export default class Login extends React.Component {
             password: "",
             loginMethodType: this.getVaultAuthMethod(),
             tmpLoginMethodType: this.getVaultAuthMethod(),
+            authBackendPath: this.getAuthBackendPath(),
+            tmpAuthBackendPath: '',
             settingsChanged: false,
         };
 
         _.bindAll(
             this,
             'validateAuthToken',
+            'getAuthBackendPath',
             'validateToken',
+            'getDefaultBackendPathForMethod',
             'submitSettings',
             'renderSettingsDialog',
             'renderSelectedLoginOption',
@@ -78,6 +82,30 @@ export default class Login extends React.Component {
             return window.defaultAuth;
     }
 
+    getDefaultBackendPathForMethod(type) {
+        switch (type) {
+            case 'TOKEN':
+                return 'token'
+            case 'GITHUB':
+                return 'github'
+            case 'LDAP':
+                return 'ldap'
+            case 'USERNAMEPASSWORD':
+                return 'userpass'
+            default:
+                return ''
+        }
+    }
+
+    getAuthBackendPath() {
+        if (window.localStorage.getItem("loginBackendPath"))
+            return window.localStorage.getItem("loginBackendPath");
+        else if (window.defaultBackendPath)
+            return window.defaultBackendPath;
+        else
+            return this.getDefaultBackendPathForMethod(this.getVaultAuthMethod())
+    }
+
     login() {
         let method = '';
         let uri = '';
@@ -86,21 +114,21 @@ export default class Login extends React.Component {
         switch (this.state.loginMethodType) {
             case "TOKEN":
                 method = 'get';
-                uri = 'auth/token/lookup-self';
+                uri = `auth/${this.state.authBackendPath}/lookup-self`;
                 break;
             case "GITHUB":
                 method = 'post';
-                uri = `auth/github/login`;
+                uri = `auth/${this.state.authBackendPath}/login`;
                 data = { token: this.state.authToken };
                 break;
             case "LDAP":
                 method = 'post';
-                uri = `auth/ldap/login/${this.state.username}`;
+                uri = `auth/${this.state.authBackendPath}/login/${this.state.username}`;
                 data = { password: this.state.password };
                 break;
             case "USERNAMEPASSWORD":
                 method = 'post';
-                uri = `auth/userpass/login/${this.state.username}`;
+                uri = `auth/${this.state.authBackendPath}/login/${this.state.username}`;
                 data = { password: this.state.password };
                 break;
             default:
@@ -180,6 +208,7 @@ export default class Login extends React.Component {
             window.localStorage.setItem("vaultAccessToken", accessToken);
             window.localStorage.setItem('vaultUrl', this.getVaultUrl());
             window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
+            window.localStorage.setItem('loginBackendPath', this.getAuthBackendPath());
             if (this.props.location.query.returnto && this.props.location.query.returnto.indexOf('/') === 0)
                 window.location.href = this.props.location.query.returnto;
             else
@@ -196,13 +225,17 @@ export default class Login extends React.Component {
             }
             else if (!this.state.tmpLoginMethodType) {
                 this.setState({ errorMessage: 'Please select an authentication backend' });
+            } else if (!this.state.authBackendPath) {
+                this.setState({ errorMessage: 'Please select a valid path for the authentication backend' })
             } else {
                 window.localStorage.setItem("vaultUrl", this.state.tmpVaultUrl);
                 window.localStorage.setItem("loginMethodType", this.state.tmpLoginMethodType);
+                window.localStorage.setItem('loginBackendPath', this.state.tmpAuthBackendPath);
                 this.setState({
                     errorMessage: '',
                     vaultUrl: this.state.tmpVaultUrl,
                     loginMethodType: this.state.tmpLoginMethodType,
+                    authBackendPath: this.state.tmpAuthBackendPath,
                     openSettings: false
                 });
             }
@@ -227,33 +260,50 @@ export default class Login extends React.Component {
         ]
 
         let handleSelectFieldChange = (e, i, v) => {
-            this.setState({ tmpLoginMethodType: v, settingsChanged: true });
+            this.setState({ tmpLoginMethodType: v, tmpAuthBackendPath: this.getDefaultBackendPathForMethod(v), settingsChanged: true });
         }
 
         return (
             <Dialog
-                title="Settings"
+                title="Authentication Settings"
                 actions={actions}
+                autoScrollBodyContent={true}
                 modal={true}
                 open={this.state.openSettings}
             >
-                <TextField
-                    id="vaultUrl"
-                    fullWidth={true}
-                    className="col-xs-12"
-                    defaultValue={this.state.vaultUrl}
-                    onChange={(e, v) => this.setState({ tmpVaultUrl: v, settingsChanged: true })}
-                />
-                <SelectField
-                    style={{ paddingLeft: 8 }}
-                    value={this.state.tmpLoginMethodType}
-                    onChange={handleSelectFieldChange.bind(this)}
-                    floatingLabelText="Login Method">
-                    <MenuItem value={"GITHUB"} primaryText="Github" />
-                    <MenuItem value={"TOKEN"} primaryText="Token" />
-                    <MenuItem value={"LDAP"} primaryText="LDAP" />
-                    <MenuItem value={"USERNAMEPASSWORD"} primaryText="Username & Password" />
-                </SelectField>
+                <div>
+                    <TextField
+                        id="vaultUrl"
+                        fullWidth={true}
+                        className="col-xs-12"
+                        floatingLabelFixed={true}
+                        floatingLabelText="Vault Server URL"
+                        defaultValue={this.state.vaultUrl}
+                        onChange={(e, v) => this.setState({ tmpVaultUrl: v, settingsChanged: true })}
+                    />
+                </div>
+                <div>
+                    <SelectField
+                        style={{ paddingLeft: 8 }}
+                        value={this.state.tmpLoginMethodType}
+                        onChange={handleSelectFieldChange.bind(this)}
+                        floatingLabelText="Login Method">
+                        <MenuItem value={"GITHUB"} primaryText="Github" />
+                        <MenuItem value={"TOKEN"} primaryText="Token" />
+                        <MenuItem value={"LDAP"} primaryText="LDAP" />
+                        <MenuItem value={"USERNAMEPASSWORD"} primaryText="Username & Password" />
+                    </SelectField>
+                </div>
+                <div>
+                    <TextField
+                        style={{ paddingLeft: 8 }}
+                        id="backendPath"
+                        floatingLabelFixed={true}
+                        floatingLabelText="Auth backend path"
+                        value={this.state.tmpAuthBackendPath}
+                        onChange={(e, v) => this.setState({ tmpAuthBackendPath: v, settingsChanged: true })}
+                    />
+                </div>
                 <div className={styles.error}>{this.state.errorMessage}</div>
             </Dialog>
         )
@@ -339,7 +389,15 @@ export default class Login extends React.Component {
                             {this.renderSelectedLoginOption()}
                         </div>
                         <div className="col-xs-1">
-                            <IconButton tooltip="Settings" onTouchTap={() => this.setState({ openSettings: true, tmpLoginMethodType: this.state.loginMethodType, tmpVaultUrl: this.state.vaultUrl })}>
+                            <IconButton tooltip="Settings" onTouchTap={() => {
+                                this.setState({
+                                    errorMessage: '',
+                                    openSettings: true,
+                                    tmpLoginMethodType: this.state.loginMethodType,
+                                    tmpVaultUrl: this.state.vaultUrl,
+                                    tmpAuthBackendPath: this.state.authBackendPath
+                                })
+                            }}>
                                 <Settings />
                             </IconButton>
                         </div>
