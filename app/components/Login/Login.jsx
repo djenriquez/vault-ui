@@ -7,9 +7,6 @@ import Dialog from 'material-ui/Dialog';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
-import Snackbar from 'material-ui/Snackbar';
-import { browserHistory } from 'react-router';
-import axios from 'axios';
 import _ from 'lodash';
 import { callVaultApi } from '../shared/VaultUtils.jsx'
 
@@ -46,22 +43,24 @@ export default class Login extends React.Component {
             'checkSettings',
             'login'
         )
-
-        // If a token was supplied in the window.suppliedAuthToken variable, then simulate a login
-        if (window.suppliedAuthToken && this.state.vaultUrl) {
-            this.state.loginMethodType = 'TOKEN';
-            this.state.authToken = window.suppliedAuthToken;
-            this.validateToken({ keyCode: 13 });
-        }
-
     }
 
     componentDidMount() {
-        this.setState({ show: true });
-        if (!this.state.vaultUrl) {
+        // If a token was supplied in the window.suppliedAuthToken variable, then simulate a login
+        if (window.suppliedAuthToken && this.state.vaultUrl) {
             this.setState({
-                openSettings: true
+                loginMethodType: 'TOKEN',
+                authToken: window.suppliedAuthToken
+            }, () => {
+                this.validateToken({ keyCode: 13 });
             });
+        } else {
+            this.setState({ show: true });
+            if (!this.state.vaultUrl) {
+                this.setState({
+                    openSettings: true
+                });
+            }
         }
     }
 
@@ -82,15 +81,12 @@ export default class Login extends React.Component {
     login() {
         let method = '';
         let uri = '';
-        let query = null;
         let data = null;
-        let headers = null;
 
         switch (this.state.loginMethodType) {
             case "TOKEN":
                 method = 'get';
                 uri = 'auth/token/lookup-self';
-                headers = { "X-Vault-Token": this.state.authToken };
                 break;
             case "GITHUB":
                 method = 'post';
@@ -111,17 +107,7 @@ export default class Login extends React.Component {
                 throw new Error(`Login method type: '${this.state.loginMethodType}' is not supported`);
         }
 
-        let instance = axios.create({
-            baseURL: '/v1/'
-        });
-
-        instance.request({
-            url: uri,
-            method: method,
-            data: data,
-            params: { "vaultaddr": this.state.vaultUrl },
-            headers: headers
-        })
+        callVaultApi(method, uri, null, data, null, this.state.loginMethodType == 'TOKEN' ? this.state.authToken : null, this.state.vaultUrl)
             .then((resp) => {
                 //console.log(resp);
                 if (this.state.loginMethodType == "TOKEN") {
@@ -203,7 +189,7 @@ export default class Login extends React.Component {
         }
     }
 
-    submitSettings(e) {
+    submitSettings() {
         if (this.state.settingsChanged) {
             if (!this.state.tmpVaultUrl) {
                 this.setState({ errorMessage: 'Please enter a Vault URL' });
@@ -225,7 +211,7 @@ export default class Login extends React.Component {
         }
     }
 
-    checkSettings(e) {
+    checkSettings() {
         this.setState({
             errorMessage: this.state.vaultUrl ? '' : 'No Vault URL specified.  Click the gear to edit your Vault URL.',
             openSettings: false
@@ -250,14 +236,14 @@ export default class Login extends React.Component {
                 actions={actions}
                 modal={true}
                 open={this.state.openSettings}
-                >
+            >
                 <TextField
                     id="vaultUrl"
                     fullWidth={true}
                     className="col-xs-12"
                     defaultValue={this.state.vaultUrl}
                     onChange={(e, v) => this.setState({ tmpVaultUrl: v, settingsChanged: true })}
-                    />
+                />
                 <SelectField
                     style={{ paddingLeft: 8 }}
                     value={this.state.tmpLoginMethodType}
@@ -284,7 +270,7 @@ export default class Login extends React.Component {
                         hintText="Enter Github token"
                         onKeyDown={this.validateAuthToken}
                         onChange={(e, v) => this.setState({ authToken: v })}
-                        />
+                    />
                 );
             case "TOKEN":
                 return (
@@ -295,7 +281,7 @@ export default class Login extends React.Component {
                         hintText="Enter token"
                         onKeyDown={this.validateToken}
                         onChange={(e, v) => this.setState({ authToken: v })}
-                        />
+                    />
                 );
             case "LDAP":
                 return (
@@ -306,7 +292,7 @@ export default class Login extends React.Component {
                             hintText="Enter LDAP username"
                             onKeyDown={this.validateUsernamePassword}
                             onChange={(e, v) => this.setState({ username: v })}
-                            />
+                        />
                         <TextField
                             fullWidth={true}
                             className="col-xs-12"
@@ -314,7 +300,7 @@ export default class Login extends React.Component {
                             hintText="Enter LDAP password"
                             onKeyDown={this.validateUsernamePassword}
                             onChange={(e, v) => this.setState({ password: v })}
-                            />
+                        />
                         <div className={styles.error}>{this.state.errorMessage}</div>
                     </div>
                 );
@@ -327,7 +313,7 @@ export default class Login extends React.Component {
                             hintText="Enter username"
                             onKeyDown={this.validateUsernamePassword}
                             onChange={(e, v) => this.setState({ username: v })}
-                            />
+                        />
                         <TextField
                             fullWidth={true}
                             className="col-xs-12"
@@ -335,7 +321,7 @@ export default class Login extends React.Component {
                             hintText="Enter password"
                             onKeyDown={this.validateUsernamePassword}
                             onChange={(e, v) => this.setState({ password: v })}
-                            />
+                        />
                         <div className={styles.error}>{this.state.errorMessage}</div>
                     </div>
                 )
