@@ -13,17 +13,19 @@ Configuration is accessed by clicking on the configuration cog on the login page
 
 ### Vault Endpoint
 Users can enter in the full endpoint to Vault, including scheme.  When running the docker image, it is possible to
-set the environment variables `VAULT_URL_DEFAULT` and `VAULT_AUTH_DEFAULT`.
-`VAULT_URL_DEFAULT` will set the default endpoint for users without needing them to enter one in the UI.
-`VAULT_AUTH_DEFAULT` will set the default authentication method type. Supported values are: GITHUB, TOKEN, LDAP, USERNAMEPASSWORD
+set the following environment variables to pre-configure authentication settings:
+- `VAULT_URL_DEFAULT` will set the default vault endpoint.
+- `VAULT_AUTH_DEFAULT` will set the default authentication method type. See below for supported authentication methods.
+- `VAULT_AUTH_BACKEND_PATH` will set the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
+
 This defaults can be overridden if the user fills out the endpoint and auth method manually.
 
 ## Authentication
-Currently supported authentication backends:
-- [GitHub](https://www.vaultproject.io/docs/auth/github.html)
-- [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html)
-- [LDAP](https://www.vaultproject.io/docs/auth/ldap.html)
-- [Tokens](https://www.vaultproject.io/docs/auth/token.html)
+Currently supported authentication methods:
+- `GITHUB` : When using the [GitHub](https://www.vaultproject.io/docs/auth/github.html) backend
+- `USERNAMEPASSWORD` : When using the [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html) or [RADIUS](https://www.vaultproject.io/docs/auth/radius.html) backends
+- `LDAP` : When using the [LDAP](https://www.vaultproject.io/docs/auth/ldap.html) backend
+- `TOKEN` : When using the [Tokens](https://www.vaultproject.io/docs/auth/token.html) backend
 
 ### Token authentication by header (SSO)
 In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
