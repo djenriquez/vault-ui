@@ -1,6 +1,5 @@
 import axios from 'axios';
 import _ from 'lodash';
-import { AXIOS_TIME_OUT } from './Consts.jsx'
 
 function resetCapabilityCache() {
     window.localStorage.setItem('capability_cache', JSON.stringify({}));
@@ -33,8 +32,7 @@ function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken =
     var instance = axios.create({
         baseURL: '/v1/',
         params: { "vaultaddr": vaultUrl || window.localStorage.getItem("vaultUrl") },
-        headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") },
-        timeout: AXIOS_TIME_OUT
+        headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
     });
 
     return instance.request({
@@ -84,8 +82,7 @@ function tokenHasCapabilities(capabilities, path) {
 
 function callVaultLogin(uri, method, data, vaultUrl, headers) {
         let instance = axios.create({
-            baseURL: '/v1/',
-            timeout: AXIOS_TIME_OUT
+            baseURL: '/v1/'
         });
 
         return instance.request({

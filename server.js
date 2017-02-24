@@ -3,7 +3,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var path = require('path');
-var axios = require('axios');
 var _ = require('lodash');
 var routeHandler = require('./src/routeHandler');
 var compression = require('compression');
@@ -11,7 +10,7 @@ var compression = require('compression');
 var PORT = 8000;
 var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT || "";
 var VAULT_AUTH_DEFAULT = process.env.VAULT_AUTH_DEFAULT || "GITHUB";
-var VAULT_SUPPLIED_TOKEN_HEADER = process.env.VAULT_SUPPLIED_TOKEN_HEADER
+var VAULT_SUPPLIED_TOKEN_HEADER = process.env.VAULT_SUPPLIED_TOKEN_HEADER;
 
 var app = express();
 app.set('view engine', 'html');

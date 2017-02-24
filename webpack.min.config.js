@@ -3,8 +3,7 @@ var webpack = require('webpack');
 
 var reactprodmode = new webpack.DefinePlugin({
     'process.env': {
-        'NODE_ENV': JSON.stringify('production'),
-        'AXIOS_TIME_OUT': process.env.AXIOS_TIME_OUT
+        'NODE_ENV': JSON.stringify('production')
     }
 });
 config.plugins.push(reactprodmode);

@@ -24,6 +24,7 @@ services:
       VAULT_URL_DEFAULT: http://vault:8200
       VAULT_AUTH_DEFAULT: USERNAMEPASSWORD
       VAULT_SUPPLIED_TOKEN_HEADER: 'X-Remote-User'
+      AXIOS_TIME_OUT: 120000
 
   webpack:
     build: .
