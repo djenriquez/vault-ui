@@ -1,4 +1,6 @@
 import React, { PropTypes } from 'react'
+import axios from 'axios';
+import _ from 'lodash';
 import styles from './login.css';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
@@ -9,9 +11,7 @@ import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
 import Snackbar from 'material-ui/Snackbar';
 import { browserHistory } from 'react-router';
-import axios from 'axios';
-import _ from 'lodash';
-import { callVaultApi } from '../shared/VaultUtils.jsx'
+import { callVaultLogin } from '../shared/VaultUtils.jsx'
 
 export default class Login extends React.Component {
     static propTypes = {
@@ -111,19 +111,13 @@ export default class Login extends React.Component {
                 throw new Error(`Login method type: '${this.state.loginMethodType}' is not supported`);
         }
 
-        let instance = axios.create({
-            baseURL: '/v1/'
-        });
-
-        instance.request({
-            url: uri,
-            method: method,
-            data: data,
-            params: { "vaultaddr": this.state.vaultUrl },
-            headers: headers
-        })
+        callVaultLogin(
+                uri,
+                method,
+                data,
+                this.state.vaultUrl,
+                headers)
             .then((resp) => {
-                //console.log(resp);
                 if (this.state.loginMethodType == "TOKEN") {
                     this.setAccessToken({
                         client_token: resp.data.data.id,
@@ -137,7 +131,9 @@ export default class Login extends React.Component {
                 var loginErrorMessage;
                 if (_.has(error, 'response.data.errors') &&
                     error.response.data.errors.length > 0) {
-                    loginErrorMessage = _.join(error.response.data.errors, ", ");
+                    loginErrorMessage = _.join(
+                            error.response.data.errors,
+                            ", ");
                 } else {
                     loginErrorMessage = error.message;
                 }
