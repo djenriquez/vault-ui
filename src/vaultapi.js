@@ -27,9 +27,9 @@ exports.callMethod = function (req, res) {
             res.json(resp.data);
         })
         .catch(function (err) {
-            if (_.has(err, 'response.data.errors') &&
-                    _.has(err, 'response.status') &&
-                    err.response.data.errs.length > 0) {
+            if (_.has(err, 'response.status') &&
+                    _.has(err, 'response.data.errors') &&
+                    err.response.data.errors.length > 0) {
                 res.status(err.response.status).send(err.response.data);
             }
             else {
