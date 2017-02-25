@@ -15,9 +15,10 @@ import _ from 'lodash';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
-import { green500, green400, red500, red300, white } from 'material-ui/styles/colors.js'
+import { green500, green400, red500, white } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 import { browserHistory } from 'react-router'
 import update from 'immutability-helper';
 
@@ -60,18 +61,16 @@ class RadiusAuthBackend extends React.Component {
             newUserObject: {},
             selectedUserId: '',
             selectedUserObject: {},
-            deleteUserId: '',
+            deleteUserPath: '',
             configObj: this.radiusConfigSchema,
             newConfigObj: this.radiusConfigSchema,
             openNewUserDialog: false,
-            openEditUserDialog: false,
-            openDeleteModal: false
+            openEditUserDialog: false
         }
 
         _.bindAll(
             this,
             'loadUserList',
-            'DeleteUser',
             'CreateUpdateUser',
             'CreateUpdateConfig',
             'readConfig'
@@ -203,20 +202,6 @@ class RadiusAuthBackend extends React.Component {
             .catch(snackBarMessage)
     }
 
-    DeleteUser(userid) {
-        let fullpath = `${this.state.baseVaultPath}/users/${userid}`;
-        tokenHasCapabilities(['delete'], fullpath).then(() => {
-            callVaultApi('delete', fullpath)
-                .then(() => {
-                    this.loadUserList();
-                    this.setState({ openDeleteModal: false, deleteUserId: '' })
-                    snackBarMessage(`User ${userid} has been deleted`);
-                })
-                .catch(snackBarMessage)
-        }).catch(() => snackBarMessage("Permission denied"))
-
-    }
-
     render() {
         let renderUserListItems = () => {
             return _.map(this.state.userList, (userobj) => {
@@ -224,13 +209,7 @@ class RadiusAuthBackend extends React.Component {
                 let action = (
                     <IconButton
                         tooltip="Delete"
-                        onTouchTap={() => {
-                            if (window.localStorage.getItem("showDeleteModal") === 'false') {
-                                this.DeleteUser(userobj.id);
-                            } else {
-                                this.setState({ openDeleteModal: true, deleteUserId: userobj.id })
-                            }
-                        }}
+                        onTouchTap={() => this.setState({ deleteUserPath: userobj.path })}
                     >
                         {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                     </IconButton>
@@ -370,32 +349,19 @@ class RadiusAuthBackend extends React.Component {
             );
         }
 
-        let renderDeleteConfirmationDialog = () => {
-            const actions = [
-                <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deleteUserId: '' })} />,
-                <FlatButton label="Delete" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => this.DeleteUser(this.state.deleteUserId)} />
-            ];
-
-            return (
-                <Dialog
-                    title={`Delete Confirmation`}
-                    modal={false}
-                    actions={actions}
-                    open={this.state.openDeleteModal}
-                >
-
-                    <p>You are about to permanently delete user {this.state.deleteUserId}.  Are you sure?</p>
-                    <em>To disable this prompt, visit the settings page.</em>
-                </Dialog>
-            )
-        }
-
-
         return (
             <div>
                 {this.state.openEditUserDialog && renderEditUserDialog()}
                 {this.state.openNewUserDialog && renderNewUserDialog()}
-                {this.state.openDeleteModal && renderDeleteConfirmationDialog()}
+                <VaultObjectDeleter
+                    path={this.state.deleteUserPath}
+                    onReceiveResponse={() => {
+                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
+                        this.setState({deleteUserPath: ''})
+                        this.loadUserList();
+                    }}
+                    onReceiveError={(err) => snackBarMessage(err)}
+                />
                 <Tabs>
                     <Tab label="Manage users" >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
