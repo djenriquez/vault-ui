@@ -334,7 +334,7 @@ class RadiusAuthBackend extends React.Component {
                         />
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
-                            height="120px"
+                            height="200px"
                             selectedPolicies={this.state.newUserObject.policies}
                             onSelectedChange={(policies) => {
                                 let user = this.state.newUserObject;
