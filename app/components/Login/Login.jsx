@@ -7,6 +7,7 @@ import Dialog from 'material-ui/Dialog';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
+import { Card, CardHeader, CardText } from 'material-ui/Card';
 import _ from 'lodash';
 import { callVaultApi } from '../shared/VaultUtils.jsx'
 
@@ -295,14 +296,19 @@ export default class Login extends React.Component {
                     </SelectField>
                 </div>
                 <div>
-                    <TextField
-                        style={{ paddingLeft: 8 }}
-                        id="backendPath"
-                        floatingLabelFixed={true}
-                        floatingLabelText="Auth backend path"
-                        value={this.state.tmpAuthBackendPath}
-                        onChange={(e, v) => this.setState({ tmpAuthBackendPath: v, settingsChanged: true })}
-                    />
+                    <Card initiallyExpanded={false}>
+                        <CardHeader title="Advanced Options" actAsExpander={true} showExpandableButton={true} />
+                        <CardText expandable={true}>
+                            <TextField
+                                style={{ paddingLeft: 8 }}
+                                id="backendPath"
+                                floatingLabelFixed={true}
+                                floatingLabelText="Auth backend path"
+                                value={this.state.tmpAuthBackendPath}
+                                onChange={(e, v) => this.setState({ tmpAuthBackendPath: v, settingsChanged: true })}
+                            />
+                        </CardText>
+                    </Card>
                 </div>
                 <div className={styles.error}>{this.state.errorMessage}</div>
             </Dialog>
