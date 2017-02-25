@@ -15,7 +15,7 @@ import _ from 'lodash';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
-import { green500, green400, red500, white } from 'material-ui/styles/colors.js'
+import { red500 } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
@@ -242,7 +242,6 @@ class RadiusAuthBackend extends React.Component {
             const actions = [
                 <FlatButton
                     label="Cancel"
-                    primary={true}
                     onTouchTap={() => {
                         this.setState({ openEditUserDialog: false, selectedUserId: '' })
                         browserHistory.push(this.state.baseUrl);
@@ -301,7 +300,6 @@ class RadiusAuthBackend extends React.Component {
             const actions = [
                 <FlatButton
                     label="Cancel"
-                    primary={true}
                     onTouchTap={() => {
                         this.setState({ openNewUserDialog: false, newUserId: '' })
                     }}
@@ -374,9 +372,6 @@ class RadiusAuthBackend extends React.Component {
                                         primary={true}
                                         label="NEW USER"
                                         disabled={this.state.newSecretBtnDisabled}
-                                        backgroundColor={green500}
-                                        hoverColor={green400}
-                                        labelStyle={{ color: white }}
                                         onTouchTap={() => {
                                             this.setState({
                                                 openNewUserDialog: true,
@@ -477,9 +472,6 @@ class RadiusAuthBackend extends React.Component {
                                     <FlatButton
                                         primary={true}
                                         label="Save"
-                                        backgroundColor={green500}
-                                        hoverColor={green400}
-                                        labelStyle={{ color: white }}
                                         onTouchTap={() => this.CreateUpdateConfig(this.state.newConfigObj)}
                                     />
                                 </div>
