@@ -30,7 +30,7 @@ export default class VaultObjectDeleter extends Component {
 
     componentWillReceiveProps(nextProps) {
         // Trigger automatically on props change
-        if (!_.isEqual(nextProps.path, this.props.path)) {
+        if (nextProps.path && !_.isEqual(nextProps.path, this.props.path)) {
             this.setState({ path: nextProps.path })
         }
     }
