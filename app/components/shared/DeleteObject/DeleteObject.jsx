@@ -7,6 +7,7 @@ import FlatButton from 'material-ui/FlatButton';
 export default class VaultObjectDeleter extends Component {
     static propTypes = {
         path: PropTypes.string,
+        forceShowDialog: PropTypes.bool,
         onReceiveResponse: PropTypes.func,
         onReceiveError: PropTypes.func,
         onModalClose: PropTypes.func
@@ -14,6 +15,7 @@ export default class VaultObjectDeleter extends Component {
 
     static defaultProps = {
         path: '',
+        forceShowDialog: false,
         onReceiveResponse: () => { },
         onReceiveError: () => { },
         onModalClose: () => { }
@@ -37,7 +39,7 @@ export default class VaultObjectDeleter extends Component {
 
     componentDidUpdate(prevProps, prevState) {
         if (!_.isEqual(prevState.path, this.state.path) && this.state.path) {
-            if (window.localStorage.getItem("showDeleteModal") === 'false') {
+            if (window.localStorage.getItem("showDeleteModal") === 'false' && !this.props.forceShowDialog) {
                 this.DeleteObject(this.state.path);
             } else {
                 this.setState({ openDeleteModal: true })
@@ -77,9 +79,10 @@ export default class VaultObjectDeleter extends Component {
                 open={this.state.openDeleteModal}
                 actions={actions}
             >
-                <p>You are about to permanently delete the object at path: <p style={style_objpath}>{this.state.path}</p></p>
+                <p>You are about to permanently delete the object at path:</p>
+                <p style={style_objpath}>{this.state.path}</p>
                 <p>Are you sure?</p>
-                <em>To disable this prompt, visit the settings page.</em>
+                {!this.props.forceShowDialog ? <em>To disable this prompt, visit the settings page.</em> : null}
             </Dialog >
         )
     }

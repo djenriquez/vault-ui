@@ -140,6 +140,7 @@ export default class MountTuneDeleteDialog extends Component {
                         </Dialog >
                         <VaultObjectDeleter
                             path={this.state.unmountPath}
+                            forceShowDialog={true}
                             onReceiveResponse={() => {
                                 this.props.onActionDeleteSuccess(this.state.mountpointObject.path, this.state.mountpointObject.uipath);
                                 this.setState({ unmountPath: '', mountpointObject: null, openDialog: false }, () => this.props.onClose());
