@@ -13,6 +13,7 @@ import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
 import TokenAuthBackend from './components/Authentication/Token/Token.jsx';
 import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
 import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
+import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
 
 injectTapEventPlugin();
@@ -56,6 +57,7 @@ ReactDOM.render((
                 <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
                 <Route path="/auth/aws-ec2/:namespace" component={AwsEc2AuthBackend} />
                 <Route path="/auth/github/:namespace" component={GithubAuthBackend} />
+                <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/responsewrapper" component={ResponseWrapper} />
                 <Route path="/sys/policies(/**)" component={PolicyManager} />

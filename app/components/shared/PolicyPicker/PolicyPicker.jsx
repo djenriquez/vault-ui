@@ -69,6 +69,12 @@ class PolicyPicker extends React.Component {
             })
     }
 
+    componentWillReceiveProps(nextProps) {
+        if(!_.isEqual(this.props.selectedPolicies, nextProps.selectedPolicies)) {
+            this.setState({selectedPolicies: nextProps.selectedPolicies})
+        }
+    }
+
     componentDidMount() {
         if(_.isEmpty(this.props.fixedPolicyList)) {
             this.reloadPolicyList();

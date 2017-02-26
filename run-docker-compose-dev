@@ -18,10 +18,12 @@ exec_in_vault vault auth "$(docker-compose logs vault | grep 'Root Token:' | tai
 exec_in_vault vault status
 exec_in_vault vault auth-enable userpass
 exec_in_vault vault auth-enable github
+exec_in_vault vault auth-enable radius
 exec_in_vault vault auth-enable -path=awsaccount1 aws-ec2
 exec_in_vault vault policy-write admin /app/admin.hcl
 exec_in_vault vault write auth/userpass/users/test password=test policies=admin
 exec_in_vault vault write auth/userpass/users/lame password=lame policies=default
+exec_in_vault vault write auth/radius/users/test password=test policies=admin
 exec_in_vault vault write secret/test somekey=somedata
 exec_in_vault vault mount -path=ultrasecret generic
 exec_in_vault vault write ultrasecret/moretest somekey=somedata
