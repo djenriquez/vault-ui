@@ -4,6 +4,15 @@ var axios = require('axios');
 
 exports.callMethod = function (req, res) {
     let vaultAddr = req.query.vaultaddr;
+
+    let timeout;
+    try {
+        timeout = parseInt(req.query.timeout);
+        delete req.query.timeout;
+    } catch (err) {
+        timeout = null
+    }
+
     if (!vaultAddr) {
         res.status(400).send("missing vaultaddr parameter");
         return;
@@ -16,7 +25,8 @@ exports.callMethod = function (req, res) {
         url: req.path,
         params: req.query,
         headers: req.headers,
-        data: req.body
+        data: req.body,
+        timeout: timeout
     }
 
     axios.request(config)
@@ -24,6 +34,10 @@ exports.callMethod = function (req, res) {
             res.json(resp.data);
         })
         .catch(function (err) {
-            res.status(err.response.status).send(err.response.data);
+            if (err.response) {
+                res.status(err.response.status).send(err.response.data);
+            } else {
+                res.status(503).send({errors: [err.toString()]});
+            }
         });
 };
