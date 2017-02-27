@@ -1,6 +1,9 @@
 'use strict';
 
-var axios = require('axios');
+const AXIOS_TIME_OUT = process.env.AXIOS_TIME_OUT || 10000;
+
+let axios = require('axios');
+let _ = require('lodash');
 
 exports.callMethod = function (req, res) {
     let vaultAddr = req.query.vaultaddr;
@@ -16,16 +19,21 @@ exports.callMethod = function (req, res) {
         url: req.path,
         params: req.query,
         headers: req.headers,
-        data: req.body
+        data: req.body,
+        timeout: AXIOS_TIME_OUT
     }
-    //console.log(config);
     axios.request(config)
         .then(function (resp) {
             res.json(resp.data);
         })
         .catch(function (err) {
-            //console.error(err.response.data);
-            //console.error(err.stack);
-            res.status(err.response.status).send(err.response.data);
+            if (_.has(err, 'response.status') &&
+                    _.has(err, 'response.data.errors') &&
+                    err.response.data.errors.length > 0) {
+                res.status(err.response.status).send(err.response.data);
+            }
+            else {
+                res.status(502).send(err.message);
+            }
         });
 };

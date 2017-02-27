@@ -80,8 +80,23 @@ function tokenHasCapabilities(capabilities, path) {
         });
 }
 
+function callVaultLogin(uri, method, data, vaultUrl, headers) {
+        let instance = axios.create({
+            baseURL: '/v1/'
+        });
+
+        return instance.request({
+            url: uri,
+            method: method,
+            data: data,
+            params: { "vaultaddr": vaultUrl },
+            headers: headers
+        });
+}
+
 module.exports = {
     callVaultApi: callVaultApi,
+    callVaultLogin: callVaultLogin,
     tokenHasCapabilities: tokenHasCapabilities,
     resetCapabilityCache: resetCapabilityCache
 };
