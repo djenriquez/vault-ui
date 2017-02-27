@@ -119,11 +119,10 @@ export default class Login extends React.Component {
             url: uri,
             method: method,
             data: data,
-            params: { "vaultaddr": this.state.vaultUrl },
+            params: { "vaultaddr": this.state.vaultUrl, "timeout": 5000 },
             headers: headers
         })
             .then((resp) => {
-                //console.log(resp);
                 if (this.state.loginMethodType == "TOKEN") {
                     this.setAccessToken({
                         client_token: resp.data.data.id,
@@ -141,7 +140,7 @@ export default class Login extends React.Component {
                 } else {
                     loginErrorMessage = error.message;
                 }
-                this.setState({ errorMessage: `Error: ${loginErrorMessage}` });
+                this.setState({ errorMessage: `${loginErrorMessage}` });
             });
     }
 
