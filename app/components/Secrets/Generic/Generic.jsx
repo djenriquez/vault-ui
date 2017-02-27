@@ -95,7 +95,11 @@ class GenericSecretBackend extends React.Component {
                     .then((resp) => {
                         this.setState({ secretList: resp.data.data.keys });
                     })
-                    .catch(snackBarMessage)
+                    .catch((err) => {
+                        // 404 is expected when no secrets are present
+                        if (!_.has(err, 'response') || err.response.status != 404)
+                            snackBarMessage(err)
+                    })
             })
             .catch(() => {
                 this.setState({ secretList: [] })
