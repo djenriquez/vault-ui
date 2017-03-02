@@ -7,7 +7,7 @@ import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
-import { browserHistory } from 'react-router';
+import { hashHistory } from 'react-router';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import { green500, red500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
@@ -66,7 +66,7 @@ export default class App extends React.Component {
         }
 
         let logoutTimeout = () => {
-            browserHistory.push('/login');
+            hashHistory.push('/login');
         }
 
         // Retrieve session identity information
@@ -85,7 +85,7 @@ export default class App extends React.Component {
             .catch((err) => {
                 if (_.has(err, 'response.status') && err.response.status >= 400) {
                     window.localStorage.removeItem('vaultAccessToken');
-                    browserHistory.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
+                    hashHistory.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
                 } else throw err;
             });
     }

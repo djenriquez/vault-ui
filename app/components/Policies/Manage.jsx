@@ -20,7 +20,7 @@ import Avatar from 'material-ui/Avatar';
 import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
-import { browserHistory, Link } from 'react-router'
+import { hashHistory, Link } from 'react-router'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -97,7 +97,7 @@ export default class PolicyManager extends React.Component {
                 primary={true}
                 onTouchTap={() => {
                     this.setState({ openEditModal: false })
-                    browserHistory.push('/sys/policies');
+                    hashHistory.push('/sys/policies');
                 }}
             />,
             <FlatButton
@@ -106,7 +106,7 @@ export default class PolicyManager extends React.Component {
                 primary={true}
                 onTouchTap={() => {
                     this.updatePolicy(this.state.focusPolicy, false)
-                    browserHistory.push('/sys/policies');
+                    hashHistory.push('/sys/policies');
                 }}
             />
         ];
@@ -334,7 +334,7 @@ export default class PolicyManager extends React.Component {
                     leftAvatar={<Avatar icon={<HardwareSecurity />} />}
                     onTouchTap={() => {
                         tokenHasCapabilities(['read'], 'sys/policy/' + policy.name).then(() => {
-                            browserHistory.push(`/sys/policies/` + policy.name);
+                            hashHistory.push(`/sys/policies/` + policy.name);
                         }).catch(() => {
                             snackBarMessage(new Error("Access denied"));
                         })

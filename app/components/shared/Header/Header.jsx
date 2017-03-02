@@ -4,7 +4,7 @@ import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
 import FontIcon from 'material-ui/FontIcon';
-import { browserHistory } from 'react-router';
+import { hashHistory } from 'react-router';
 import CountDown from './countdown.js'
 import styles from './header.css';
 import { callVaultApi } from '../../shared/VaultUtils.jsx';
@@ -13,7 +13,7 @@ import Snackbar from 'material-ui/Snackbar';
 
 var logout = () => {
     window.localStorage.removeItem('vaultAccessToken');
-    browserHistory.push('/login');
+    hashHistory.push('/login');
 }
 
 function snackBarMessage(message) {
@@ -112,7 +112,7 @@ class Header extends React.Component {
                         </IconButton>
                         <ToolbarTitle className={styles.title}
                             onTouchTap={() => {
-                                browserHistory.push('/');
+                                hashHistory.push('/');
                             }}
                             text="VAULT - UI" />
                     </ToolbarGroup>

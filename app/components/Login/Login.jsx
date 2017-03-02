@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import { hashHistory } from 'react-router';
 import styles from './login.css';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
@@ -218,9 +219,9 @@ export default class Login extends React.Component {
             window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
             window.localStorage.setItem('loginBackendPath', this.getAuthBackendPath());
             if (this.props.location.query.returnto && this.props.location.query.returnto.indexOf('/') === 0)
-                window.location.href = this.props.location.query.returnto;
+                hashHistory.push(this.props.location.query.returnto);
             else
-                window.location.href = '/';
+                hashHistory.push('/');
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })
         }
@@ -395,8 +396,7 @@ export default class Login extends React.Component {
         return (
             <div id={styles.root} className="row middle-xs center-xs">
                 {this.state.openSettings && this.renderSettingsDialog()}
-                <div className={`col-xs-12 col-sm-6 col-md-4 ${this.state.show ? styles.show : styles.hide}`}>
-                    <div className="col-xs-12" id={styles.title}><img height="40" src="https://www.vaultproject.io/assets/images/favicons/safari-pinned-tab-2d806584.svg"></img>AULT - UI</div>
+                <div className={`col-xs-12 col-sm-6 col-md-4`}>
                     <div className="row">
                         <div className="col-xs-11">
                             {this.renderSelectedLoginOption()}

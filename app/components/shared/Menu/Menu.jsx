@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import styles from './menu.css';
 import Drawer from 'material-ui/Drawer';
-import { browserHistory } from 'react-router';
+import { hashHistory } from 'react-router';
 import { List, ListItem, makeSelectable } from 'material-ui/List';
 import IconButton from 'material-ui/IconButton';
 import Build from 'material-ui/svg-icons/action/build';
@@ -179,7 +179,7 @@ class Menu extends React.Component {
         }
 
         let handleMenuChange = (e, v) => {
-            browserHistory.push(v)
+            hashHistory.push(v)
         }
 
         return (
@@ -217,7 +217,7 @@ class Menu extends React.Component {
                     onActionDeleteSuccess={(path, uipath) => {
                         snackBarMessage(`Mountpoint ${path} deleted`)
                         if (this.props.pathname.startsWith(uipath)) {
-                            browserHistory.push('/');
+                            hashHistory.push('/');
                         }
                         this.loadAuthBackends();
                         this.loadSecretBackends();
