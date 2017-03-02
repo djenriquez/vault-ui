@@ -31,7 +31,7 @@ export default class Login extends React.Component {
             loginMethodType: this.getVaultAuthMethod(),
             tmpLoginMethodType: this.getVaultAuthMethod(),
             authBackendPath: this.getAuthBackendPath(),
-            tmpAuthBackendPath: '',
+            tmpAuthBackendPath: this.getAuthBackendPath(),
             settingsChanged: false,
         };
 
@@ -233,7 +233,7 @@ export default class Login extends React.Component {
             }
             else if (!this.state.tmpLoginMethodType) {
                 this.setState({ errorMessage: 'Please select an authentication backend' });
-            } else if (!this.state.authBackendPath) {
+            } else if (!this.state.tmpAuthBackendPath) {
                 this.setState({ errorMessage: 'Please select a valid path for the authentication backend' })
             } else {
                 window.localStorage.setItem("vaultUrl", this.state.tmpVaultUrl);
