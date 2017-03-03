@@ -7,11 +7,18 @@ import FontIcon from 'material-ui/FontIcon';
 import { browserHistory } from 'react-router';
 import CountDown from './countdown.js'
 import styles from './header.css';
-import { callVaultApi } from '../../shared/VaultUtils.jsx'
+import { callVaultApi } from '../../shared/VaultUtils.jsx';
+import Snackbar from 'material-ui/Snackbar';
+
 
 var logout = () => {
     window.localStorage.removeItem('vaultAccessToken');
     browserHistory.push('/login');
+}
+
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
 }
 
 class Header extends React.Component {
@@ -40,7 +47,7 @@ class Header extends React.Component {
                         version: error.response.data.version,
                     });
                 } else {
-                    throw error;
+                    snackBarMessage(error);
                 }
             });
     }
