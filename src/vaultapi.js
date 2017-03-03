@@ -18,14 +18,12 @@ exports.callMethod = function (req, res) {
         headers: req.headers,
         data: req.body
     }
-    //console.log(config);
+
     axios.request(config)
         .then(function (resp) {
             res.json(resp.data);
         })
         .catch(function (err) {
-            //console.error(err.response.data);
-            //console.error(err.stack);
             res.status(err.response.status).send(err.response.data);
         });
 };
