@@ -18,17 +18,12 @@ exports.callMethod = function (req, res) {
         headers: req.headers,
         data: req.body
     }
+
     axios.request(config)
         .then(function (resp) {
             res.json(resp.data);
         })
         .catch(function (err) {
-            // Response code 429 is a valid status code returned by vault from stand-by nodes for the sys/health call
-            // https://www.vaultproject.io/docs/http/#429
-            if (config.url === '/v1/sys/health' && err.response.status == 429) {
-                res.json(err.response.data);
-            } else {
-                res.status(err.response.status).send(err.response.data);
-            }
+            res.status(err.response.status).send(err.response.data);
         });
 };

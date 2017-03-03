@@ -33,6 +33,15 @@ class Header extends React.Component {
                 this.setState({
                     version: resp.data.version,
                 });
+            })
+            .catch((error) => {
+                if (error.response.status === 429) {
+                    this.setState({
+                        version: error.response.data.version,
+                    });
+                } else {
+                    throw error;
+                }
             });
     }
 
