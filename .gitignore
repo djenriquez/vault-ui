@@ -25,6 +25,7 @@ coverage
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
+release/
 
 # Dependency directories
 node_modules
@@ -41,3 +42,6 @@ dist/*
 
 # Visual studio code
 .vscode/
+
+# OSX
+.DS_Store
