@@ -43,7 +43,7 @@ app.post('/unwrap', function(req, res) {
     routeHandler.unwrapValue(req, res);
 })
 
-app.all('/v1/*', function(req, res, next) {
+app.all('/v1/*', function(req, res, _next) {
     routeHandler.vaultapi(req, res);
 })
 
