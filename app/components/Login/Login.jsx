@@ -395,7 +395,7 @@ export default class Login extends React.Component {
             <div id={styles.root} className="row middle-xs center-xs">
                 {this.state.openSettings && this.renderSettingsDialog()}
                 <div className={`col-xs-12 col-sm-6 col-md-4 ${this.state.show ? styles.show : styles.hide}`}>
-                    <div className="col-xs-12" id={styles.title}><img height="40" src="https://www.vaultproject.io/assets/images/favicon-16466d1a.png"></img>AULT</div>
+                    <div className="col-xs-12" id={styles.title}><img height="40" src="https://www.vaultproject.io/assets/images/logo-text-f5d7ace7.svg"></img></div>
                     <div className="row">
                         <div className="col-xs-11">
                             {this.renderSelectedLoginOption()}

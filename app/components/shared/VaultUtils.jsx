@@ -1,6 +1,8 @@
 import axios from 'axios';
 import _ from 'lodash';
 
+let DEFAULT_TIMEOUT_IN_MS = 20000;
+
 function resetCapabilityCache() {
     window.localStorage.setItem('capability_cache', JSON.stringify({}));
     return {};
@@ -28,6 +30,13 @@ function getCachedCapabilities(path) {
 }
 
 function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken = null, vaultUrl = null) {
+
+    if (query === null) {
+        query = {};
+    }
+    if (typeof query === 'object' && !_.has(query, 'timeout')) {
+        query.timeout = DEFAULT_TIMEOUT_IN_MS;
+    }
 
     var instance = axios.create({
         baseURL: '/v1/',
