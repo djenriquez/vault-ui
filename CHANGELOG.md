@@ -34,8 +34,6 @@
 - Add `Token management` - [Feature request #41](https://github.com/djenriquez/vault-ui/issues/41)
 
 # 0.1.0
-Initial stable release
-## Features
 - Supports [Github, Username and Password, Token](https://github.com/djenriquez/vault-ui/pull/3), and [LDAP](https://github.com/djenriquez/vault-ui/pull/16) authentication
 - Full [generic secrets management](https://github.com/djenriquez/vault-ui/pull/2)
 - Full [policies management](https://github.com/djenriquez/vault-ui/pull/4)
