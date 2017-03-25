@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
@@ -13,37 +13,48 @@ import Subheader from 'material-ui/Subheader';
 // Styles
 import styles from './okta.css';
 import sharedStyles from '../../shared/styles.css';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
+import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
 import Checkbox from 'material-ui/Checkbox';
-import { callVaultApi } from '../../shared/VaultUtils.jsx'
+import { callVaultApi } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 
+function snackBarMessage(message) {
+    let ev = new CustomEvent("snackbar", { detail: { message: message } });
+    document.dispatchEvent(ev);
+}
 
 export default class OktaAuthBackend extends React.Component {
-
     oktaUserSchema = {
         name: '',
         groups: [
             'default'
         ]
     };
+    
+    oktaGroupSchema = {
+        name: '',
+        policies: [
+            'default'
+        ]
+    };
 
     oktaConfigSchema = {
         organization: '',
-        token: '',
-        oktaUrl: 'okta.com'
+        token: null,
+        base_url: null
     };
 
 
     constructor(props) {
         super(props);
         this.state = {
+            baseUrl: `/auth/okta/${this.props.params.namespace}/`,
             userList: [],
             openNewUserDialog: false,
             newUserObject: this.oktaUserSchema,
+            newGroupObject: this.oktaGroupSchema,
             deleteUserPath: '',
             configObj: this.oktaConfigSchema,
             newConfigObj: this.oktaConfigSchema,
@@ -52,17 +63,56 @@ export default class OktaAuthBackend extends React.Component {
         _.bindAll(
             this,
             'createUpdateUser',
-            'createUpdateConfig'
+            'createUpdateConfig',
+            'getOktaBackendConfig'
         );
 
     }
+    componentDidMount() {
+        this.getOktaBackendConfig();
+    }
 
-    createUpdateUser(newUserObj, create=false) {
+    getOktaBackendConfig() {
+        console.log('Requesting Okta config');
+        callVaultApi('get', 'auth/okta/config', null, null, null)
+            .then((resp) => {
+                let config = resp.data.data;
+                console.log(config);
+
+                this.setState({
+                    configObj: update(this.state.configObj,
+                        {
+                            token: { $set: (config.token ? config.token : null) },
+                            organization: { $set: config.Org },
+                            base_url: { $set: (config.BaseURL ? config.BaseURL : null) }
+                        }),
+                    newConfigObj: update(this.state.configObj,
+                        {
+                            token: { $set: (config.token ? config.token : null) },
+                            organization: { $set: config.Org },
+                            base_url: { $set: (config.BaseURL ? config.BaseURL : null) }
+                        })
+                });
+            })
+            .catch(snackBarMessage);
+    }
+
+    createUpdateUser(newUserObj, create = false) {
         return;
     }
 
-    createUpdateConfig(newConfigObj, create=false) {
+    createUpdateGroup(newUserObj, create = false) {
         return;
+    }
+
+    createUpdateConfig(newConfigObj, create = false) {
+        console.log('Updating config:');
+        console.log(this.state.newConfigObj);
+        callVaultApi('post', 'auth/okta/config', null, this.state.newConfigObj, null)
+            .then(() => {
+                snackBarMessage(`Backend auth/okta/config has been updated`);
+            })
+            .catch(snackBarMessage)
     }
 
     render() {
@@ -216,13 +266,13 @@ export default class OktaAuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText="Enter the Okta base url"
+                                    hintText="okta.com"
                                     floatingLabelText="Okta url"
                                     fullWidth={true}
                                     floatingLabelFixed={true}
-                                    value={this.state.newConfigObj.oktaUrl}
+                                    value={this.state.newConfigObj.base_url}
                                     onChange={(e) => {
-                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { oktaUrl: { $set: e.target.value } }) });
+                                        this.setState({ newConfigObj: update(this.state.newConfigObj, { base_url: { $set: e.target.value } }) });
                                     }}
                                 />
                                 <div style={{ paddingTop: '20px', textAlign: 'center' }}>
@@ -240,3 +290,4 @@ export default class OktaAuthBackend extends React.Component {
         );
     }
 }
+
