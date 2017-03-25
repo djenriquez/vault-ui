@@ -20,7 +20,8 @@ const supported_secret_backend_types = [
 const supported_auth_backend_types = [
     'token',
     'github',
-    'radius'
+    'radius',
+    'okta'
 ]
 
 function snackBarMessage(message) {
