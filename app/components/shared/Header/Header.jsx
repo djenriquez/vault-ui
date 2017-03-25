@@ -114,7 +114,7 @@ class Header extends React.Component {
                             onTouchTap={() => {
                                 browserHistory.push('/');
                             }}
-                            text="VAULT-UI" />
+                            text="VAULT - UI" />
                     </ToolbarGroup>
                     <ToolbarGroup>
                         {renderTokenInfo()}
