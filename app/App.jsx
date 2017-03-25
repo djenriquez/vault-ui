@@ -17,6 +17,7 @@ import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
 import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import UserPassAuthBackend from './components/Authentication/UserPass/UserPass.jsx';
+import OktaAuthBackend from './components/Authentication/Okta/Okta.jsx';
 import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
 
 // Load here to signal webpack
@@ -82,6 +83,7 @@ ReactDOM.render((
                 <Route path="/auth/github/:namespace(/**)" component={GithubAuthBackend} />
                 <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
                 <Route path="/auth/userpass/:namespace(/**)" component={UserPassAuthBackend} />
+                <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/responsewrapper" component={ResponseWrapper} />
                 <Route path="/sys/policies(/**)" component={PolicyManager} />

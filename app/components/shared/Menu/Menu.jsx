@@ -22,6 +22,7 @@ const supported_auth_backend_types = [
     'radius',
     'aws-ec2',
     'userpass'
+    'okta'
 ]
 
 function snackBarMessage(message) {
