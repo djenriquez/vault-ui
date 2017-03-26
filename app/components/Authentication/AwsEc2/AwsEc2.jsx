@@ -69,7 +69,6 @@ export default class AwsEc2AuthBackend extends React.Component {
             newSecretBtnDisabled: false,
             openNewRoleDialog: false,
             openEditRoleDialog: false,
-            selectedRole: '',
             deleteUserPath: ''
         };
 
@@ -77,7 +76,6 @@ export default class AwsEc2AuthBackend extends React.Component {
             this,
             'listEc2Roles',
             'getEc2AuthConfig',
-            'getEc2RoleDetails',
             'createUpdateConfig',
             'createUpdateRole'
         );
@@ -136,22 +134,24 @@ export default class AwsEc2AuthBackend extends React.Component {
             .then(() => {
                 snackBarMessage(`Role ${this.state.newRoleConfig.role} has been updated`);
                 this.listEc2Roles();
+                this.setState({ openNewRoleDialog: false, openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) });
             })
             .catch(snackBarMessage);
     }
 
     displayRole() {
-        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${this.state.selectedRole}`)
+        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${this.state.newRoleConfig.role}`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.selectedRole}`, null, null, null)
+                callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.newRoleConfig.role}`, null, null, null)
                     .then((resp) => {
+                        resp.data.data.role = this.state.newRoleConfig.role;
                         this.setState({ newRoleConfig: resp.data.data, openEditRoleDialog: true });
                     })
                     .catch(snackBarMessage)
             })
             .catch(() => {
                 this.setState({ selectedUserObject: {} })
-                snackBarMessage(new Error(`No permissions to display properties for role ${this.state.selectedRole}`));
+                snackBarMessage(new Error(`No permissions to display properties for role ${this.state.newRoleConfig.role}`));
             })
     }
 
@@ -161,9 +161,9 @@ export default class AwsEc2AuthBackend extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.selectedRole != prevState.selectedRole) {
+        if (this.state.newRoleConfig.role != prevState.newRoleConfig.role) {
             this.listEc2Roles();
-            if (this.state.selectedRole) {
+            if (this.state.newRoleConfig.role) {
                 this.displayRole();
             }
         }
@@ -192,7 +192,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         onTouchTap={() => {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
                                 .then(() => {
-                                    this.setState({ selectedRole: role });
+                                    this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role: { $set: role } }) });
                                     browserHistory.push(`${this.state.baseUrl}${role}`);
                                 }).catch(() => {
                                     snackBarMessage(new Error("Access denied"));
@@ -296,7 +296,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                 <FlatButton
                     label="Cancel"
                     onTouchTap={() => {
-                        this.setState({ openEditRoleDialog: false, selectedRole: '' })
+                        this.setState({ openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) })
                         browserHistory.push(this.state.baseUrl);
                     }}
                 />,
@@ -311,11 +311,11 @@ export default class AwsEc2AuthBackend extends React.Component {
 
             return (
                 <Dialog
-                    title={`Editing role ${this.state.selectedRole}`}
+                    title={`Editing role ${this.state.newRoleConfig.role}`}
                     modal={false}
                     actions={actions}
                     open={this.state.openEditRoleDialog}
-                    onRequestClose={() => this.setState({ openEditRoleDialog: false, selectedRole: '' })}
+                    onRequestClose={() => this.setState({ openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) })}
                     autoScrollBodyContent={true}
                 >
                     <List>
