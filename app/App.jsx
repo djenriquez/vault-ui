@@ -55,7 +55,7 @@ ReactDOM.render((
             <Route path="/" component={App} onEnter={checkAccessToken}>
                 <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric} />
                 <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
-                <Route path="/auth/aws-ec2/:namespace" component={AwsEc2AuthBackend} />
+                <Route path="/auth/aws-ec2/:namespace(/**)" component={AwsEc2AuthBackend} />
                 <Route path="/auth/github/:namespace" component={GithubAuthBackend} />
                 <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
                 <Route path="/settings" component={Settings} />
