@@ -121,14 +121,6 @@ export default class AwsEc2AuthBackend extends React.Component {
             .catch(snackBarMessage);
     }
 
-    getEc2RoleDetails() {
-        callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.selectedRole}`, null, null)
-            .then((resp) => {
-                console.log(resp);
-            })
-            .catch(snackBarMessage);
-    }
-
     createUpdateConfig() {
         callVaultApi('post', `${this.state.baseVaultPath}/config/client`, null, this.state.newConfigObj)
             .then(() => {
