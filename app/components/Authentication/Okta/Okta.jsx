@@ -51,6 +51,7 @@ export default class OktaAuthBackend extends React.Component {
         super(props);
         this.state = {
             baseUrl: `/auth/okta/${this.props.params.namespace}/`,
+            baseVaultPath: `auth/${this.props.params.namespace}`,
             userList: [],
             openNewUserDialog: false,
             newUserObject: this.oktaUserSchema,
@@ -74,7 +75,7 @@ export default class OktaAuthBackend extends React.Component {
 
     getOktaBackendConfig() {
         console.log('Requesting Okta config');
-        callVaultApi('get', 'auth/okta/config', null, null, null)
+        callVaultApi('get', `${this.state.baseVaultPath}/config`, null, null, null)
             .then((resp) => {
                 let config = resp.data.data;
                 console.log(config);
@@ -108,9 +109,9 @@ export default class OktaAuthBackend extends React.Component {
     createUpdateConfig(newConfigObj, create = false) {
         console.log('Updating config:');
         console.log(this.state.newConfigObj);
-        callVaultApi('post', 'auth/okta/config', null, this.state.newConfigObj, null)
+        callVaultApi('post', `${this.state.baseVaultPath}/config`, null, this.state.newConfigObj, null)
             .then(() => {
-                snackBarMessage(`Backend auth/okta/config has been updated`);
+                snackBarMessage(`Backend ${this.state.baseVaultPath}/config has been updated`);
             })
             .catch(snackBarMessage)
     }
