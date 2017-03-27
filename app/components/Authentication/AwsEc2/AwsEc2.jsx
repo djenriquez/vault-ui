@@ -13,6 +13,7 @@ import Subheader from 'material-ui/Subheader';
 import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
+import Toggle from 'material-ui/Toggle';
 // Styles
 import styles from './awsec2.css';
 import sharedStyles from '../../shared/styles.css';
@@ -50,10 +51,11 @@ export default class AwsEc2AuthBackend extends React.Component {
         bound_iam_instance_profile_arn: undefined,
         role_tag: undefined,
         ttl: undefined,
+        max_ttl: undefined,
         period: undefined,
         policies: [],
         allow_instance_migration: undefined,
-        disallow_reauthentication: undefined
+        disallow_reauthentication: false
     }
 
     constructor(props) {
@@ -326,6 +328,98 @@ export default class AwsEc2AuthBackend extends React.Component {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_role_arn: { $set: e.target.value } }) });
                             }}
                         />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Account ID"
+                            value={this.state.newRoleConfig.bound_account_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_account_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Region"
+                            value={this.state.newRoleConfig.bound_region}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_region: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="VPC ID"
+                            value={this.state.newRoleConfig.bound_vpc_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_vpc_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Subnet ID"
+                            value={this.state.newRoleConfig.bound_subnet_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_subnet_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="IAM Instance Profile ARN"
+                            value={this.state.newRoleConfig.bound_iam_instance_profile_arn}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_instance_profile_arn: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="TTL"
+                            value={this.state.newRoleConfig.ttl}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { ttl: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Max TTL"
+                            value={this.state.newRoleConfig.max_ttl}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { max_ttl: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <ListItem primaryText="Disallow Reauthentication">
+                            <Toggle
+                                toggled={this.state.newRoleConfig.disallow_reauthentication}
+                                onToggle={(e, v) => {
+                                    this.setState({ newRoleConfig: update(this.state.newRoleConfig, { disallow_reauthentication: { $set: v } }) });
+                                }}
+                            />
+                        </ListItem>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
                             height="200px"
@@ -394,6 +488,98 @@ export default class AwsEc2AuthBackend extends React.Component {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_role_arn: { $set: e.target.value } }) });
                             }}
                         />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Account ID"
+                            value={this.state.newRoleConfig.bound_account_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_account_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Region"
+                            value={this.state.newRoleConfig.bound_region}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_region: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="VPC ID"
+                            value={this.state.newRoleConfig.bound_vpc_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_vpc_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Subnet ID"
+                            value={this.state.newRoleConfig.bound_subnet_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_subnet_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="IAM Instance Profile ARN"
+                            value={this.state.newRoleConfig.bound_iam_instance_profile_arn}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_instance_profile_arn: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="TTL"
+                            value={this.state.newRoleConfig.ttl}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { ttl: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText="optional"
+                            floatingLabelFixed={true}
+                            floatingLabelText="Max TTL"
+                            value={this.state.newRoleConfig.max_ttl}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { max_ttl: { $set: e.target.value } }) });
+                            }}
+                        />
+                        <ListItem primaryText="Disallow Reauthentication">
+                            <Toggle
+                                toggled={this.state.newRoleConfig.disallow_reauthentication}
+                                onToggle={(e, v) => {
+                                    this.setState({ newRoleConfig: update(this.state.newRoleConfig, { disallow_reauthentication: { $set: v } }) });
+                                }}
+                            />
+                        </ListItem>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
                             height="250px"
