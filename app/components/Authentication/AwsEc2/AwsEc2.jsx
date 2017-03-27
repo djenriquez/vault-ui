@@ -72,7 +72,9 @@ export default class AwsEc2AuthBackend extends React.Component {
             newSecretBtnDisabled: false,
             openNewRoleDialog: false,
             openEditRoleDialog: false,
-            deleteUserPath: ''
+            deleteUserPath: '',
+            selectedTab: "roles",
+            isBackendConfigured: false
         };
 
         _.bindAll(
@@ -124,7 +126,8 @@ export default class AwsEc2AuthBackend extends React.Component {
                                     access_key: { $set: (config.access_key ? config.access_key : null) },
                                     endpoint: { $set: config.endpoint },
                                     secret_key: { $set: (config.secret_key ? config.secret_key : null) }
-                                })
+                                }),
+                            isBackendConfigured: true
                         });
                     })
                     .catch((error) => {
@@ -132,6 +135,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                             snackBarMessage(error);
                         } else {
                             error.message = `This backend has not yet been configured`;
+                            this.setState({ selectedTab: "backend" });
                             snackBarMessage(error);
                         }
                     });
@@ -145,6 +149,7 @@ export default class AwsEc2AuthBackend extends React.Component {
         callVaultApi('post', `${this.state.baseVaultPath}/config/client`, null, this.state.newConfigObj)
             .then(() => {
                 snackBarMessage(`Backend ${this.state.baseVaultPath}/config has been updated`);
+                this.setState({ isBackendConfigured: true, configObj: this.state.newConfigObj });
             })
             .catch(snackBarMessage);
     }
@@ -212,7 +217,8 @@ export default class AwsEc2AuthBackend extends React.Component {
                 ec2Roles: [],
                 selectedRoleId: '',
                 newConfigObj: this.ec2ConfigSchema,
-                configObj: this.ec2ConfigSchema
+                configObj: this.ec2ConfigSchema,
+                selectedTab: "roles"
             }, () => {
                 this.listEc2Roles();
                 this.getEc2AuthConfig();
@@ -608,8 +614,14 @@ export default class AwsEc2AuthBackend extends React.Component {
                 />
                 <Tabs
                     onChange={() => this.setState({ newConfigObj: _.clone(this.state.configObj) })}
+                    value={this.state.selectedTab}
                 >
-                    <Tab label="Configure Roles">
+                    <Tab
+                        label="Configure Roles"
+                        value="roles"
+                        onActive={() => this.setState({ selectedTab: "roles" })}
+                        disabled={!this.state.isBackendConfigured}
+                    >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can configure EC2 roles.
                         </Paper>
@@ -634,7 +646,11 @@ export default class AwsEc2AuthBackend extends React.Component {
                             </List>
                         </Paper>
                     </Tab>
-                    <Tab label="Configure Backend" >
+                    <Tab
+                        label="Configure Backend"
+                        value="backend"
+                        onActive={() => this.setState({ selectedTab: "backend" })}
+                    >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can configure connection details to your EC2 account.
                         </Paper>
@@ -682,7 +698,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         </Paper>
                     </Tab>
                 </Tabs>
-            </div>
+            </div >
         );
     }
 }
