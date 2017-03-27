@@ -94,6 +94,8 @@ export default class AwsEc2AuthBackend extends React.Component {
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
+                        } else {
+                            this.setState({ ec2Roles: [] });
                         }
                     });
             })
