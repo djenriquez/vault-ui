@@ -41,7 +41,6 @@ export default class AwsEc2AuthBackend extends React.Component {
     };
 
     roleConfigSchema = {
-        role: '',
         bound_ami_id: undefined,
         bound_account_id: undefined,
         bound_region: undefined,
@@ -66,6 +65,8 @@ export default class AwsEc2AuthBackend extends React.Component {
             configObj: this.ec2ConfigSchema,
             newConfigObj: this.ec2ConfigSchema,
             newRoleConfig: this.roleConfigSchema,
+            selectedRoleId: '',
+            newRoleId: '',
             newSecretBtnDisabled: false,
             openNewRoleDialog: false,
             openEditRoleDialog: false,
@@ -90,7 +91,11 @@ export default class AwsEc2AuthBackend extends React.Component {
                         let roles = resp.data.data.keys;
                         this.setState({ ec2Roles: _.valuesIn(roles) });
                     })
-                    .catch(snackBarMessage);
+                    .catch((error) => {
+                        if (error.response.status !== 404) {
+                            snackBarMessage(error);
+                        }
+                    });
             })
             .catch(() => {
                 snackBarMessage(new Error("Access denied"));
@@ -98,25 +103,38 @@ export default class AwsEc2AuthBackend extends React.Component {
     }
 
     getEc2AuthConfig() {
-        callVaultApi('get', `${this.state.baseVaultPath}/config/client`, null, null)
-            .then((resp) => {
-                let config = resp.data.data;
-                this.setState({
-                    configObj: update(this.state.configObj,
-                        {
-                            access_key: { $set: (config.access_key ? config.access_key : null) },
-                            endpoint: { $set: config.endpoint },
-                            secret_key: { $set: (config.secret_key ? config.secret_key : null) }
-                        }),
-                    newConfigObj: update(this.state.configObj,
-                        {
-                            access_key: { $set: (config.access_key ? config.access_key : null) },
-                            endpoint: { $set: config.endpoint },
-                            secret_key: { $set: (config.secret_key ? config.secret_key : null) }
-                        })
-                });
+        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/config/client`)
+            .then(() => {
+                callVaultApi('get', `${this.state.baseVaultPath}/config/client`, null, null)
+                    .then((resp) => {
+                        let config = resp.data.data;
+                        this.setState({
+                            configObj: update(this.state.configObj,
+                                {
+                                    access_key: { $set: (config.access_key ? config.access_key : null) },
+                                    endpoint: { $set: config.endpoint },
+                                    secret_key: { $set: (config.secret_key ? config.secret_key : null) }
+                                }),
+                            newConfigObj: update(this.state.configObj,
+                                {
+                                    access_key: { $set: (config.access_key ? config.access_key : null) },
+                                    endpoint: { $set: config.endpoint },
+                                    secret_key: { $set: (config.secret_key ? config.secret_key : null) }
+                                })
+                        });
+                    })
+                    .catch((error) => {
+                        if (error.response.status !== 404) {
+                            snackBarMessage(error);
+                        } else {
+                            error.message = `This backend has not yet been configured`;
+                            snackBarMessage(error);
+                        }
+                    });
             })
-            .catch(snackBarMessage);
+            .catch(() => {
+                snackBarMessage(new Error("Access denied"));
+            })
     }
 
     createUpdateConfig() {
@@ -127,45 +145,74 @@ export default class AwsEc2AuthBackend extends React.Component {
             .catch(snackBarMessage);
     }
 
-    createUpdateRole() {
-        let updateObj = _.clone(this.state.newRoleConfig);
-        updateObj.policies = updateObj.policies.join(',');
-        callVaultApi('post', `${this.state.baseVaultPath}/role/${this.state.newRoleConfig.role}`, null, updateObj)
+    createUpdateRole(roleId) {
+        tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/role/${roleId}`)
             .then(() => {
-                snackBarMessage(`Role ${this.state.newRoleConfig.role} has been updated`);
-                this.listEc2Roles();
-                this.setState({ openNewRoleDialog: false, openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) });
+                let updateObj = _.clone(this.state.newRoleConfig);
+                updateObj.policies = updateObj.policies.join(',');
+                callVaultApi('post', `${this.state.baseVaultPath}/role/${roleId}`, null, updateObj)
+                    .then(() => {
+                        snackBarMessage(`Role ${roleId} has been updated`);
+                        this.listEc2Roles();
+                        this.setState({ openNewRoleDialog: false, openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema), selectedRoleId: '', newRoleId: '' });
+                        browserHistory.push(this.state.baseUrl);
+                    })
+                    .catch(snackBarMessage);
             })
-            .catch(snackBarMessage);
+            .catch(() => {
+                this.setState({ selectedRoleId: '' })
+                snackBarMessage(new Error(`No permissions to display properties for role ${this.state.selectedRoleId}`));
+            })
     }
 
     displayRole() {
-        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${this.state.newRoleConfig.role}`)
+        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${this.state.selectedRoleId}`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.newRoleConfig.role}`, null, null, null)
+                callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.selectedRoleId}`, null, null, null)
                     .then((resp) => {
-                        resp.data.data.role = this.state.newRoleConfig.role;
+                        resp.data.data.role = this.state.selectedRoleId;
                         this.setState({ newRoleConfig: resp.data.data, openEditRoleDialog: true });
                     })
                     .catch(snackBarMessage)
             })
             .catch(() => {
-                this.setState({ selectedUserObject: {} })
-                snackBarMessage(new Error(`No permissions to display properties for role ${this.state.newRoleConfig.role}`));
+                this.setState({ selectedRoleId: '' })
+                snackBarMessage(new Error(`No permissions to display properties for role ${this.state.selectedRoleId}`));
             })
     }
 
     componentDidMount() {
-        this.listEc2Roles();
+        if (this.props.params.splat) {
+            this.setState({ selectedRoleId: this.props.params.splat });
+        } else {
+            this.listEc2Roles();
+        }
         this.getEc2AuthConfig();
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.newRoleConfig.role != prevState.newRoleConfig.role) {
+        if (this.state.selectedRoleId != prevState.selectedRoleId) {
             this.listEc2Roles();
-            if (this.state.newRoleConfig.role) {
+            if (this.state.selectedRoleId) {
                 this.displayRole();
             }
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
+            // Reset
+            this.setState({
+                baseUrl: `/auth/aws-ec2/${nextProps.params.namespace}/`,
+                baseVaultPath: `auth/${nextProps.params.namespace}`,
+                ec2Roles: [],
+                selectedRoleId: '',
+                newConfigObj: this.ec2ConfigSchema,
+                configObj: this.ec2ConfigSchema
+            }, () => {
+                this.listEc2Roles();
+                this.getEc2AuthConfig();
+            });
         }
     }
 
@@ -192,7 +239,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         onTouchTap={() => {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
                                 .then(() => {
-                                    this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role: { $set: role } }) });
+                                    this.setState({ selectedRoleId: role });
                                     browserHistory.push(`${this.state.baseUrl}${role}`);
                                 }).catch(() => {
                                     snackBarMessage(new Error("Access denied"));
@@ -207,25 +254,24 @@ export default class AwsEc2AuthBackend extends React.Component {
 
         let renderNewRoleDialog = () => {
             let validateAndSubmit = () => {
-                if (this.state.newRoleConfig.role === '') {
+                if (this.state.newRoleId === '') {
                     snackBarMessage(new Error("Role name cannot be empty"));
                     return;
                 }
 
-                if (_.indexOf(this.state.ec2Roles, this.state.newRoleConfig.role) > 0) {
+                if (_.indexOf(this.state.ec2Roles, this.state.newRoleId) > 0) {
                     snackBarMessage(new Error("Role already exists"));
                     return;
                 }
 
-                this.createUpdateRole();
-                this.setState({ openNewRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) });
+                this.createUpdateRole(this.state.newRoleId);
             }
 
             const actions = [
                 <FlatButton
                     label="Cancel"
                     onTouchTap={() => {
-                        this.setState({ openNewRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) });
+                        this.setState({ openNewRoleDialog: false });
                     }}
                 />,
                 <FlatButton
@@ -241,7 +287,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                     modal={false}
                     actions={actions}
                     open={this.state.openNewRoleDialog}
-                    onRequestClose={() => this.setState({ openNewRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) })}
+                    onRequestClose={() => this.setState({ openNewRoleDialog: false })}
                     autoScrollBodyContent={true}
                 >
                     <List>
@@ -253,7 +299,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
-                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role: { $set: e.target.value } }) });
+                                this.setState({ newRoleId: e.target.value });
                             }}
                         />
                         <TextField
@@ -296,7 +342,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                 <FlatButton
                     label="Cancel"
                     onTouchTap={() => {
-                        this.setState({ openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) })
+                        this.setState({ openEditRoleDialog: false, selectedRoleId: '' })
                         browserHistory.push(this.state.baseUrl);
                     }}
                 />,
@@ -304,18 +350,21 @@ export default class AwsEc2AuthBackend extends React.Component {
                     label="Save"
                     primary={true}
                     onTouchTap={() => {
-                        this.createUpdateRole()
+                        this.createUpdateRole(this.state.selectedRoleId)
                     }}
                 />
             ];
 
             return (
                 <Dialog
-                    title={`Editing role ${this.state.newRoleConfig.role}`}
+                    title={`Editing role ${this.state.selectedRoleId}`}
                     modal={false}
                     actions={actions}
                     open={this.state.openEditRoleDialog}
-                    onRequestClose={() => this.setState({ openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema) })}
+                    onRequestClose={() => {
+                        this.setState({ openEditRoleDialog: false, selectedRoleId: '' });
+                        browserHistory.push(this.state.baseUrl);
+                    }}
                     autoScrollBodyContent={true}
                 >
                     <List>
