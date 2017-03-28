@@ -617,7 +617,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                     value={this.state.selectedTab}
                 >
                     <Tab
-                        label="Configure Roles"
+                        label="Manage Roles"
                         value="roles"
                         onActive={() => this.setState({ selectedTab: "roles" })}
                         disabled={!this.state.isBackendConfigured}
