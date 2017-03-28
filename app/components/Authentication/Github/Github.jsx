@@ -121,23 +121,28 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/config`, null, null)
                     .then((resp) => {
                         let config = resp.data.data;
-                        this.setState({
-                            config: update(this.state.config,
-                                {
-                                    organization: { $set: (config.organization ? config.organization : undefined) },
-                                    base_url: { $set: (config.base_url ? config.base_url : undefined) },
-                                    ttl: { $set: (config.ttl ? config.ttl : undefined) },
-                                    max_ttl: { $set: (config.max_ttl ? config.max_ttl : undefined) }
-                                }),
-                            newConfig: update(this.state.newConfig,
-                                {
-                                    organization: { $set: (config.organization ? config.organization : undefined) },
-                                    base_url: { $set: (config.base_url ? config.base_url : undefined) },
-                                    ttl: { $set: (config.ttl ? config.ttl : undefined) },
-                                    max_ttl: { $set: (config.max_ttl ? config.max_ttl : undefined) }
-                                }),
-                            isBackendConfigured: true
-                        });
+                        if (!config.organization) {
+                            this.setState({ selectedTab: "backend", isBackendConfigured: false });
+                            snackBarMessage(new Error(`This backend has not yet been configured`));
+                        } else {
+                            this.setState({
+                                config: update(this.state.config,
+                                    {
+                                        organization: { $set: (config.organization ? config.organization : undefined) },
+                                        base_url: { $set: (config.base_url ? config.base_url : undefined) },
+                                        ttl: { $set: (config.ttl ? config.ttl : undefined) },
+                                        max_ttl: { $set: (config.max_ttl ? config.max_ttl : undefined) }
+                                    }),
+                                newConfig: update(this.state.newConfig,
+                                    {
+                                        organization: { $set: (config.organization ? config.organization : undefined) },
+                                        base_url: { $set: (config.base_url ? config.base_url : undefined) },
+                                        ttl: { $set: (config.ttl ? config.ttl : undefined) },
+                                        max_ttl: { $set: (config.max_ttl ? config.max_ttl : undefined) }
+                                    }),
+                                isBackendConfigured: true
+                            });
+                        }
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
@@ -175,7 +180,7 @@ export default class GithubAuthBackend extends React.Component {
         callVaultApi('post', `${this.state.baseVaultPath}/config`, null, this.state.newConfig)
             .then(() => {
                 snackBarMessage(`Backend ${this.state.baseVaultPath}/config has been updated`);
-                this.setState({ isBackendConfigured: true, config: this.state.newConfig });
+                this.setState({ isBackendConfigured: this.state.newConfig.organization, config: this.state.newConfig });
             })
             .catch(snackBarMessage);
     }
@@ -233,7 +238,8 @@ export default class GithubAuthBackend extends React.Component {
                 selectedItemId: '',
                 newConfig: this.backendConfigSchema,
                 config: this.backendConfigSchema,
-                selectedTab: "team"
+                selectedTab: "team",
+                isBackendConfigured: false
             }, () => {
                 this.listGithubTeams();
                 this.listGithubUsers();
