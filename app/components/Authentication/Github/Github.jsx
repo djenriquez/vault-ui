@@ -397,7 +397,7 @@ export default class GithubAuthBackend extends React.Component {
                     value={this.state.selectedTab}
                 >
                     <Tab
-                        label="Configure Teams"
+                        label="Manage Teams"
                         value="team"
                         onActive={() => this.setState({ selectedTab: "team" })}
                         disabled={!this.state.isBackendConfigured}
@@ -427,7 +427,7 @@ export default class GithubAuthBackend extends React.Component {
                         </Paper>
                     </Tab>
                     <Tab
-                        label="Configure Users"
+                        label="Manage Users"
                         value="user"
                         onActive={() => this.setState({ selectedTab: "user" })}
                         disabled={!this.state.isBackendConfigured}
