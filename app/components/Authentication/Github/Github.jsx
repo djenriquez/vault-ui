@@ -462,7 +462,7 @@ export default class GithubAuthBackend extends React.Component {
                         onActive={() => this.setState({ selectedTab: "backend" })}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
-                            Here you can configure connection details to your EC2 account.
+                            Here you can configure details to your GitHub account.
                         </Paper>
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <List>
