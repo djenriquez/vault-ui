@@ -14,23 +14,23 @@ import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import Toggle from 'material-ui/Toggle';
+import Avatar from 'material-ui/Avatar';
+import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
+import Checkbox from 'material-ui/Checkbox';
+
 // Styles
 import styles from './github.css';
 import sharedStyles from '../../shared/styles.css';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
-import Checkbox from 'material-ui/Checkbox';
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import Avatar from 'material-ui/Avatar';
 import { browserHistory } from 'react-router'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx';
 
 function snackBarMessage(message) {
-    let ev = new CustomEvent("snackbar", { detail: { message: message } });
-    document.dispatchEvent(ev);
+    document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
 }
 
 export default class GithubAuthBackend extends React.Component {
@@ -60,7 +60,7 @@ export default class GithubAuthBackend extends React.Component {
             newItemId: '',
             isBackendConfigured: false,
             openItemDialog: false,
-            selectedTab: "team",
+            selectedTab: 'team',
             deleteUserPath: ''
         };
 
@@ -78,7 +78,7 @@ export default class GithubAuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/teams`, { list: true }, null)
                     .then((resp) => {
-                        let teams = resp.data.data.keys;
+                        let teams = _.get(resp, 'data.data.keys', []);
                         this.setState({ teams: _.valuesIn(teams) });
                     })
                     .catch((error) => {
@@ -90,7 +90,7 @@ export default class GithubAuthBackend extends React.Component {
                     });
             })
             .catch(() => {
-                snackBarMessage(new Error("Access denied"));
+                snackBarMessage(new Error('Access denied'));
             })
     }
 
@@ -99,7 +99,7 @@ export default class GithubAuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/users`, { list: true }, null)
                     .then((resp) => {
-                        let users = resp.data.data.keys;
+                        let users = _.get(resp, 'data.data.keys', []);
                         this.setState({ users: _.valuesIn(users) });
                     })
                     .catch((error) => {
@@ -111,7 +111,7 @@ export default class GithubAuthBackend extends React.Component {
                     });
             })
             .catch(() => {
-                snackBarMessage(new Error("Access denied"));
+                snackBarMessage(new Error('Access denied'));
             })
     }
 
@@ -120,26 +120,14 @@ export default class GithubAuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/config`, null, null)
                     .then((resp) => {
-                        let config = resp.data.data;
+                        let config = _.get(resp, 'data.data', this.backendConfigSchema);
                         if (!config.organization) {
-                            this.setState({ selectedTab: "backend", isBackendConfigured: false });
+                            this.setState({ selectedTab: 'backend', isBackendConfigured: false });
                             snackBarMessage(new Error(`This backend has not yet been configured`));
                         } else {
                             this.setState({
-                                config: update(this.state.config,
-                                    {
-                                        organization: { $set: (config.organization ? config.organization : undefined) },
-                                        base_url: { $set: (config.base_url ? config.base_url : undefined) },
-                                        ttl: { $set: (config.ttl ? config.ttl : undefined) },
-                                        max_ttl: { $set: (config.max_ttl ? config.max_ttl : undefined) }
-                                    }),
-                                newConfig: update(this.state.newConfig,
-                                    {
-                                        organization: { $set: (config.organization ? config.organization : undefined) },
-                                        base_url: { $set: (config.base_url ? config.base_url : undefined) },
-                                        ttl: { $set: (config.ttl ? config.ttl : undefined) },
-                                        max_ttl: { $set: (config.max_ttl ? config.max_ttl : undefined) }
-                                    }),
+                                config: config,
+                                newConfig: config,
                                 isBackendConfigured: true
                             });
                         }
@@ -149,13 +137,13 @@ export default class GithubAuthBackend extends React.Component {
                             snackBarMessage(error);
                         } else {
                             error.message = `This backend has not yet been configured`;
-                            this.setState({ selectedTab: "backend" });
+                            this.setState({ selectedTab: 'backend' });
                             snackBarMessage(error);
                         }
                     });
             })
             .catch(() => {
-                snackBarMessage(new Error("Access denied"));
+                snackBarMessage(new Error('Access denied'));
             })
     }
 
@@ -190,7 +178,6 @@ export default class GithubAuthBackend extends React.Component {
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${itemId}s/${id}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
-                //updateObj.policies = updateObj.policies.join(',');
                 callVaultApi('post', `${this.state.baseVaultPath}/map/${itemId}s/${id}`, null, updateObj)
                     .then(() => {
                         snackBarMessage(`GitHub ${this.state.selectedTab} ${id} has been updated`);
@@ -218,7 +205,7 @@ export default class GithubAuthBackend extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.state.selectedItemId != prevState.selectedItemId) {
+        if (this.state.selectedItemId !== prevState.selectedItemId) {
             this.listGithubTeams();
             this.listGithubUsers();
             if (this.state.selectedItemId) {
@@ -238,7 +225,7 @@ export default class GithubAuthBackend extends React.Component {
                 selectedItemId: '',
                 newConfig: this.backendConfigSchema,
                 config: this.backendConfigSchema,
-                selectedTab: "team",
+                selectedTab: 'team',
                 isBackendConfigured: false
             }, () => {
                 this.listGithubTeams();
@@ -250,15 +237,15 @@ export default class GithubAuthBackend extends React.Component {
 
     render() {
         let renderListItems = () => {
-            let items = this.state.selectedTab === "team" ? this.state.teams : this.state.users;
+            let items = this.state.selectedTab === 'team' ? this.state.teams : this.state.users;
             return _.map(items, (item) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
-                        tooltip="Delete"
+                        tooltip='Delete'
                         onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/map/${this.state.selectedTab}s/${item}` })}
                     >
-                        {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
+                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                     </IconButton>
                 );
 
@@ -275,7 +262,7 @@ export default class GithubAuthBackend extends React.Component {
                                     this.setState({ selectedItemId: item });
                                     browserHistory.push(`${this.state.baseUrl}${item}`);
                                 }).catch(() => {
-                                    snackBarMessage(new Error("Access denied"));
+                                    snackBarMessage(new Error('Access denied'));
                                 })
 
                         }}
@@ -288,14 +275,14 @@ export default class GithubAuthBackend extends React.Component {
         let renderPolicyDialog = () => {
             const actions = [
                 <FlatButton
-                    label="Cancel"
+                    label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openItemDialog: false, selectedItemId: '' });
                         browserHistory.push(this.state.baseUrl);
                     }}
                 />,
                 <FlatButton
-                    label="Save"
+                    label='Save'
                     primary={true}
                     onTouchTap={() => {
                         this.createUpdateRole(this.state.selectedItemId);
@@ -318,7 +305,7 @@ export default class GithubAuthBackend extends React.Component {
                     <List>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
-                            height="250px"
+                            height='250px'
                             selectedPolicies={this.state.itemConfig.policies}
                             onSelectedChange={(newPolicies) => {
                                 this.setState({ itemConfig: update(this.state.itemConfig, { policies: { $set: newPolicies } }) });
@@ -332,14 +319,14 @@ export default class GithubAuthBackend extends React.Component {
         let renderNewPolicyDialog = () => {
             const actions = [
                 <FlatButton
-                    label="Cancel"
+                    label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openNewItemDialog: false, newItemId: '' });
                         browserHistory.push(this.state.baseUrl);
                     }}
                 />,
                 <FlatButton
-                    label="Save"
+                    label='Save'
                     primary={true}
                     onTouchTap={() => {
                         this.createUpdateRole(this.state.newItemId);
@@ -362,9 +349,9 @@ export default class GithubAuthBackend extends React.Component {
                     <List>
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="Enter the new name"
+                            hintText='Enter the new name'
                             floatingLabelFixed={true}
-                            floatingLabelText="Name"
+                            floatingLabelText='Name'
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
@@ -373,7 +360,7 @@ export default class GithubAuthBackend extends React.Component {
                         />
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
-                            height="250px"
+                            height='250px'
                             selectedPolicies={this.state.itemConfig.policies}
                             onSelectedChange={(newPolicies) => {
                                 this.setState({ itemConfig: update(this.state.itemConfig, { policies: { $set: newPolicies } }) });
@@ -403,9 +390,9 @@ export default class GithubAuthBackend extends React.Component {
                     value={this.state.selectedTab}
                 >
                     <Tab
-                        label="Manage Teams"
-                        value="team"
-                        onActive={() => this.setState({ selectedTab: "team" })}
+                        label='Manage Teams'
+                        value='team'
+                        onActive={() => this.setState({ selectedTab: 'team' })}
                         disabled={!this.state.isBackendConfigured}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
@@ -416,7 +403,7 @@ export default class GithubAuthBackend extends React.Component {
                                 <ToolbarGroup firstChild={true}>
                                     <FlatButton
                                         primary={true}
-                                        label="NEW TEAM"
+                                        label='NEW TEAM'
                                         onTouchTap={() => {
                                             this.setState({
                                                 newItemId: '',
@@ -433,9 +420,9 @@ export default class GithubAuthBackend extends React.Component {
                         </Paper>
                     </Tab>
                     <Tab
-                        label="Manage Users"
-                        value="user"
-                        onActive={() => this.setState({ selectedTab: "user" })}
+                        label='Manage Users'
+                        value='user'
+                        onActive={() => this.setState({ selectedTab: 'user' })}
                         disabled={!this.state.isBackendConfigured}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
@@ -446,7 +433,7 @@ export default class GithubAuthBackend extends React.Component {
                                 <ToolbarGroup firstChild={true}>
                                     <FlatButton
                                         primary={true}
-                                        label="NEW USER"
+                                        label='NEW USER'
                                         onTouchTap={() => {
                                             this.setState({
                                                 newItemId: '',
@@ -463,9 +450,9 @@ export default class GithubAuthBackend extends React.Component {
                         </Paper>
                     </Tab>
                     <Tab
-                        label="Configure Backend"
-                        value="backend"
-                        onActive={() => this.setState({ selectedTab: "backend" })}
+                        label='Configure Backend'
+                        value='backend'
+                        onActive={() => this.setState({ selectedTab: 'backend' })}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can configure details to your GitHub account.
@@ -473,8 +460,8 @@ export default class GithubAuthBackend extends React.Component {
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <List>
                                 <TextField
-                                    hintText="Organization"
-                                    floatingLabelText="GitHub Organization"
+                                    hintText='Organization'
+                                    floatingLabelText='GitHub Organization'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfig.organization}
@@ -483,8 +470,8 @@ export default class GithubAuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText="www.mygithub.com"
-                                    floatingLabelText="GitHub endpoint"
+                                    hintText='www.mygithub.com'
+                                    floatingLabelText='GitHub endpoint'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfig.endpoint}
@@ -493,8 +480,8 @@ export default class GithubAuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText="1800000"
-                                    floatingLabelText="TTL"
+                                    hintText='1800000'
+                                    floatingLabelText='TTL'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfig.ttl}
@@ -505,7 +492,7 @@ export default class GithubAuthBackend extends React.Component {
                                 <div style={{ paddingTop: '20px', textAlign: 'center' }}>
                                     <FlatButton
                                         primary={true}
-                                        label="Save"
+                                        label='Save'
                                         onTouchTap={() => this.createUpdateConfig()}
                                     />
                                 </div>
