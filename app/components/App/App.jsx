@@ -222,7 +222,7 @@ export default class App extends React.Component {
                     <Tab className={styles.welcomeTab} label="WELCOME TO VAULT-UI" >
                         <Paper className={styles.welcomeScreen} zDepth={0}>
                             <Paper className={styles.welcomeHeader} zDepth={0}>
-                                <h1>Get started by using the left menu to navigate your vault</h1>
+                                <h1>Get started by using the left menu to navigate your Vault</h1>
                             </Paper>
                             {/*{ !this.state.tokenCanListSecretBackends ? 
                                 <Paper className={styles.warningMsg} zDepth={0}>
