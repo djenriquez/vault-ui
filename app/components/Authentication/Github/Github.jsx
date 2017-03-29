@@ -196,23 +196,16 @@ export default class GithubAuthBackend extends React.Component {
     }
     componentWillMount() {
         let tab =this.props.location.pathname.split(this.state.baseUrl)[1];
-        console.log(tab);
         if(!tab) {
             browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
             this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
-            console.log(this.state.selectedTab);
         }
     }
 
     componentDidMount() {
-        // if (this.props.params.splat) {
-        //     this.setState({ selectedItemId: this.props.params.splat });
-        //     console.log(`Splat: ${this.props.params.splat}`);
-        // } else {
         this.listGithubTeams();
         this.listGithubUsers();
-        // }
         this.getOrgConfig();
     }
 
