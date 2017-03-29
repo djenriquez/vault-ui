@@ -149,9 +149,9 @@ export default class GithubAuthBackend extends React.Component {
 
     displayItem() {
         let itemId = this.state.selectedTab;
-        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/map/${itemId}s/${this.state.selectedItemId}`)
+        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/map/${this.state.selectedItemId}`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/map/${itemId}s/${this.state.selectedItemId}`, null, null, null)
+                callVaultApi('get', `${this.state.baseVaultPath}/map/${this.state.selectedItemId}`, null, null, null)
                     .then((resp) => {
                         resp.data.data.id = itemId;
                         this.setState({ itemConfig: resp.data.data, openItemDialog: true });
@@ -175,10 +175,10 @@ export default class GithubAuthBackend extends React.Component {
 
     createUpdateRole(id) {
         let itemId = this.state.selectedTab;
-        tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${itemId}s/${id}`)
+        tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${id}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
-                callVaultApi('post', `${this.state.baseVaultPath}/map/${itemId}s/${id}`, null, updateObj)
+                callVaultApi('post', `${this.state.baseVaultPath}/map/${id}`, null, updateObj)
                     .then(() => {
                         snackBarMessage(`GitHub ${this.state.selectedTab} ${id} has been updated`);
                         this.listGithubTeams();
@@ -259,8 +259,8 @@ export default class GithubAuthBackend extends React.Component {
                         onTouchTap={() => {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${this.state.selectedTab}/${item}`)
                                 .then(() => {
-                                    this.setState({ selectedItemId: item });
-                                    browserHistory.push(`${this.state.baseUrl}${item}`);
+                                    this.setState({ selectedItemId: `${this.state.selectedTab}s/${item}` });
+                                    browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}s/${item}`);
                                 }).catch(() => {
                                     snackBarMessage(new Error('Access denied'));
                                 })
