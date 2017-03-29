@@ -154,8 +154,13 @@ export default class GithubAuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/${this.state.selectedItemId}`, null, null, null)
                     .then((resp) => {
-                        resp.data.data.id = itemId;
-                        this.setState({ itemConfig: resp.data.data, openItemDialog: true });
+                        let item = _.get(resp, 'data.data', {});
+                        item.id = itemId;
+
+                        let policies = _.get(item, 'value', undefined);
+                        item.policies = policies ? policies.split(',') : [];
+                        
+                        this.setState({ itemConfig: item, openItemDialog: true });
                     })
                     .catch(snackBarMessage)
             })
@@ -179,9 +184,10 @@ export default class GithubAuthBackend extends React.Component {
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${id}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
+                updateObj.value = this.state.itemConfig.policies.join(',');
                 callVaultApi('post', `${this.state.baseVaultPath}/map/${id}`, null, updateObj)
                     .then(() => {
-                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0,this.state.selectedTab.length-1)} ${id.split('/')[1]} has been updated`);
+                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0, this.state.selectedTab.length - 1)} ${id.split('/')[1]} has been updated`);
                         this.listGithubTeams();
                         this.listGithubUsers();
                         this.setState({ openItemDialog: false, openNewItemDialog: false, itemConfig: _.clone(this.itemConfigSchema), selectedItemId: '' });
@@ -195,8 +201,8 @@ export default class GithubAuthBackend extends React.Component {
             })
     }
     componentWillMount() {
-        let tab =this.props.location.pathname.split(this.state.baseUrl)[1];
-        if(!tab) {
+        let tab = this.props.location.pathname.split(this.state.baseUrl)[1];
+        if (!tab) {
             browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
             this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
@@ -304,7 +310,7 @@ export default class GithubAuthBackend extends React.Component {
 
             return (
                 <Dialog
-                    title={`Editing GitHub ${this.state.selectedTab.substring(0,this.state.selectedTab.length-1)} '${this.state.selectedItemId}'`}
+                    title={`Editing GitHub ${this.state.selectedTab.substring(0, this.state.selectedTab.length - 1)} '${this.state.selectedItemId}'`}
                     modal={false}
                     actions={actions}
                     open={this.state.openItemDialog}
@@ -390,7 +396,7 @@ export default class GithubAuthBackend extends React.Component {
                 <VaultObjectDeleter
                     path={this.state.deleteUserPath}
                     onReceiveResponse={() => {
-                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0,this.state.selectedTab.length-1)} '${this.state.deleteUserPath}' deleted`)
+                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0, this.state.selectedTab.length - 1)} '${this.state.deleteUserPath}' deleted`)
                         this.setState({ deleteUserPath: '' })
                         this.listGithubTeams();
                         this.listGithubUsers();
