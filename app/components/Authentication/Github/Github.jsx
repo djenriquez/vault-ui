@@ -60,7 +60,7 @@ export default class GithubAuthBackend extends React.Component {
             newItemId: '',
             isBackendConfigured: false,
             openItemDialog: false,
-            selectedTab: 'team',
+            selectedTab: 'teams',
             deleteUserPath: ''
         };
 
@@ -122,7 +122,8 @@ export default class GithubAuthBackend extends React.Component {
                     .then((resp) => {
                         let config = _.get(resp, 'data.data', this.backendConfigSchema);
                         if (!config.organization) {
-                            this.setState({ selectedTab: 'backend', isBackendConfigured: false });
+                            browserHistory.push(`${this.state.baseUrl}backend`);
+                            this.setState({ selectedTab: 'backend', isBackendConfigured: false, newConfig: this.backendConfigSchema });
                             snackBarMessage(new Error(`This backend has not yet been configured`));
                         } else {
                             this.setState({
@@ -137,7 +138,7 @@ export default class GithubAuthBackend extends React.Component {
                             snackBarMessage(error);
                         } else {
                             error.message = `This backend has not yet been configured`;
-                            this.setState({ selectedTab: 'backend' });
+                            browserHistory.push(`${this.state.baseUrl}backend`);
                             snackBarMessage(error);
                         }
                     });
@@ -173,14 +174,14 @@ export default class GithubAuthBackend extends React.Component {
             .catch(snackBarMessage);
     }
 
-    createUpdateRole(id) {
+    createUpdateItem(id) {
         let itemId = this.state.selectedTab;
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${id}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
                 callVaultApi('post', `${this.state.baseVaultPath}/map/${id}`, null, updateObj)
                     .then(() => {
-                        snackBarMessage(`GitHub ${this.state.selectedTab} ${id} has been updated`);
+                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0,this.state.selectedTab.length-1)} ${id.split('/')[1]} has been updated`);
                         this.listGithubTeams();
                         this.listGithubUsers();
                         this.setState({ openItemDialog: false, openNewItemDialog: false, itemConfig: _.clone(this.itemConfigSchema), selectedItemId: '' });
@@ -193,14 +194,25 @@ export default class GithubAuthBackend extends React.Component {
                 snackBarMessage(new Error(`No permissions to display properties for role ${id}`));
             })
     }
+    componentWillMount() {
+        let tab =this.props.location.pathname.split(this.state.baseUrl)[1];
+        console.log(tab);
+        if(!tab) {
+            browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
+        } else {
+            this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
+            console.log(this.state.selectedTab);
+        }
+    }
 
     componentDidMount() {
-        if (this.props.params.splat) {
-            this.setState({ selectedItemId: this.props.params.splat });
-        } else {
-            this.listGithubTeams();
-            this.listGithubUsers();
-        }
+        // if (this.props.params.splat) {
+        //     this.setState({ selectedItemId: this.props.params.splat });
+        //     console.log(`Splat: ${this.props.params.splat}`);
+        // } else {
+        this.listGithubTeams();
+        this.listGithubUsers();
+        // }
         this.getOrgConfig();
     }
 
@@ -209,7 +221,13 @@ export default class GithubAuthBackend extends React.Component {
             this.listGithubTeams();
             this.listGithubUsers();
             if (this.state.selectedItemId) {
-                this.displayItem();
+                let params = this.state.selectedItemId.split('/');
+                if (params.length > 0) {
+                    this.setState({ selectedTab: params[0] });
+                    if (params.length > 1 && params[1]) {
+                        this.displayItem();
+                    }
+                }
             }
         }
     }
@@ -225,9 +243,10 @@ export default class GithubAuthBackend extends React.Component {
                 selectedItemId: '',
                 newConfig: this.backendConfigSchema,
                 config: this.backendConfigSchema,
-                selectedTab: 'team',
+                selectedTab: 'teams',
                 isBackendConfigured: false
             }, () => {
+                browserHistory.push(`${this.state.baseUrl}teams`);
                 this.listGithubTeams();
                 this.listGithubUsers();
                 this.getOrgConfig();
@@ -237,13 +256,13 @@ export default class GithubAuthBackend extends React.Component {
 
     render() {
         let renderListItems = () => {
-            let items = this.state.selectedTab === 'team' ? this.state.teams : this.state.users;
+            let items = this.state.selectedTab === 'teams' ? this.state.teams : this.state.users;
             return _.map(items, (item) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
                         tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/map/${this.state.selectedTab}s/${item}` })}
+                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/map/${this.state.selectedTab}/${item}` })}
                     >
                         {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                     </IconButton>
@@ -259,8 +278,8 @@ export default class GithubAuthBackend extends React.Component {
                         onTouchTap={() => {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${this.state.selectedTab}/${item}`)
                                 .then(() => {
-                                    this.setState({ selectedItemId: `${this.state.selectedTab}s/${item}` });
-                                    browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}s/${item}`);
+                                    this.setState({ selectedItemId: `${this.state.selectedTab}/${item}` });
+                                    browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/${item}`);
                                 }).catch(() => {
                                     snackBarMessage(new Error('Access denied'));
                                 })
@@ -285,14 +304,14 @@ export default class GithubAuthBackend extends React.Component {
                     label='Save'
                     primary={true}
                     onTouchTap={() => {
-                        this.createUpdateRole(this.state.selectedItemId);
+                        this.createUpdateItem(this.state.selectedItemId);
                     }}
                 />
             ];
 
             return (
                 <Dialog
-                    title={`Editing GitHub ${this.state.selectedTab} '${this.state.selectedItemId}'`}
+                    title={`Editing GitHub ${this.state.selectedTab.substring(0,this.state.selectedTab.length-1)} '${this.state.selectedItemId}'`}
                     modal={false}
                     actions={actions}
                     open={this.state.openItemDialog}
@@ -329,7 +348,7 @@ export default class GithubAuthBackend extends React.Component {
                     label='Save'
                     primary={true}
                     onTouchTap={() => {
-                        this.createUpdateRole(this.state.newItemId);
+                        this.createUpdateItem(`${this.state.selectedTab}/${this.state.newItemId}`);
                     }}
                 />
             ];
@@ -378,7 +397,7 @@ export default class GithubAuthBackend extends React.Component {
                 <VaultObjectDeleter
                     path={this.state.deleteUserPath}
                     onReceiveResponse={() => {
-                        snackBarMessage(`GitHub ${this.state.selectedTab} '${this.state.deleteUserPath}' deleted`)
+                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0,this.state.selectedTab.length-1)} '${this.state.deleteUserPath}' deleted`)
                         this.setState({ deleteUserPath: '' })
                         this.listGithubTeams();
                         this.listGithubUsers();
@@ -386,13 +405,18 @@ export default class GithubAuthBackend extends React.Component {
                     onReceiveError={(err) => snackBarMessage(err)}
                 />
                 <Tabs
-                    onChange={() => this.setState({ newConfig: _.clone(this.state.config) })}
+                    onChange={(e) => {
+                        browserHistory.push(`${this.state.baseUrl}${e}/`);
+                        this.setState({ newConfig: _.clone(this.state.config) });
+                    }}
                     value={this.state.selectedTab}
                 >
                     <Tab
                         label='Manage Teams'
-                        value='team'
-                        onActive={() => this.setState({ selectedTab: 'team' })}
+                        value='teams'
+                        onActive={() => {
+                            this.setState({ selectedTab: 'teams' });
+                        }}
                         disabled={!this.state.isBackendConfigured}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
@@ -421,8 +445,10 @@ export default class GithubAuthBackend extends React.Component {
                     </Tab>
                     <Tab
                         label='Manage Users'
-                        value='user'
-                        onActive={() => this.setState({ selectedTab: 'user' })}
+                        value='users'
+                        onActive={() => {
+                            this.setState({ selectedTab: 'users' });
+                        }}
                         disabled={!this.state.isBackendConfigured}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
