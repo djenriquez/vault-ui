@@ -1,6 +1,7 @@
 # 2.1.0 (Unreleased)
 - Support AWS EC2 authentication backend
 - Support Okta authentication backend
+- Improve GitHub authentication backend
 - Provide ability to sort secrets
 - Allow naming tokens generated from roles
 
