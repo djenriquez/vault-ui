@@ -29,8 +29,7 @@ import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 
 function snackBarMessage(message) {
-    let ev = new CustomEvent("snackbar", { detail: { message: message } });
-    document.dispatchEvent(ev);
+    document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
 }
 
 export default class AwsEc2AuthBackend extends React.Component {
@@ -73,7 +72,7 @@ export default class AwsEc2AuthBackend extends React.Component {
             openNewRoleDialog: false,
             openEditRoleDialog: false,
             deleteUserPath: '',
-            selectedTab: "roles",
+            selectedTab: 'roles',
             isBackendConfigured: false
         };
 
@@ -92,7 +91,7 @@ export default class AwsEc2AuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/role`, { list: true }, null)
                     .then((resp) => {
-                        let roles = resp.data.data.keys;
+                        let roles = _.get(resp, 'data.data.keys', []);
                         this.setState({ ec2Roles: _.valuesIn(roles) });
                     })
                     .catch((error) => {
@@ -104,7 +103,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                     });
             })
             .catch(() => {
-                snackBarMessage(new Error("Access denied"));
+                snackBarMessage(new Error('Access denied'));
             })
     }
 
@@ -113,20 +112,10 @@ export default class AwsEc2AuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/config/client`, null, null)
                     .then((resp) => {
-                        let config = resp.data.data;
+                        let config = _.get(resp, 'data.data', this.ec2ConfigSchema);
                         this.setState({
-                            configObj: update(this.state.configObj,
-                                {
-                                    access_key: { $set: (config.access_key ? config.access_key : null) },
-                                    endpoint: { $set: config.endpoint },
-                                    secret_key: { $set: (config.secret_key ? config.secret_key : null) }
-                                }),
-                            newConfigObj: update(this.state.configObj,
-                                {
-                                    access_key: { $set: (config.access_key ? config.access_key : null) },
-                                    endpoint: { $set: config.endpoint },
-                                    secret_key: { $set: (config.secret_key ? config.secret_key : null) }
-                                }),
+                            configObj: config,
+                            newConfigObj: config,
                             isBackendConfigured: true
                         });
                     })
@@ -135,23 +124,30 @@ export default class AwsEc2AuthBackend extends React.Component {
                             snackBarMessage(error);
                         } else {
                             error.message = `This backend has not yet been configured`;
-                            this.setState({ selectedTab: "backend" });
+                            browserHistory.push(`${this.state.baseUrl}backend`);
+                            this.setState({ selectedTab: 'backend', isBackendConfigured: false });
                             snackBarMessage(error);
                         }
                     });
             })
             .catch(() => {
-                snackBarMessage(new Error("Access denied"));
-            })
+                snackBarMessage(new Error('Access denied'));
+            });
     }
 
     createUpdateConfig() {
-        callVaultApi('post', `${this.state.baseVaultPath}/config/client`, null, this.state.newConfigObj)
+        tokenHasCapabilities(['update'], `${this.state.baseVaultPath}/config/client`)
             .then(() => {
-                snackBarMessage(`Backend ${this.state.baseVaultPath}/config has been updated`);
-                this.setState({ isBackendConfigured: true, configObj: this.state.newConfigObj });
+                callVaultApi('post', `${this.state.baseVaultPath}/config/client`, null, this.state.newConfigObj)
+                    .then(() => {
+                        snackBarMessage(`Backend ${this.state.baseVaultPath}/config has been updated`);
+                        this.setState({ isBackendConfigured: true, configObj: this.state.newConfigObj });
+                    })
+                    .catch(snackBarMessage);
             })
-            .catch(snackBarMessage);
+            .catch(() => {
+                snackBarMessage(new Error('Access denied'));
+            });
     }
 
     createUpdateRole(roleId) {
@@ -164,7 +160,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         snackBarMessage(`Role ${roleId} has been updated`);
                         this.listEc2Roles();
                         this.setState({ openNewRoleDialog: false, openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema), selectedRoleId: '', newRoleId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        browserHistory.push(`${this.state.baseUrl}roles`);
                     })
                     .catch(snackBarMessage);
             })
@@ -179,8 +175,9 @@ export default class AwsEc2AuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.selectedRoleId}`, null, null, null)
                     .then((resp) => {
-                        resp.data.data.role = this.state.selectedRoleId;
-                        this.setState({ newRoleConfig: resp.data.data, openEditRoleDialog: true });
+                        let roleConfig = _.get(resp, 'data.data', {});
+                        roleConfig.role = this.state.selectedRoleId;
+                        this.setState({ newRoleConfig: roleConfig, openEditRoleDialog: true });
                     })
                     .catch(snackBarMessage)
             })
@@ -190,13 +187,23 @@ export default class AwsEc2AuthBackend extends React.Component {
             })
     }
 
-    componentDidMount() {
-        if (this.props.params.splat) {
-            this.setState({ selectedRoleId: this.props.params.splat });
+    componentWillMount() {
+        let tab = this.props.location.pathname.split(this.state.baseUrl)[1];
+        if (!tab) {
+            browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
-            this.listEc2Roles();
+            this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
         }
+    }
+
+    componentDidMount() {
+        this.listEc2Roles();
         this.getEc2AuthConfig();
+        let uri = this.props.location.pathname.split(this.state.baseUrl)[1];
+        if(uri.includes('roles/') && uri.split('roles/')[1]) {
+            this.state.selectedRoleId = uri.split('roles/')[1];
+            this.displayRole();
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -218,7 +225,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                 selectedRoleId: '',
                 newConfigObj: this.ec2ConfigSchema,
                 configObj: this.ec2ConfigSchema,
-                selectedTab: "roles"
+                selectedTab: 'roles'
             }, () => {
                 this.listEc2Roles();
                 this.getEc2AuthConfig();
@@ -232,10 +239,10 @@ export default class AwsEc2AuthBackend extends React.Component {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
-                        tooltip="Delete"
+                        tooltip='Delete'
                         onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/role/${role}` })}
                     >
-                        {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
+                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                     </IconButton>
                 );
 
@@ -250,9 +257,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
                                 .then(() => {
                                     this.setState({ selectedRoleId: role });
-                                    browserHistory.push(`${this.state.baseUrl}${role}`);
+                                    browserHistory.push(`${this.state.baseUrl}roles/${role}`);
                                 }).catch(() => {
-                                    snackBarMessage(new Error("Access denied"));
+                                    snackBarMessage(new Error('Access denied'));
                                 })
 
                         }}
@@ -265,12 +272,12 @@ export default class AwsEc2AuthBackend extends React.Component {
         let renderNewRoleDialog = () => {
             let validateAndSubmit = () => {
                 if (this.state.newRoleId === '') {
-                    snackBarMessage(new Error("Role name cannot be empty"));
+                    snackBarMessage(new Error('Role name cannot be empty'));
                     return;
                 }
 
                 if (_.indexOf(this.state.ec2Roles, this.state.newRoleId) > 0) {
-                    snackBarMessage(new Error("Role already exists"));
+                    snackBarMessage(new Error('Role already exists'));
                     return;
                 }
 
@@ -279,13 +286,13 @@ export default class AwsEc2AuthBackend extends React.Component {
 
             const actions = [
                 <FlatButton
-                    label="Cancel"
+                    label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openNewRoleDialog: false });
                     }}
                 />,
                 <FlatButton
-                    label="Create"
+                    label='Create'
                     primary={true}
                     onTouchTap={validateAndSubmit}
                 />
@@ -303,9 +310,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                     <List>
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="Enter the new role name"
+                            hintText='Enter the new role name'
                             floatingLabelFixed={true}
-                            floatingLabelText="Role Name"
+                            floatingLabelText='Role Name'
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
@@ -314,9 +321,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="AMI ID"
+                            floatingLabelText='AMI ID'
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
@@ -325,9 +332,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="IAM Role ARN"
+                            floatingLabelText='IAM Role ARN'
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
@@ -336,9 +343,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Account ID"
+                            floatingLabelText='Account ID'
                             value={this.state.newRoleConfig.bound_account_id}
                             fullWidth={false}
                             autoFocus
@@ -348,9 +355,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Region"
+                            floatingLabelText='Region'
                             value={this.state.newRoleConfig.bound_region}
                             fullWidth={false}
                             autoFocus
@@ -360,9 +367,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="VPC ID"
+                            floatingLabelText='VPC ID'
                             value={this.state.newRoleConfig.bound_vpc_id}
                             fullWidth={false}
                             autoFocus
@@ -372,9 +379,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Subnet ID"
+                            floatingLabelText='Subnet ID'
                             value={this.state.newRoleConfig.bound_subnet_id}
                             fullWidth={false}
                             autoFocus
@@ -384,9 +391,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="IAM Instance Profile ARN"
+                            floatingLabelText='IAM Instance Profile ARN'
                             value={this.state.newRoleConfig.bound_iam_instance_profile_arn}
                             fullWidth={false}
                             autoFocus
@@ -396,9 +403,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="TTL"
+                            floatingLabelText='TTL'
                             value={this.state.newRoleConfig.ttl}
                             fullWidth={false}
                             autoFocus
@@ -408,9 +415,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Max TTL"
+                            floatingLabelText='Max TTL'
                             value={this.state.newRoleConfig.max_ttl}
                             fullWidth={false}
                             autoFocus
@@ -418,7 +425,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { max_ttl: { $set: e.target.value } }) });
                             }}
                         />
-                        <ListItem primaryText="Disallow Reauthentication">
+                        <ListItem primaryText='Disallow Reauthentication'>
                             <Toggle
                                 toggled={this.state.newRoleConfig.disallow_reauthentication}
                                 onToggle={(e, v) => {
@@ -428,7 +435,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         </ListItem>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
-                            height="200px"
+                            height='200px'
                             selectedPolicies={this.state.newRoleConfig.policies}
                             onSelectedChange={(newPolicies) => {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { policies: { $set: newPolicies } }) });
@@ -442,14 +449,14 @@ export default class AwsEc2AuthBackend extends React.Component {
         let renderEditRoleDialog = () => {
             const actions = [
                 <FlatButton
-                    label="Cancel"
+                    label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openEditRoleDialog: false, selectedRoleId: '' })
-                        browserHistory.push(this.state.baseUrl);
+                        browserHistory.push(`${this.state.baseUrl}roles/`);
                     }}
                 />,
                 <FlatButton
-                    label="Save"
+                    label='Save'
                     primary={true}
                     onTouchTap={() => {
                         this.createUpdateRole(this.state.selectedRoleId)
@@ -465,16 +472,16 @@ export default class AwsEc2AuthBackend extends React.Component {
                     open={this.state.openEditRoleDialog}
                     onRequestClose={() => {
                         this.setState({ openEditRoleDialog: false, selectedRoleId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        browserHistory.push(`${this.state.baseUrl}roles/`);
                     }}
                     autoScrollBodyContent={true}
                 >
                     <List>
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="AMI ID"
+                            floatingLabelText='AMI ID'
                             value={this.state.newRoleConfig.bound_ami_id}
                             fullWidth={false}
                             autoFocus
@@ -484,9 +491,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="IAM Role ARN"
+                            floatingLabelText='IAM Role ARN'
                             value={this.state.newRoleConfig.bound_iam_role_arn}
                             fullWidth={false}
                             autoFocus
@@ -496,9 +503,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Account ID"
+                            floatingLabelText='Account ID'
                             value={this.state.newRoleConfig.bound_account_id}
                             fullWidth={false}
                             autoFocus
@@ -508,9 +515,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Region"
+                            floatingLabelText='Region'
                             value={this.state.newRoleConfig.bound_region}
                             fullWidth={false}
                             autoFocus
@@ -520,9 +527,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="VPC ID"
+                            floatingLabelText='VPC ID'
                             value={this.state.newRoleConfig.bound_vpc_id}
                             fullWidth={false}
                             autoFocus
@@ -532,9 +539,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Subnet ID"
+                            floatingLabelText='Subnet ID'
                             value={this.state.newRoleConfig.bound_subnet_id}
                             fullWidth={false}
                             autoFocus
@@ -544,9 +551,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="IAM Instance Profile ARN"
+                            floatingLabelText='IAM Instance Profile ARN'
                             value={this.state.newRoleConfig.bound_iam_instance_profile_arn}
                             fullWidth={false}
                             autoFocus
@@ -556,9 +563,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="TTL"
+                            floatingLabelText='TTL'
                             value={this.state.newRoleConfig.ttl}
                             fullWidth={false}
                             autoFocus
@@ -568,9 +575,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText="optional"
+                            hintText='optional'
                             floatingLabelFixed={true}
-                            floatingLabelText="Max TTL"
+                            floatingLabelText='Max TTL'
                             value={this.state.newRoleConfig.max_ttl}
                             fullWidth={false}
                             autoFocus
@@ -578,7 +585,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { max_ttl: { $set: e.target.value } }) });
                             }}
                         />
-                        <ListItem primaryText="Disallow Reauthentication">
+                        <ListItem primaryText='Disallow Reauthentication'>
                             <Toggle
                                 toggled={this.state.newRoleConfig.disallow_reauthentication}
                                 onToggle={(e, v) => {
@@ -588,7 +595,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         </ListItem>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
-                            height="250px"
+                            height='250px'
                             selectedPolicies={this.state.newRoleConfig.policies}
                             onSelectedChange={(newPolicies) => {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { policies: { $set: newPolicies } }) });
@@ -613,13 +620,16 @@ export default class AwsEc2AuthBackend extends React.Component {
                     onReceiveError={(err) => snackBarMessage(err)}
                 />
                 <Tabs
-                    onChange={() => this.setState({ newConfigObj: _.clone(this.state.configObj) })}
+                    onChange={(e) => {
+                        browserHistory.push(`${this.state.baseUrl}${e}/`);
+                        this.setState({ newConfigObj: _.clone(this.state.configObj) });
+                    }}
                     value={this.state.selectedTab}
                 >
                     <Tab
-                        label="Manage Roles"
-                        value="roles"
-                        onActive={() => this.setState({ selectedTab: "roles" })}
+                        label='Manage Roles'
+                        value='roles'
+                        onActive={() => this.setState({ selectedTab: 'roles' })}
                         disabled={!this.state.isBackendConfigured}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
@@ -630,7 +640,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                                 <ToolbarGroup firstChild={true}>
                                     <FlatButton
                                         primary={true}
-                                        label="NEW ROLE"
+                                        label='NEW ROLE'
                                         disabled={this.state.newSecretBtnDisabled}
                                         onTouchTap={() => {
                                             this.setState({
@@ -647,9 +657,9 @@ export default class AwsEc2AuthBackend extends React.Component {
                         </Paper>
                     </Tab>
                     <Tab
-                        label="Configure Backend"
-                        value="backend"
-                        onActive={() => this.setState({ selectedTab: "backend" })}
+                        label='Configure Backend'
+                        value='backend'
+                        onActive={() => this.setState({ selectedTab: 'backend' })}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can configure connection details to your EC2 account.
@@ -657,8 +667,8 @@ export default class AwsEc2AuthBackend extends React.Component {
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <List>
                                 <TextField
-                                    hintText="AKIAIOSFODNN7EXAMPLE"
-                                    floatingLabelText="AWS Access Key ID"
+                                    hintText='AKIAIOSFODNN7EXAMPLE'
+                                    floatingLabelText='AWS Access Key ID'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfigObj.access_key}
@@ -667,10 +677,10 @@ export default class AwsEc2AuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                                    floatingLabelText="AWS Secret Access Key"
+                                    hintText='wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+                                    floatingLabelText='AWS Secret Access Key'
                                     fullWidth={true}
-                                    type="password"
+                                    type='password'
                                     floatingLabelFixed={true}
                                     value={this.state.newConfigObj.secret_key}
                                     onChange={(e) => {
@@ -678,8 +688,8 @@ export default class AwsEc2AuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText="Override with caution"
-                                    floatingLabelText="Endpoint for making AWS EC2 API calls"
+                                    hintText='Override with caution'
+                                    floatingLabelText='Endpoint for making AWS EC2 API calls'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfigObj.endpoint}
@@ -690,7 +700,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                                 <div style={{ paddingTop: '20px', textAlign: 'center' }}>
                                     <FlatButton
                                         primary={true}
-                                        label="Save"
+                                        label='Save'
                                         onTouchTap={() => this.createUpdateConfig()}
                                     />
                                 </div>
