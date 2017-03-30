@@ -15,12 +15,12 @@ import FontIcon from 'material-ui/FontIcon';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import hcltojson from 'hcl-to-json'
 import jsonschema from './vault-policy-schema.json'
-import { callVaultApi, tokenHasCapabilities } from '../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../shared/VaultUtils.jsx'
 import Avatar from 'material-ui/Avatar';
 import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
-import { hashHistory, Link } from 'react-router'
+import { Link } from 'react-router'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -97,7 +97,7 @@ export default class PolicyManager extends React.Component {
                 primary={true}
                 onTouchTap={() => {
                     this.setState({ openEditModal: false })
-                    hashHistory.push('/sys/policies');
+                    history.push('/sys/policies');
                 }}
             />,
             <FlatButton
@@ -106,7 +106,7 @@ export default class PolicyManager extends React.Component {
                 primary={true}
                 onTouchTap={() => {
                     this.updatePolicy(this.state.focusPolicy, false)
-                    hashHistory.push('/sys/policies');
+                    history.push('/sys/policies');
                 }}
             />
         ];
@@ -334,7 +334,7 @@ export default class PolicyManager extends React.Component {
                     leftAvatar={<Avatar icon={<HardwareSecurity />} />}
                     onTouchTap={() => {
                         tokenHasCapabilities(['read'], 'sys/policy/' + policy.name).then(() => {
-                            hashHistory.push(`/sys/policies/` + policy.name);
+                            history.push(`/sys/policies/` + policy.name);
                         }).catch(() => {
                             snackBarMessage(new Error("Access denied"));
                         })

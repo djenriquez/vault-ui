@@ -1,6 +1,13 @@
 import axios from 'axios';
 import _ from 'lodash';
+import { browserHistory, hashHistory } from 'react-router'
 
+var history;
+if(window.vaultuiweb) {
+    history = browserHistory;
+} else {
+    history = hashHistory;
+}
 
 function resetCapabilityCache() {
     window.localStorage.setItem('capability_cache', JSON.stringify({}));
@@ -30,12 +37,20 @@ function getCachedCapabilities(path) {
 
 function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken = null, vaultUrl = null) {
 
-    var instance = axios.create({
-        baseURL: `${window.localStorage.getItem("vaultUrl")}/v1/`,
-        headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
-    });
+    var instance;
 
-    instance.defaults.adapter = require('axios/lib/adapters/http');
+    if(window.vaultuiweb) {
+        instance = axios.create({
+            baseURL: '/v1/',
+            params: { "vaultaddr": vaultUrl || window.localStorage.getItem("vaultUrl") },
+            headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
+        });
+    } else {
+        instance = axios.create({
+            baseURL: `${window.localStorage.getItem("vaultUrl")}/v1/`,
+            headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
+        }); 
+    }
 
     return instance.request({
         url: encodeURI(path),
@@ -83,6 +98,7 @@ function tokenHasCapabilities(capabilities, path) {
 }
 
 module.exports = {
+    history: history,
     callVaultApi: callVaultApi,
     tokenHasCapabilities: tokenHasCapabilities,
     resetCapabilityCache: resetCapabilityCache

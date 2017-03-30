@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react'
-import { hashHistory } from 'react-router';
 import styles from './login.css';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
@@ -10,7 +9,7 @@ import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import _ from 'lodash';
-import { callVaultApi } from '../shared/VaultUtils.jsx'
+import { callVaultApi, history } from '../shared/VaultUtils.jsx'
 
 export default class Login extends React.Component {
     static propTypes = {
@@ -219,9 +218,9 @@ export default class Login extends React.Component {
             window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
             window.localStorage.setItem('loginBackendPath', this.getAuthBackendPath());
             if (this.props.location.query.returnto && this.props.location.query.returnto.indexOf('/') === 0)
-                hashHistory.push(this.props.location.query.returnto);
+                history.push(this.props.location.query.returnto);
             else
-                hashHistory.push('/');
+                history.push('/');
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })
         }

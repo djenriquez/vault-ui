@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom';
 import Login from './components/Login/Login.jsx';
-import { Router, Route, browserHistory, hashHistory } from 'react-router'
+import { Router, Route } from 'react-router'
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { history } from './components/shared/VaultUtils.jsx';
 import App from './components/App/App.jsx';
 import SecretsGeneric from './components/Secrets/Generic/Generic.jsx';
 import PolicyManager from './components/Policies/Manage.jsx';
@@ -49,7 +50,7 @@ const muiTheme = getMuiTheme({
 
 ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
-        <Router history={hashHistory}>
+        <Router history={history}>
             <Route path="/login" component={Login} />
             <Route path="/unwrap" component={SecretUnwrapper} />
             <Route path="/" component={App} onEnter={checkAccessToken}>

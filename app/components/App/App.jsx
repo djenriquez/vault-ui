@@ -7,13 +7,12 @@ import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
-import { hashHistory } from 'react-router';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import { green500, red500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
-import { callVaultApi, tokenHasCapabilities } from '../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../shared/VaultUtils.jsx'
 
 let twoMinuteWarningTimeout;
 let logoutTimeout;
@@ -66,7 +65,7 @@ export default class App extends React.Component {
         }
 
         let logoutTimeout = () => {
-            hashHistory.push('/login');
+            history.push('/login');
         }
 
         // Retrieve session identity information
@@ -85,7 +84,7 @@ export default class App extends React.Component {
             .catch((err) => {
                 if (_.has(err, 'response.status') && err.response.status >= 400) {
                     window.localStorage.removeItem('vaultAccessToken');
-                    hashHistory.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
+                    history.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
                 } else throw err;
             });
     }
