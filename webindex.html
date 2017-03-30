@@ -2,11 +2,11 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Vault UI</title>
+        <title>Vault-UI</title>
         <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" type="text/css" >
-        <link href="./dist/styles.css" rel="stylesheet">
-        <link rel="shortcut icon" href="https://www.vaultproject.io/assets/images/favicon-16466d1a.png" type="image/x-icon">
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" type="text/css" >
+        <link href="/assets/styles.css" rel="stylesheet">
+        <link rel="shortcut icon" href="https://www.vaultproject.io/assets/images/favicons/safari-pinned-tab-2d806584.svg" type="image/x-icon">
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
         <style type="text/css">
             body {
@@ -17,7 +17,11 @@
     </head>
     <body>
         <div id="app"></div>
-        <script>require('./dist/bundle.js')</script>
-        <!-- <script src="http://127.0.0.1:8000/assets/bundle.js"></script> -->
+        <script>window.vaultuiweb = true</script>
+        <script>window.defaultUrl = "{{defaultUrl}}"</script>
+        <script>window.defaultAuth = "{{defaultAuth}}"</script>
+        <script>window.suppliedAuthToken = "{{suppliedAuthToken}}"</script>
+        <script>window.defaultBackendPath = "{{defaultBackendPath}}"</script>
+        <script src="/assets/bundle.js"></script>
     </body>
 </html>
