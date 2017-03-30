@@ -112,7 +112,11 @@ export default class SecretWrapper extends Component {
         if (this.state.wrapInfo) {
             let loc = window.location;
             tokenValue = this.state.wrapInfo.token;
-            urlValue = `${loc.protocol}//${loc.hostname}${(loc.port ? ":" + loc.port : "")}/unwrap?token=${tokenValue}&vaultUrl=${vaultUrl}`;
+            if(window.vaultuiweb) {
+                urlValue = `${loc.protocol}//${loc.hostname}${(loc.port ? ":" + loc.port : "")}/unwrap?token=${tokenValue}&vaultUrl=${vaultUrl}`;
+            } else {
+                urlValue = `vaultui://#/unwrap~token=${tokenValue}&vaultUrl=${vaultUrl}`;
+            }
         }
 
         return (

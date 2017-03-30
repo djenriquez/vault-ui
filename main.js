@@ -1,10 +1,4 @@
-const electron = require('electron')
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
-const Menu = electron.Menu
-
+const { app, protocol, BrowserWindow, Menu } = require('electron')
 
 const path = require('path')
 const url = require('url')
@@ -12,6 +6,50 @@ const url = require('url')
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+let initialPath;
+
+// Handle commandline
+if (process.argv && process.argv.length > 1) {
+  setInitialPath(process.argv[1]);
+}
+
+function setInitialPath(urlloc) {
+  
+  let l = url.parse(urlloc, true);
+  if (l && l.protocol == 'vaultui:' && l.hash) {
+
+    // Windows Protocol Handler bug workaround
+    initialPath = l.hash.replace('~', '?');
+  }
+}
+
+const shouldQuit = app.makeSingleInstance((commandLine) => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
+  }
+
+  if (commandLine && commandLine.length > 1) { 
+    setInitialPath(commandLine[1]);
+    mainWindow.loadURL(url.format({
+      pathname: path.join(__dirname, 'appindex.html'),
+      protocol: 'file:',
+      hash: initialPath,
+      slashes: true
+    }))
+  }
+})
+
+if (shouldQuit) {
+  app.quit()
+}
+
+app.setAsDefaultProtocolClient('vaultui')
+app.on('open-url', function (event, openurl) {
+  setInitialPath(openurl);
+})
+
 
 function createWindow() {
   // Create the browser window.
@@ -21,6 +59,7 @@ function createWindow() {
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'appindex.html'),
     protocol: 'file:',
+    hash: initialPath,
     slashes: true
   }))
 
@@ -54,10 +93,23 @@ function createWindow() {
       { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
       { label: "Select All", accelerator: "CmdOrCtrl+A", selector: "selectAll:" }
     ]
+  }, {
+    label: "Tools",
+    submenu: [
+      { label: "Open Development Tools", click: function () { mainWindow.webContents.openDevTools(); } }
+    ]
   }
   ];
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+
+  protocol.registerFileProtocol('vaultui', (request, callback) => {
+    const url = request.url.substr(7)
+    callback({ path: path.normalize(`${__dirname}/${url}`) })
+  }, (error) => {
+    if (error) console.error('Failed to register protocol')
+  })
+
 }
 
 // This method will be called when Electron has finished
@@ -84,3 +136,4 @@ app.on('activate', function () {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
