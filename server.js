@@ -50,7 +50,7 @@ app.all('/v1/*', function(req, res, next) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.render(path.join(__dirname, '/index.html'),{
+    res.render(path.join(__dirname, '/webindex.html'),{
         defaultUrl: VAULT_URL_DEFAULT,
         defaultAuth: VAULT_AUTH_DEFAULT,
         suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER ? req.header(VAULT_SUPPLIED_TOKEN_HEADER) : "",

@@ -9,7 +9,7 @@ module.exports = {
     resolve: {
         extensions: ['', '.js', '.jsx']
     },
-    target: 'electron',
+    target: 'web',
     output: {
         path: './dist',
         publicPath: '/assets/',
