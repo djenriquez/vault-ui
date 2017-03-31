@@ -1,62 +1,43 @@
-# Vault-UI
+<a href="https://github.com/djenriquez/vault-ui">
+    <img src="http://svgshare.com/i/177.svg" alt="Vault-UI Logo"
+         title="Vault-UI" width="64px" align="right" />
+</a>
+
 [![](https://images.microbadger.com/badges/image/djenriquez/vault-ui.svg)](https://microbadger.com/images/djenriquez/vault-ui)
 [![Run Status](https://api.shippable.com/projects/581e7826fbc68c0f00deb0ca/badge?branch=master)](https://app.shippable.com/projects/581e7826fbc68c0f00deb0ca)
 
-A beautiful way to manage your secrets in Vault
-![Landing Page](images/Landing.png)
+# Vault-UI
 
-## Configuration
-Configuration is accessed by clicking on the configuration cog on the login page.
+A beautiful way to manage your Hashicorp Vault
 
-<img src="images/AuthConfig.png" height="280">
+![](http://i.imgur.com/COBxk3m.gif)
 
-### Vault Endpoint
-Users can enter in the full endpoint to Vault, including scheme.  When running the docker image, it is possible to
-set the following environment variables to pre-configure authentication settings:
-- `VAULT_URL_DEFAULT` will set the default vault endpoint.
-- `VAULT_AUTH_DEFAULT` will set the default authentication method type. See below for supported authentication methods.
-- `VAULT_AUTH_BACKEND_PATH` will set the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
+## Features
 
-This defaults can be overridden if the user fills out the endpoint and auth method manually.
+- Easy to deploy as Web App
+- Desktop version works on Mac, Linux and Windows
+- Material UI Design
+- Integrated JSON Editor
+- Written in React
 
-## Authentication
-Currently supported authentication methods:
-- `GITHUB` : When using the [GitHub](https://www.vaultproject.io/docs/auth/github.html) backend
-- `USERNAMEPASSWORD` : When using the [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html) or [RADIUS](https://www.vaultproject.io/docs/auth/radius.html) backends
-- `LDAP` : When using the [LDAP](https://www.vaultproject.io/docs/auth/ldap.html) backend
-- `TOKEN` : When using the [Tokens](https://www.vaultproject.io/docs/auth/token.html) backend
+## Installation
 
-### Token authentication by header (SSO)
-In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
+### Desktop Version
 
-## Secrets
-![Secrets Management](images/Home.png)
+Vault-UI Desktop is available for the following operating systems:
+- Windows
+- MacOS
+- Linux (32bit and 64bit AppImage)
 
-Secrets are now managed using the graphical [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Schema validation is enforced on policies to aid the operator in writing correct syntax.
-<img src="images/NewSecret.png" height="500">
+Download the latest version from the release page and install/run the software
 
-Secrets also are accessible directly by key from a browser by navigating to the URI `/secrets/<mount>/<namespace>/key`. For example, if you have a generic secret key of /hello/world/vault using the generic mount `secret`, one can navigate to this directly through http://vault-ui.myorg.com/secrets/secret/hello/world/vault.
+### Web Version
 
-### Root key bias
-By default, secrets will display as their raw JSON value represented by the `data` field in the HTTP GET response metadata. However, users can apply a "Root Key" bias to the secrets through the settings page. The "Root Key" will be used when reading, creating and updating secrets such that the value displayed in the UI is the value stored at the "Root Key". For example, if the secret at `secret/hello` is `{ "value": "world" }`, setting the "Root Key" to `value` will update the UI such that the secret will display as simply "world" instead of `{ "value": "world" }`.
+Vault-UI can be deployed as a shared web app for your organization
 
-<img src="images/RootKey.png" height="180">
+Docker images are automatically built using an [automated build on Docker Hub](https://hub.docker.com/r/djenriquez/vault-ui/builds/).
+We encourage that versioned images are used for production.
 
-## Policies
-Policies are managed also using the [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Currently, GitHub and raw Tokens are the only supported authentication backends for associated policies.
-
-## Token Management
-<img src="images/TokenManagement.png" height="500">
-
-Users now have the ability to create and revoke tokens.
-<img src="images/NewToken.png" height="500">
-
-## Response Wrapping
-Vault-UI supports response-wrapping raw values. It currently does not support wrapping of existing secrets.
-<img src="images/ResponseWrapping.png" height="500">
-
-## Run
-Vault-UI Docker images are automatically built using an [automated build on Docker Hub](https://hub.docker.com/r/djenriquez/vault-ui/builds/). We encourage that versioned images are used for production.
 To run Vault-UI using the latest Docker image:
 ```bash
 docker run -d \
@@ -65,15 +46,61 @@ docker run -d \
 djenriquez/vault-ui
 ```
 
-### Skip TLS Verification
-In the case that you need to skip TLS verification, say for self-signed certs, you can run Vault-UI with the environment variable `NODE_TLS_REJECT_UNAUTHORIZED=0`:
-```
+#### Advanced configuration options
+
+By default, connection and authentication parameters must be configured by clicking on the configuration cog on the login page.
+Using environement variables (via docker), an administrator can pre-configure those parameters.
+
+Example command to pre-configure the Vault server URL and authentication method
+```bash
 docker run -d \
 -p 8000:8000 \
--e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+-e VAULT_URL_DEFAULT=http://vault.server.org:8200
+-e VAULT_AUTH_DEFAULT=GITHUB
 --name vault-ui \
 djenriquez/vault-ui
 ```
+
+Supported environment variables:
+- `NODE_TLS_REJECT_UNAUTHORIZED` disable TLS server side validation (ex. vault deployed with self-signed certificate)
+- `VAULT_URL_DEFAULT` will set the default vault endpoint.
+- `VAULT_AUTH_DEFAULT` will set the default authentication method type. See below for supported authentication methods.
+- `VAULT_AUTH_BACKEND_PATH` will set the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
+- `VAULT_SUPPLIED_TOKEN_HEADER` will instruct Vault-UI to attempt authentication using a token provided by the client in the specified HTTP request header.
+
+This defaults can be overridden if the user fills out the endpoint and auth method manually.
+
+
+Currently supported authentication methods:
+- `GITHUB` : When using the [GitHub](https://www.vaultproject.io/docs/auth/github.html) backend
+- `USERNAMEPASSWORD` : When using the [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html) or [RADIUS](https://www.vaultproject.io/docs/auth/radius.html) backends
+- `LDAP` : When using the [LDAP](https://www.vaultproject.io/docs/auth/ldap.html) backend
+- `TOKEN` : When using the [Tokens](https://www.vaultproject.io/docs/auth/token.html) backend
+
+
+In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
+
+
+## Usage
+
+### Secrets
+Secrets are now managed using the graphical [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Schema validation is enforced on policies to aid the operator in writing correct syntax.
+
+Secrets also are accessible directly by key from a browser by navigating to the URI `/secrets/<backendtype>/<mountpoint>/key`. For example, if you have a generic secret key of /hello/world/vault using the _generic_ mount `secret/`, one can navigate to this directly through http://vault-ui.myorg.com/secrets/secret/hello/world/vault.
+
+#### Root key bias
+By default, secrets will display as their raw JSON value represented by the `data` field in the HTTP GET response metadata. However, users can apply a "Root Key" bias to the secrets through the settings page. The "Root Key" will be used when reading, creating and updating secrets such that the value displayed in the UI is the value stored at the "Root Key". For example, if the secret at `secret/hello` is `{ "value": "world" }`, setting the "Root Key" to `value` will update the UI such that the secret will display as simply "world" instead of `{ "value": "world" }`.
+
+
+### Policies
+Policies are managed also using the [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Currently, GitHub and raw Tokens are the only supported authentication backends for associated policies.
+
+### Token Management
+Users have the ability to create and revoke tokens, manage token roles and list accesors.
+
+### Response Wrapping
+Vault-UI supports response-wrapping of secrets in _generic_ backends. Wrapping custom JSON data is also supported.
+
 
 ## Development
 
@@ -92,12 +119,8 @@ The following will spin up a Vault UI server only. It will not set up
 Vault for you:
 ```sh
 npm install
-
-# If you do not have webpack installed globally
-npm install -g webpack
-
+npm run dev-pack &
 npm start
-webpack -w
 ```
 
 # Licensing
