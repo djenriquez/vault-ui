@@ -112,7 +112,7 @@
     },
     "files": [
       "dist/",
-      "appindex.html",
+      "index.html",
       "main.js",
       "package.json"
     ],
