@@ -1,4 +1,4 @@
-FROM node:slim
+FROM node:alpine
 
 MAINTAINER Vault-UI Contributors
 
