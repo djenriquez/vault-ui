@@ -454,6 +454,16 @@ class GenericSecretBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <SelectField
+                                        floatingLabelText="Sort Secrets"
+                                        floatingLabelFixed={true}
+                                        value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}
+                                    >
+                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending"/>
+                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending"/>
+                                    </SelectField>
+                                </ToolbarGroup>
                             </Toolbar>
                             <List className={sharedStyles.listStyle}>
                                 <Subheader inset={false}>
@@ -465,10 +475,6 @@ class GenericSecretBackend extends React.Component {
                                         {renderBreadcrumb()}
                                     </Stepper>
                                 </Subheader>
-                                <SelectField value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}>
-                                    <MenuItem value={SORT_DIR.ASC} primaryText={SORT_DIR.ASC}/>
-                                    <MenuItem value={SORT_DIR.DESC} primaryText={SORT_DIR.DESC}/>
-                                </SelectField>
                                 <Divider inset={false} />
                                 {renderSecretListItems(true, false)}
                                 <Divider inset={true} />
