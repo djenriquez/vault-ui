@@ -1,5 +1,8 @@
 import React, { PropTypes } from 'react';
 import JSONEditor from 'jsoneditor';
+import JsonDiffReact from 'jsondiffpatch-for-react';
+import Checkbox from 'material-ui/Checkbox';
+import Divider from 'material-ui/Divider';
 import 'jsoneditor/src/css/reset.css';
 import 'jsoneditor/src/css/jsoneditor.css';
 import 'jsoneditor/src/css/menu.css';
@@ -32,6 +35,8 @@ class JsonEditor extends React.Component {
 
     state = {
         hasValue: false,
+        initialValue: this.props.value,
+        showDiff: true
     };
 
     constructor(props) {
@@ -81,9 +86,32 @@ class JsonEditor extends React.Component {
         this._jsoneditor.destroy();
     }
 
+    renderDiff = () => {
+        if (_.isEqual(this.state.initialValue, this.props.value)) {
+            return <div>No difference detected.</div>;
+        } else {
+            return (
+                <JsonDiffReact
+                    left={this.state.initialValue}
+                    right={this.props.value}
+                    annotated={true}
+                />
+            );
+        }
+    }
+
     render() {
         return (
+            <div>
               <div style={this.props.height ? {height: this.props.height} : null} ref={(c) => { this.editorEl = c; }} />
+                <Divider/>
+                <Checkbox
+                    label="Show Diff"
+                    checked={this.state.showDiff}
+                    onCheck={(e,isChecked) => this.setState({showDiff: isChecked})}
+                />
+                {this.state.showDiff && this.renderDiff()}
+            </div>
         );
     }
 }
