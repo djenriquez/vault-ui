@@ -465,7 +465,7 @@ class GenericSecretBackend extends React.Component {
                                         {renderBreadcrumb()}
                                     </Stepper>
                                 </Subheader>
-                                <SelectField value={this.state.secretSortDir} onChange={(e,i,v) => {console.log(i); this.setState({secretSortDir: v})}}>
+                                <SelectField value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}>
                                     <MenuItem value={SORT_DIR.ASC} primaryText={SORT_DIR.ASC}/>
                                     <MenuItem value={SORT_DIR.DESC} primaryText={SORT_DIR.DESC}/>
                                 </SelectField>
