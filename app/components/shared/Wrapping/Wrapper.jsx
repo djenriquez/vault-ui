@@ -7,11 +7,14 @@ import RaisedButton from 'material-ui/RaisedButton';
 import copy from 'copy-to-clipboard';
 import FontIcon from 'material-ui/FontIcon';
 import FlatButton from 'material-ui/FlatButton';
+import Divider from 'material-ui/Divider';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
 import styles from './wrapping.css'
 import sharedStyles from '../styles.css';
+
+const RETURN_KEY = 13;
 
 export default class SecretWrapper extends Component {
     static propTypes = {
@@ -43,6 +46,7 @@ export default class SecretWrapper extends Component {
     state = {
         wrapInfo: {},
         openPopover: false,
+        customTtl: '',
         ttl: '5m',
         data: null,
         path: null
@@ -105,6 +109,19 @@ export default class SecretWrapper extends Component {
         });
     };
 
+    handleCustomTtl = (e, v) => {
+        if (e.keyCode === RETURN_KEY) {
+            let customTtl = this.state.customTtl;
+            this.setState({
+                openPopover: false,
+                ttl: customTtl,
+                customTtl: '',
+                data: this.props.data,
+                path: this.props.path
+            });
+        }
+    }
+
     render() {
         let vaultUrl = encodeURI(window.localStorage.getItem("vaultUrl"));
         let tokenValue = '';
@@ -127,7 +144,7 @@ export default class SecretWrapper extends Component {
                             anchorOrigin={{ "horizontal": "right", "vertical": "top" }}
                             targetOrigin={{"horizontal":"right","vertical":"bottom"}}
                         >
-                            <Menu onItemTouchTap={this.handleItemTouchTap}>
+                            <Menu onItemTouchTap={this.handleItemTouchTap} disableAutoFocus>
                                 <MenuItem disabled={true} primaryText="Wrap lifetime" />
                                 <MenuItem className={styles.ttlList} primaryText="48 Hours" secondaryText="48h" />
                                 <MenuItem className={styles.ttlList} primaryText="24 Hours" secondaryText="24h" />
@@ -138,6 +155,15 @@ export default class SecretWrapper extends Component {
                                 <MenuItem className={styles.ttlList} primaryText="10 Minutes" secondaryText="10m" />
                                 <MenuItem className={styles.ttlList} primaryText="5 Minutes" secondaryText="5m" />
                             </Menu>
+                            <Divider/>
+                            <TextField
+                                style={{marginLeft: 15}}
+                                onChange={(e,v) => this.setState({ customTtl: v})}
+                                onKeyDown={this.handleCustomTtl}
+                                name="custom" 
+                                hintText="Custom lifetime" 
+                                floatingLabelText="Custom lifetime" 
+                            />
                         </Popover>
                     </div>
                 }
