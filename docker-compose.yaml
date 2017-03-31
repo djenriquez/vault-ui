@@ -23,7 +23,7 @@ services:
     environment:
       VAULT_URL_DEFAULT: http://vault:8200
       VAULT_AUTH_DEFAULT: USERNAMEPASSWORD
-      VAULT_SUPPLIED_TOKEN_HEADER: 'X-Remote-User'
+#      VAULT_SUPPLIED_TOKEN_HEADER: 'X-Remote-User'
 
   webpack:
     build: .

@@ -74,14 +74,14 @@ export default class Login extends React.Component {
         if (window.localStorage.getItem("vaultUrl"))
             return window.localStorage.getItem("vaultUrl");
         else
-            return window.defaultUrl;
+            return window.defaultVaultUrl;
     }
 
     getVaultAuthMethod() {
         if (window.localStorage.getItem("loginMethodType"))
             return window.localStorage.getItem("loginMethodType");
         else
-            return window.defaultAuth;
+            return window.defaultAuthMethod;
     }
 
     getDefaultBackendPathForMethod(type) {

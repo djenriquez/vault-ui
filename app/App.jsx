@@ -1,4 +1,5 @@
 import React from 'react'
+import axios from 'axios';
 import ReactDOM from 'react-dom';
 import Login from './components/Login/Login.jsx';
 import { Router, Route } from 'react-router'
@@ -39,6 +40,22 @@ injectTapEventPlugin();
     window.CustomEvent = CustomEvent;
 })();
 
+const checkVaultUiServer = (nextState, replace, callback) => {
+    // If it's a web deployment, query the server for default connection parameters
+    // Those can be set using environment variables in the nodejs process
+    if (WEBPACK_DEF_TARGET_WEB) {
+        axios.get('/vaultui').then((resp) => {
+            window.defaultVaultUrl = resp.data.defaultVaultUrl;
+            window.defaultAuthMethod = resp.data.defaultAuthMethod;
+            window.defaultBackendPath = resp.data.defaultBackendPath;
+            window.suppliedAuthToken = resp.data.suppliedAuthToken;
+            callback();
+        }).catch((err) => callback())
+    } else {
+        callback();
+    }
+}
+
 const checkAccessToken = (nextState, replace, callback) => {
     let vaultAuthToken = window.localStorage.getItem('vaultAccessToken');
     if (!vaultAuthToken) {
@@ -55,7 +72,7 @@ const muiTheme = getMuiTheme({
 ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
         <Router history={history}>
-            <Route path="/login" component={Login} />
+            <Route path="/login" component={Login} onEnter={checkVaultUiServer} />
             <Route path="/unwrap" component={SecretUnwrapper} />
             <Route path="/" component={App} onEnter={checkAccessToken}>
                 <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric} />

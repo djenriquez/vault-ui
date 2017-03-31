@@ -10,9 +10,12 @@ var compression = require('compression');
 
 var PORT = 8000;
 var VAULT_URL_DEFAULT = process.env.VAULT_URL_DEFAULT || "";
+var VAULT_URL_DEFAULT_FORCE = process.env.VAULT_URL_DEFAULT_FORCE ? true : false;
 var VAULT_AUTH_DEFAULT = process.env.VAULT_AUTH_DEFAULT || "GITHUB";
-var VAULT_SUPPLIED_TOKEN_HEADER = process.env.VAULT_SUPPLIED_TOKEN_HEADER
+var VAULT_AUTH_DEFAULT_FORCE = process.env.VAULT_AUTH_DEFAULT_FORCE ? true : false;
 var VAULT_AUTH_BACKEND_PATH = process.env.VAULT_AUTH_BACKEND_PATH
+var VAULT_AUTH_BACKEND_PATH_FORCE = process.env.VAULT_AUTH_BACKEND_PATH_FORCE ? true : false;
+var VAULT_SUPPLIED_TOKEN_HEADER = process.env.VAULT_SUPPLIED_TOKEN_HEADER
 
 var app = express();
 app.set('view engine', 'html');
@@ -35,13 +38,9 @@ app.listen(PORT, function () {
     console.log('Vault UI listening on: ' + PORT);
 });
 
-app.post('/wrap', function(req,res) {
-    routeHandler.wrapValue(req, res);
+app.get('/vaultui', function(req,res) {
+    routeHandler.vaultuiHello(req, res);
 });
-
-app.post('/unwrap', function(req, res) {
-    routeHandler.unwrapValue(req, res);
-})
 
 app.all('/v1/*', function(req, res, next) {
     routeHandler.vaultapi(req, res);
@@ -50,7 +49,7 @@ app.all('/v1/*', function(req, res, next) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.render(path.join(__dirname, '/webindex.html'),{
+    res.render(path.join(__dirname, '/index.html'),{
         defaultUrl: VAULT_URL_DEFAULT,
         defaultAuth: VAULT_AUTH_DEFAULT,
         suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER ? req.header(VAULT_SUPPLIED_TOKEN_HEADER) : "",
