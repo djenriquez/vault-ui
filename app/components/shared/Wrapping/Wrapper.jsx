@@ -5,11 +5,11 @@ import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import copy from 'copy-to-clipboard';
-import FontIcon from 'material-ui/FontIcon';
 import FlatButton from 'material-ui/FlatButton';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
+import ContentContentCopy from 'material-ui/svg-icons/content/content-copy';
 import styles from './wrapping.css'
 import sharedStyles from '../styles.css';
 
@@ -112,7 +112,7 @@ export default class SecretWrapper extends Component {
         if (this.state.wrapInfo) {
             let loc = window.location;
             tokenValue = this.state.wrapInfo.token;
-            if(window.vaultuiweb) {
+            if(WEBPACK_DEF_TARGET_WEB) {
                 urlValue = `${loc.protocol}//${loc.hostname}${(loc.port ? ":" + loc.port : "")}/unwrap?token=${tokenValue}&vaultUrl=${vaultUrl}`;
             } else {
                 urlValue = `vaultui://#/unwrap~token=${tokenValue}&vaultUrl=${vaultUrl}`;
@@ -159,7 +159,7 @@ export default class SecretWrapper extends Component {
                             floatingLabelText="This is a single-use unwrap token to read the wrapped data"
                             defaultValue={tokenValue}
                         />
-                        <RaisedButton icon={<FontIcon className="fa fa-clipboard" />} label="Copy to Clipboard" onTouchTap={() => { copy(tokenValue) }} />
+                        <RaisedButton icon={<ContentContentCopy />} label="Copy to Clipboard" onTouchTap={() => { copy(tokenValue) }} />
                     </div >
                     <div className={sharedStyles.newUrlEmitted}>
                         <TextField
@@ -168,7 +168,7 @@ export default class SecretWrapper extends Component {
                             floatingLabelText="Use this URL if you want to display the wrapped data using Vault UI"
                             defaultValue={urlValue}
                         />
-                        <RaisedButton icon={<FontIcon className="fa fa-clipboard" />} label="Copy to Clipboard" onTouchTap={() => { copy(urlValue) }} />
+                        <RaisedButton icon={<ContentContentCopy />} label="Copy to Clipboard" onTouchTap={() => { copy(urlValue) }} />
                     </div>
                 </Dialog >
             </div>

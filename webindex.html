@@ -4,10 +4,8 @@
         <meta charset="utf-8">
         <title>Vault-UI</title>
         <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600" rel="stylesheet">
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" type="text/css" >
-        <link href="/assets/styles.css" rel="stylesheet">
-        <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
-        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href="dist/styles.css" rel="stylesheet">
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
         <style type="text/css">
             body {
                 font-family: 'Source Sans Pro', sans-serif;
@@ -17,11 +15,10 @@
     </head>
     <body>
         <div id="app"></div>
-        <script>window.vaultuiweb = true</script>
         <script>window.defaultUrl = "{{defaultUrl}}"</script>
         <script>window.defaultAuth = "{{defaultAuth}}"</script>
         <script>window.suppliedAuthToken = "{{suppliedAuthToken}}"</script>
         <script>window.defaultBackendPath = "{{defaultBackendPath}}"</script>
-        <script src="/assets/bundle.js"></script>
+        <script src="dist/bundle.js"></script>
     </body>
 </html>

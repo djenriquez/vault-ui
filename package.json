@@ -10,7 +10,7 @@
     "start": "nodemon ./server.js --exec babel-node --presets es2015,stage-2",
     "serve": "nodemon ./server.js",
     "build-desktop": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack.desktop.config.js --progress --profile --colors",
-    "build-web": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack.min.config.js --progress --profile --colors",
+    "build-web": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack.web.config.js --progress --profile --colors",
     "run-desktop": "electron .",
     "package": "npm run build-desktop && build --publish never",
     "package-win64": "npm run build-desktop && build --win --x64",
@@ -72,12 +72,14 @@
     "copy-to-clipboard": "^3.0.5",
     "cross-env": "^3.1.4",
     "express": "^4.14.0",
+    "flexboxgrid": "^6.3.1",
     "hbs": "^4.0.1",
     "hcl-to-json": "0.0.4",
     "immutability-helper": "^2.1.2",
     "jsoneditor": "^5.5.11",
     "lodash": "^4.16.6",
     "material-ui": "^0.16.1",
+    "mui-icons": "^1.2.1",
     "react": "^15.4.0",
     "react-dom": "^15.4.0",
     "react-router": "^3.0.0",
@@ -92,12 +94,14 @@
     },
     "protocols": [
       {
-        "name" : "Vault-UI Desktop URL Protocol Handler",
-        "schemes": [ "vaultui" ]
+        "name": "Vault-UI Desktop URL Protocol Handler",
+        "schemes": [
+          "vaultui"
+        ]
       }
     ],
     "dmg": {
-      "icon" : "build/icon.icns",
+      "icon": "build/icon.icns",
       "contents": [
         {
           "x": 410,
@@ -119,7 +123,7 @@
       "package.json"
     ],
     "win": {
-      "icon" : "build/icon.ico",
+      "icon": "build/icon.ico",
       "target": "nsis"
     },
     "linux": {

@@ -20,7 +20,6 @@ import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
 import TextField from 'material-ui/TextField';
 import FlatButton from 'material-ui/FlatButton';
-import FontIcon from 'material-ui/FontIcon';
 import { tokenHasCapabilities, callVaultApi } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import UltimatePagination from 'react-ultimate-pagination-material-ui'
@@ -28,6 +27,9 @@ import Avatar from 'material-ui/Avatar';
 import ActionClass from 'material-ui/svg-icons/action/class';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
+import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import ContentContentCopy from 'material-ui/svg-icons/content/content-copy';
+import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 
 function snackBarMessage(message) {
@@ -150,7 +152,7 @@ export default class TokenAuthBackend extends React.Component {
                         <TableRowColumn><List>{policies}</List></TableRowColumn>
                         <TableRowColumn style={{ whiteSpace: 'normal' }}>{getDateStr(this.state.accessorDetails[acc_id].creation_time)}</TableRowColumn>
                         <TableRowColumn style={{ width: 40 }}>{this.state.accessorDetails[acc_id].orphan &&
-                            <FontIcon className="fa fa-check"></FontIcon>
+                            <NavigationCheck />
                         }</TableRowColumn>
                     </TableRow>
                 )
@@ -751,7 +753,7 @@ export default class TokenAuthBackend extends React.Component {
                             errorStyle={{ color: orange500, }}
                             defaultValue={this.state.newTokenCode}
                         />
-                        <RaisedButton icon={<FontIcon className="fa fa-clipboard" />} label="Copy to Clipboard" onTouchTap={() => { copy(this.state.newTokenCode) }} />
+                        <RaisedButton icon={<ContentContentCopy />} label="Copy to Clipboard" onTouchTap={() => { copy(this.state.newTokenCode) }} />
                     </div>
                 </Dialog>
             </div>
@@ -795,7 +797,7 @@ export default class TokenAuthBackend extends React.Component {
                                 </ToolbarGroup>
                                 <ToolbarGroup>
                                     <ToolbarSeparator />
-                                    <IconMenu iconButtonElement={<IconButton iconClassName="fa fa-bars" />}>
+                                    <IconMenu iconButtonElement={<IconButton><NavigationMenu /></IconButton>}>
                                         <MenuItem
                                             primaryText="Show details"
                                             disabled={!this.state.selectedAccessor}

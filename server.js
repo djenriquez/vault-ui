@@ -17,7 +17,7 @@ var VAULT_AUTH_BACKEND_PATH = process.env.VAULT_AUTH_BACKEND_PATH
 var app = express();
 app.set('view engine', 'html');
 app.engine('html', require('hbs').__express);
-app.use('/assets', compression(), express.static('dist'));
+app.use('/dist', compression(), express.static('dist'));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));

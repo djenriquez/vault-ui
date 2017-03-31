@@ -3,12 +3,10 @@ import _ from 'lodash';
 import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
+import Github from 'mui-icons/fontawesome/github';
 import CountDown from './countdown.js'
 import styles from './header.css';
 import { callVaultApi, history } from '../../shared/VaultUtils.jsx';
-import Snackbar from 'material-ui/Snackbar';
-
 
 var logout = () => {
     window.localStorage.removeItem('vaultAccessToken');
@@ -108,7 +106,7 @@ class Header extends React.Component {
                     <ToolbarGroup firstChild={true}>
                         <IconButton
                             onTouchTap={() => {
-                                if(window.vaultuiweb) {
+                                if(WEBPACK_DEF_TARGET_WEB) {
                                     window.open('https://github.com/djenriquez/vault-ui', '_blank');
                                 } else {
                                     event.preventDefault();
@@ -116,7 +114,7 @@ class Header extends React.Component {
                                 }
                             }}
                         >
-                            <FontIcon className={`fa fa-github ${styles.title}`} />
+                            <Github className={styles.title}/>
                         </IconButton>
                         <ToolbarTitle className={styles.title}
                             onTouchTap={() => {

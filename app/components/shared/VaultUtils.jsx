@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { browserHistory, hashHistory } from 'react-router'
 
 var history;
-if(window.vaultuiweb) {
+if(WEBPACK_DEF_TARGET_WEB) {
     history = browserHistory;
 } else {
     history = hashHistory;
@@ -39,7 +39,7 @@ function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken =
 
     var instance;
 
-    if(window.vaultuiweb) {
+    if(WEBPACK_DEF_TARGET_WEB) {
         instance = axios.create({
             baseURL: '/v1/',
             params: { "vaultaddr": vaultUrl || window.localStorage.getItem("vaultUrl") },
