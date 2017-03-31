@@ -6,8 +6,9 @@
   "scripts": {
     "dist": "build",
     "serve": "nodemon ./server.js",
-    "build-desktop": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack/webpack.desktop.config.js --progress --profile --colors",
-    "build-web": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack/webpack.web.config.js --progress --profile --colors",
+    "dev-pack": "webpack --config webpack/webpack.dev.config.js -w",
+    "build-desktop": "cross-env NODE_ENV=production webpack --config webpack/webpack.desktop.config.js --progress --profile --colors",
+    "build-web": "cross-env NODE_ENV=production webpack --config webpack/webpack.web.config.js --progress --profile --colors",
     "desktop": "npm run build-desktop && electron .",
     "package-mac": "npm run build-desktop && build --mac=zip --ia32 --x64 --publish never",
     "package-win32": "npm run build-desktop && build --win=nsis --ia32 --x64 --publish never",

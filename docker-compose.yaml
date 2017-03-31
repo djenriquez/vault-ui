@@ -30,4 +30,4 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: webpack --config=webpack/webpack.dev.config.js -w
+    command: npm run dev-pack
