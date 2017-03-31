@@ -9,7 +9,8 @@ import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import _ from 'lodash';
-import { callVaultApi, history } from '../shared/VaultUtils.jsx'
+import { callVaultApi, history } from '../shared/VaultUtils.jsx';
+import logoImage from '../../assets/vault-ui-logo.svg';
 
 export default class Login extends React.Component {
     static propTypes = {
@@ -396,6 +397,7 @@ export default class Login extends React.Component {
             <div id={styles.root} className="row middle-xs center-xs">
                 {this.state.openSettings && this.renderSettingsDialog()}
                 <div className={`col-xs-12 col-sm-6 col-md-4`}>
+                    <div className="col-xs-12" id={styles.title}><img height="40" src={logoImage}></img>AULT - UI</div>
                     <div className="row">
                         <div className="col-xs-11">
                             {this.renderSelectedLoginOption()}

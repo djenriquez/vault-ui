@@ -33,6 +33,9 @@ module.exports = {
             loader: ExtractTextPlugin.extract('css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader'),
             exclude: /node_modules/
         }, {
+          test: /\.ico$/,
+          loader: 'file-loader?name=[name].[ext]'  // <-- retain original file name
+        }, {
             test: /\.css$/,
             loader: ExtractTextPlugin.extract('css!postcss-loader'),
             include: /node_modules/

@@ -106,7 +106,16 @@ class Header extends React.Component {
             <div id={styles.headerWrapper}>
                 <Toolbar style={{ backgroundColor: '#000000', height: '64px' }}>
                     <ToolbarGroup firstChild={true}>
-                        <IconButton href={'https://github.com/djenriquez/vault-ui'}>
+                        <IconButton
+                            onTouchTap={() => {
+                                if(window.vaultuiweb) {
+                                    window.open('https://github.com/djenriquez/vault-ui', '_blank');
+                                } else {
+                                    event.preventDefault();
+                                    require('electron').shell.openExternal('https://github.com/djenriquez/vault-ui')
+                                }
+                            }}
+                        >
                             <FontIcon className={`fa fa-github ${styles.title}`} />
                         </IconButton>
                         <ToolbarTitle className={styles.title}

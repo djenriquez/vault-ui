@@ -17,6 +17,9 @@ import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
 
+// Load here to signal webpack
+import './assets/favicon.ico';
+
 injectTapEventPlugin();
 
 (function () {

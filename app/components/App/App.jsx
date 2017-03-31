@@ -223,12 +223,6 @@ export default class App extends React.Component {
                             <Paper className={styles.welcomeHeader} zDepth={0}>
                                 <h1>Get started by using the left menu to navigate your Vault</h1>
                             </Paper>
-                            {/*{ !this.state.tokenCanListSecretBackends ? 
-                                <Paper className={styles.warningMsg} zDepth={0}>
-                                    <h3>Your token doesn't have permissions to list secret backends</h3>
-                                    <div>To correctly navigate the backends, Vault UI needs the following capabilities in </div>
-                                </Paper>
-                            : null }*/}
                             {!this.state.tokenCanListSecretBackends ? this.renderWarningSecretBackends() : null}
                             {!this.state.tokenCanListAuthBackends ? this.renderWarningAuthBackends() : null}
                         </Paper>

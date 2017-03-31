@@ -21,6 +21,14 @@ function setInitialPath(urlloc) {
     // Windows Protocol Handler bug workaround
     initialPath = l.hash.replace('~', '?');
   }
+  if (mainWindow) {
+    mainWindow.loadURL(url.format({
+        pathname: path.join(__dirname, 'appindex.html'),
+        protocol: 'file:',
+        hash: initialPath,
+        slashes: true
+    }))
+  }
 }
 
 const shouldQuit = app.makeSingleInstance((commandLine) => {
@@ -32,12 +40,6 @@ const shouldQuit = app.makeSingleInstance((commandLine) => {
 
   if (commandLine && commandLine.length > 1) { 
     setInitialPath(commandLine[1]);
-    mainWindow.loadURL(url.format({
-      pathname: path.join(__dirname, 'appindex.html'),
-      protocol: 'file:',
-      hash: initialPath,
-      slashes: true
-    }))
   }
 })
 
@@ -49,7 +51,6 @@ app.setAsDefaultProtocolClient('vaultui')
 app.on('open-url', function (event, openurl) {
   setInitialPath(openurl);
 })
-
 
 function createWindow() {
   // Create the browser window.

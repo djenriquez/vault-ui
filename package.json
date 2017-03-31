@@ -4,6 +4,8 @@
   "description": "Graphical interface for Hashicorp Vault",
   "main": "main.js",
   "scripts": {
+    "pack": "build --dir",
+    "dist": "build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon ./server.js --exec babel-node --presets es2015,stage-2",
     "serve": "nodemon ./server.js",
@@ -14,7 +16,7 @@
     "package-win64": "npm run build-desktop && build --win --x64",
     "package-win32": "npm run build-desktop && build --win --ia32",
     "package-linux": "npm run build-desktop && build --linux",
-    "package-all": "npm run build && build -mwl",
+    "package-all": "npm run build-desktop && build -mwl",
     "cleanup": "mop -v"
   },
   "repository": {
@@ -49,7 +51,6 @@
     "css-loader": "^0.25.0",
     "electron": "^1.4.1",
     "electron-builder": "^13.3.2",
-    "electron-packager": "^8.6.0",
     "eslint": "^3.14.0",
     "eslint-plugin-react": "^6.9.0",
     "extract-text-webpack-plugin": "^1.0.1",
@@ -84,10 +85,19 @@
     "react-ultimate-pagination-material-ui": "^0.5.0"
   },
   "build": {
-    "productName": "Vault UI",
+    "productName": "Vault-UI",
     "appId": "com.github.djenriquez.vault-ui",
-    "category": "public.app-category.tools",
+    "mac": {
+      "category": "public.app-category.tools"
+    },
+    "protocols": [
+      {
+        "name" : "Vault-UI Desktop URL Protocol Handler",
+        "schemes": [ "vaultui" ]
+      }
+    ],
     "dmg": {
+      "icon" : "build/icon.icns",
       "contents": [
         {
           "x": 410,
@@ -109,6 +119,7 @@
       "package.json"
     ],
     "win": {
+      "icon" : "build/icon.ico",
       "target": "nsis"
     },
     "linux": {
@@ -118,7 +129,7 @@
       ]
     },
     "directories": {
-      "buildResources": "resources",
+      "buildResources": "build",
       "output": "release"
     }
   }
