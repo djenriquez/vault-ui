@@ -2,15 +2,9 @@ FROM node:slim
 
 MAINTAINER Vault-UI Contributors
 
-ADD package.json /tmp/package.json
-RUN cd /tmp && npm install --silent && mkdir -p /app/ && mv /tmp/node_modules /app/
-
-RUN npm install --silent -g webpack
-
 ADD . /app
 WORKDIR /app
-
-RUN npm run build
+RUN npm install --silent && npm run build-web
 
 EXPOSE 8000
 
