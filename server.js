@@ -10,7 +10,7 @@ var PORT = 8000;
 
 var app = express();
 app.set('view engine', 'html');
-app.engine('html', require('hbs').__express);
+// app.engine('html', require('hbs').__express);
 app.use('/dist', compression(), express.static('dist'));
 
 // parse application/x-www-form-urlencoded
@@ -40,5 +40,5 @@ app.all('/v1/*', function(req, res) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.render(path.join(__dirname, '/index.html'));
+    res.sendFile(path.join(__dirname, '/index.html'));
 });

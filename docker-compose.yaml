@@ -19,7 +19,6 @@ services:
       - vault
     volumes:
       - .:/app
-      - /app/node_modules
     environment:
       VAULT_URL_DEFAULT: http://vault:8200
       VAULT_AUTH_DEFAULT: USERNAMEPASSWORD
@@ -29,5 +28,4 @@ services:
     build: .
     volumes:
       - .:/app
-      - /app/node_modules
     command: npm run dev-pack
