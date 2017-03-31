@@ -456,6 +456,8 @@ class GenericSecretBackend extends React.Component {
                                 </ToolbarGroup>
                                 <ToolbarGroup lastChild={true}>
                                     <SelectField
+                                        style={{width: 150}}
+                                        autoWidth={true}
                                         floatingLabelText="Sort Secrets"
                                         floatingLabelFixed={true}
                                         value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}
