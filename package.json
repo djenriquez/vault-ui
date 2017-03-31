@@ -61,7 +61,7 @@
     "immutability-helper": "^2.1.2",
     "jsoneditor": "^5.5.11",
     "lodash": "^4.16.6",
-    "material-ui": "^0.16.1",
+    "material-ui": "^0.16.7",
     "react": "^15.4.0",
     "react-dom": "^15.4.0",
     "react-router": "^3.0.0",
