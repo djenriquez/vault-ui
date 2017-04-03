@@ -10,6 +10,8 @@ import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import IconButton from 'material-ui/IconButton';
 import Divider from 'material-ui/Divider';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem'
 import { List, ListItem } from 'material-ui/List';
 import { Step, Stepper, StepLabel } from 'material-ui/Stepper';
 import sharedStyles from '../../shared/styles.css';
@@ -23,6 +25,10 @@ import JsonEditor from '../../shared/JsonEditor.jsx';
 import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
 import { Link } from 'react-router'
 
+const SORT_DIR = {
+    ASC: 'asc',
+    DESC: 'desc'
+};
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -40,6 +46,7 @@ class GenericSecretBackend extends React.Component {
 
         this.state = {
             newSecretBtnDisabled: true,
+            secretSortDir: SORT_DIR.ASC,
             secretList: [],
             secretContent: {},
             newSecretName: '',
@@ -358,7 +365,8 @@ class GenericSecretBackend extends React.Component {
 
     render() {
         let renderSecretListItems = (returndirs, returnobjs) => {
-            return _.map(this.state.secretList, (key) => {
+            let sortedSecrets = _.orderBy(this.state.secretList, _.identity, this.state.secretSortDir);
+            return _.map(sortedSecrets, (key) => {
                 let avatar = (<Avatar icon={<ActionAssignment />} />);
                 let action = (
                     <IconButton
@@ -445,6 +453,18 @@ class GenericSecretBackend extends React.Component {
                                             })
                                         }}
                                     />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <SelectField
+                                        style={{width: 150}}
+                                        autoWidth={true}
+                                        floatingLabelText="Sort Secrets"
+                                        floatingLabelFixed={true}
+                                        value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}
+                                    >
+                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending"/>
+                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending"/>
+                                    </SelectField>
                                 </ToolbarGroup>
                             </Toolbar>
                             <List className={sharedStyles.listStyle}>
