@@ -23,7 +23,7 @@ function setInitialPath(urlloc) {
   }
   if (mainWindow) {
     mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'index.html'),
+        pathname: path.join(__dirname, 'index.desktop.html'),
         protocol: 'file:',
         hash: initialPath,
         slashes: true
@@ -58,7 +58,7 @@ function createWindow() {
 
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'index.html'),
+    pathname: path.join(__dirname, 'index.desktop.html'),
     protocol: 'file:',
     hash: initialPath,
     slashes: true

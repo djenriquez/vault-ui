@@ -40,5 +40,5 @@ app.all('/v1/*', function(req, res) {
 app.get('/');
 
 app.get('*', function (req, res) {
-    res.sendFile(path.join(__dirname, '/index.html'));
+    res.sendFile(path.join(__dirname, '/index.web.html'));
 });
