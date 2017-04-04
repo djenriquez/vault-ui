@@ -1,5 +1,5 @@
 {
-  "name": "vault_ui",
+  "name": "Vault-UI",
   "version": "2.1.0",
   "description": "Graphical interface for Hashicorp Vault",
   "main": "main.js",
@@ -112,7 +112,7 @@
     },
     "files": [
       "dist/",
-      "index.html",
+      "index.desktop.html",
       "main.js",
       "package.json"
     ],
