@@ -1,4 +1,4 @@
-const { app, protocol, BrowserWindow, Menu } = require('electron')
+const { app, protocol, BrowserWindow, Menu, dialog } = require('electron')
 
 const path = require('path')
 const url = require('url')
@@ -135,6 +135,18 @@ app.on('activate', function () {
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+  var result = dialog.showMessageBox({
+    type: 'warning',
+    title: 'Server TLS Certificate Error',
+    message: 'The validity of the TLS connection with the remote server cannot be verified. Would you like to proceed anyway?',
+    detail: error,
+    buttons: ['Yes', 'No']
+  });
+  if (result == 0) {
+    event.preventDefault()
+    callback(true)
+  } else {
+    callback(false)
+  }
+})

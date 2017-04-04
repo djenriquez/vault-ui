@@ -24,6 +24,10 @@ exports.callMethod = function (req, res) {
             res.json(resp.data);
         })
         .catch(function (err) {
-            res.status(err.response.status).send(err.response.data);
+            if(err.response) {
+                res.status(err.response.status).send(err.response.data);
+            } else {
+                res.status(500).send({errors: [err.toString()]});
+            }
         });
 };
