@@ -29,6 +29,57 @@ Currently supported authentication methods:
 ### Token authentication by header (SSO)
 In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
 
+### Basic policy for Vault-UI users
+A user/token accessing Vault-UI requires a basic set of capabilities in order to correctly discover and display the various mounted backends.
+Please make sure your user is granted a policy with at least the following permissions:
+
+#### JSON Version:
+```json
+{
+  "path": {
+    "auth/token/lookup-self": {
+      "capabilities": [
+        "read"
+      ]
+    },
+    "sys/capabilities-self": {
+      "capabilities": [
+        "update"
+      ]
+    },
+    "sys/mounts": {
+      "capabilities": [
+        "read"
+      ]
+    },
+    "sys/auth": {
+      "capabilities": [
+        "read"
+      ]
+    }
+  }
+}
+```
+
+#### HCL Version:
+```
+path "auth/token/lookup-self" {
+    capabilities = [ "read" ]
+}
+
+path "sys/capabilities-self" {
+    capabilities = [ "update" ]
+}
+
+path "sys/mounts" {
+    capabilities = [ "read" ]
+}
+
+path "sys/auth" {
+    capabilities = [ "read" ]
+}
+```
+
 ## Secrets
 ![Secrets Management](images/Home.png)
 
