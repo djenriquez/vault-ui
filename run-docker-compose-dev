@@ -23,7 +23,7 @@ exec_in_vault vault auth-enable -path=userpass2 userpass
 exec_in_vault vault auth-enable github
 exec_in_vault vault auth-enable radius
 exec_in_vault vault auth-enable -path=awsaccount1 aws-ec2
-exec_in_vault vault policy-write admin /app/admin.hcl
+exec_in_vault vault policy-write admin /misc/admin.hcl
 exec_in_vault vault write auth/userpass/users/test password=test policies=admin
 exec_in_vault vault write auth/userpass2/users/john password=doe policies=admin
 exec_in_vault vault write auth/userpass/users/lame password=lame policies=default

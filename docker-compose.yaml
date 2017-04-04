@@ -5,11 +5,13 @@ services:
     image: vault
     privileged: true
     volumes:
-      - .:/app
+      - ./misc:/misc
     ports:
       - "8200:8200"
+      - "8201:8201"
     environment:
       VAULT_ADDR: http://127.0.0.1:8200
+      VAULT_LOCAL_CONFIG: '{"listener" : { "tcp" : {"address" : "0.0.0.0:8201", "tls_cert_file" : "/misc/devserver.crt", "tls_key_file" : "/misc/devserver.key" } } }'
 
   vault-ui:
     build: .
