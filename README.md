@@ -83,6 +83,57 @@ In some cases, users might want to use middleware to authenticate into Vault-UI 
 
 ## Usage
 
+### Basic policy for Vault-UI users
+A user/token accessing Vault-UI requires a basic set of capabilities in order to correctly discover and display the various mounted backends.
+Please make sure your user is granted a policy with at least the following permissions:
+
+#### JSON Version:
+```json
+{
+  "path": {
+    "auth/token/lookup-self": {
+      "capabilities": [
+        "read"
+      ]
+    },
+    "sys/capabilities-self": {
+      "capabilities": [
+        "update"
+      ]
+    },
+    "sys/mounts": {
+      "capabilities": [
+        "read"
+      ]
+    },
+    "sys/auth": {
+      "capabilities": [
+        "read"
+      ]
+    }
+  }
+}
+```
+
+#### HCL Version:
+```
+path "auth/token/lookup-self" {
+    capabilities = [ "read" ]
+}
+
+path "sys/capabilities-self" {
+    capabilities = [ "update" ]
+}
+
+path "sys/mounts" {
+    capabilities = [ "read" ]
+}
+
+path "sys/auth" {
+    capabilities = [ "read" ]
+}
+```
+
 ### Secrets
 Secrets are now managed using the graphical [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Schema validation is enforced on policies to aid the operator in writing correct syntax.
 

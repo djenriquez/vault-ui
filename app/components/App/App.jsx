@@ -38,6 +38,7 @@ export default class App extends React.Component {
             logoutOpen: false,
             logoutPromptSeen: false,
             identity: {},
+            tokenCanQueryCapabilities: true,
             tokenCanListSecretBackends: true,
             tokenCanListAuthBackends: true,
         }
@@ -116,6 +117,15 @@ export default class App extends React.Component {
 
         this.reloadSessionIdentity();
 
+        // Check access to the sys/capabilities-self path
+        callVaultApi('post', 'sys/capabilities-self', null, {path: '/'})
+            .then(() =>{
+                this.setState({ tokenCanQueryCapabilities: true });
+            })
+            .catch(() =>{
+                this.setState({ tokenCanQueryCapabilities: false });
+            })
+
         // Check capabilities to list backends
         tokenHasCapabilities(['read'], 'sys/mounts').catch(() => {
             this.setState({ tokenCanListSecretBackends: false });
@@ -160,6 +170,32 @@ export default class App extends React.Component {
                 <div className={styles.error}>Your session token will expire soon. Use the renew button to request a lease extension</div>
             </Dialog>
         );
+    }
+
+    renderWarningCapabilities() {
+        return (
+            <Paper className={styles.warningMsg} zDepth={0}>
+                <Card initiallyExpanded={false}>
+                    <CardHeader
+                        title="Your token doesn't have permissions to query for capabilities"
+                        subtitle="Vault UI needs some permissions granted to your token. Tap on this message for more information"
+                        avatar={<Warning style={{ color: '#ffab00' }} />}
+                        actAsExpander={true}
+                        showExpandableButton={true}
+                    />
+                    <CardText expandable={true}>
+                        Your token has been assigned the following policies:
+                        <ul>
+                            {_.map(this.state.identity.policies, (pol, idx) => {
+                                return (<li key={idx}>{pol}</li>)
+                            })}
+                        </ul>
+                        and none of them contains the following permissions:
+                        <JsonEditor mode="text" modes={["text"]} value={{ path: { "sys/capabilities-self": { capabilities: ["update"] } } }} />
+                    </CardText>
+                </Card>
+            </Paper>
+        )
     }
 
     renderWarningAuthBackends() {
@@ -223,6 +259,7 @@ export default class App extends React.Component {
                             <Paper className={styles.welcomeHeader} zDepth={0}>
                                 <h2>Get started by using the left menu to navigate your Vault</h2>
                             </Paper>
+                            {!this.state.tokenCanQueryCapabilities ? this.renderWarningCapabilities() : null}
                             {!this.state.tokenCanListSecretBackends ? this.renderWarningSecretBackends() : null}
                             {!this.state.tokenCanListAuthBackends ? this.renderWarningAuthBackends() : null}
                         </Paper>
