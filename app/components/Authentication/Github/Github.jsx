@@ -24,10 +24,9 @@ import sharedStyles from '../../shared/styles.css';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import { browserHistory } from 'react-router'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx';
+import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 
 function snackBarMessage(message) {
     document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
@@ -122,7 +121,7 @@ export default class GithubAuthBackend extends React.Component {
                     .then((resp) => {
                         let config = _.get(resp, 'data.data', this.backendConfigSchema);
                         if (!config.organization) {
-                            browserHistory.push(`${this.state.baseUrl}backend`);
+                            history.push(`${this.state.baseUrl}backend`);
                             this.setState({ selectedTab: 'backend', isBackendConfigured: false, newConfig: this.backendConfigSchema });
                             snackBarMessage(new Error(`This backend has not yet been configured`));
                         } else {
@@ -138,7 +137,7 @@ export default class GithubAuthBackend extends React.Component {
                             snackBarMessage(error);
                         } else {
                             error.message = `This backend has not yet been configured`;
-                            browserHistory.push(`${this.state.baseUrl}backend`);
+                            history.push(`${this.state.baseUrl}backend`);
                             snackBarMessage(error);
                         }
                     });
@@ -191,7 +190,7 @@ export default class GithubAuthBackend extends React.Component {
                         this.listGithubTeams();
                         this.listGithubUsers();
                         this.setState({ openItemDialog: false, openNewItemDialog: false, itemConfig: _.clone(this.itemConfigSchema), selectedItemId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     })
                     .catch(snackBarMessage);
             })
@@ -203,7 +202,7 @@ export default class GithubAuthBackend extends React.Component {
     componentWillMount() {
         let tab = this.props.location.pathname.split(this.state.baseUrl)[1];
         if (!tab) {
-            browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
+            history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
             this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
         }
@@ -245,7 +244,7 @@ export default class GithubAuthBackend extends React.Component {
                 selectedTab: 'teams',
                 isBackendConfigured: false
             }, () => {
-                browserHistory.push(`${this.state.baseUrl}teams`);
+                history.push(`${this.state.baseUrl}teams`);
                 this.listGithubTeams();
                 this.listGithubUsers();
                 this.getOrgConfig();
@@ -278,7 +277,7 @@ export default class GithubAuthBackend extends React.Component {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${this.state.selectedTab}/${item}`)
                                 .then(() => {
                                     this.setState({ selectedItemId: `${this.state.selectedTab}/${item}` });
-                                    browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/${item}`);
+                                    history.push(`${this.state.baseUrl}${this.state.selectedTab}/${item}`);
                                 }).catch(() => {
                                     snackBarMessage(new Error('Access denied'));
                                 })
@@ -296,7 +295,7 @@ export default class GithubAuthBackend extends React.Component {
                     label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openItemDialog: false, selectedItemId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     }}
                 />,
                 <FlatButton
@@ -316,7 +315,7 @@ export default class GithubAuthBackend extends React.Component {
                     open={this.state.openItemDialog}
                     onRequestClose={() => {
                         this.setState({ openItemDialog: false, selectedItemId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     }}
                     autoScrollBodyContent={true}
                 >
@@ -340,7 +339,7 @@ export default class GithubAuthBackend extends React.Component {
                     label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openNewItemDialog: false, newItemId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     }}
                 />,
                 <FlatButton
@@ -360,7 +359,7 @@ export default class GithubAuthBackend extends React.Component {
                     open={this.state.openNewItemDialog}
                     onRequestClose={() => {
                         this.setState({ openNewItemDialog: false, newItemId: '' });
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     }}
                     autoScrollBodyContent={true}
                 >
@@ -405,7 +404,7 @@ export default class GithubAuthBackend extends React.Component {
                 />
                 <Tabs
                     onChange={(e) => {
-                        browserHistory.push(`${this.state.baseUrl}${e}/`);
+                        history.push(`${this.state.baseUrl}${e}/`);
                         this.setState({ newConfig: _.clone(this.state.config) });
                     }}
                     value={this.state.selectedTab}

@@ -3,17 +3,14 @@ import _ from 'lodash';
 import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
 import FlatButton from 'material-ui/FlatButton';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
-import { browserHistory } from 'react-router';
+import Github from 'mui-icons/fontawesome/github';
 import CountDown from './countdown.js'
 import styles from './header.css';
-import { callVaultApi } from '../../shared/VaultUtils.jsx';
-import Snackbar from 'material-ui/Snackbar';
-
+import { callVaultApi, history } from '../../shared/VaultUtils.jsx';
 
 var logout = () => {
     window.localStorage.removeItem('vaultAccessToken');
-    browserHistory.push('/login');
+    history.push('/login');
 }
 
 function snackBarMessage(message) {
@@ -85,7 +82,7 @@ class Header extends React.Component {
                     <span key="infoSessionTimeout" className={styles.infoSectionItem}>
                         <span className={styles.infoSectionItemKey}>token ttl</span>
                         <span className={styles.infoSectionItemValue}>
-                            <CountDown startTime={this.props.tokenIdentity.ttl} />
+                            <CountDown countDown={this.props.tokenIdentity.ttl} retrigger={this.props.tokenIdentity.last_renewal_time} />
                         </span>
                     </span>
                 )
@@ -107,12 +104,21 @@ class Header extends React.Component {
             <div id={styles.headerWrapper}>
                 <Toolbar style={{ backgroundColor: '#000000', height: '64px' }}>
                     <ToolbarGroup firstChild={true}>
-                        <IconButton href={'https://github.com/djenriquez/vault-ui'}>
-                            <FontIcon className={`fa fa-github ${styles.title}`} />
+                        <IconButton
+                            onTouchTap={() => {
+                                if(WEBPACK_DEF_TARGET_WEB) {
+                                    window.open('https://github.com/djenriquez/vault-ui', '_blank');
+                                } else {
+                                    event.preventDefault();
+                                    require('electron').shell.openExternal('https://github.com/djenriquez/vault-ui')
+                                }
+                            }}
+                        >
+                            <Github className={styles.title}/>
                         </IconButton>
                         <ToolbarTitle className={styles.title}
                             onTouchTap={() => {
-                                browserHistory.push('/');
+                                history.push('/');
                             }}
                             text="VAULT - UI" />
                     </ToolbarGroup>

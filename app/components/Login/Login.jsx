@@ -9,7 +9,8 @@ import MenuItem from 'material-ui/MenuItem';
 import FlatButton from 'material-ui/FlatButton';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import _ from 'lodash';
-import { callVaultApi } from '../shared/VaultUtils.jsx'
+import { callVaultApi, history } from '../shared/VaultUtils.jsx';
+import logoImage from '../../assets/vault-ui-logo.svg';
 
 export default class Login extends React.Component {
     static propTypes = {
@@ -73,14 +74,14 @@ export default class Login extends React.Component {
         if (window.localStorage.getItem("vaultUrl"))
             return window.localStorage.getItem("vaultUrl");
         else
-            return window.defaultUrl;
+            return window.defaultVaultUrl;
     }
 
     getVaultAuthMethod() {
         if (window.localStorage.getItem("loginMethodType"))
             return window.localStorage.getItem("loginMethodType");
         else
-            return window.defaultAuth;
+            return window.defaultAuthMethod;
     }
 
     getDefaultBackendPathForMethod(type) {
@@ -218,9 +219,9 @@ export default class Login extends React.Component {
             window.localStorage.setItem('loginMethodType', this.getVaultAuthMethod());
             window.localStorage.setItem('loginBackendPath', this.getAuthBackendPath());
             if (this.props.location.query.returnto && this.props.location.query.returnto.indexOf('/') === 0)
-                window.location.href = this.props.location.query.returnto;
+                history.push(this.props.location.query.returnto);
             else
-                window.location.href = '/';
+                history.push('/');
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })
         }
@@ -395,8 +396,8 @@ export default class Login extends React.Component {
         return (
             <div id={styles.root} className="row middle-xs center-xs">
                 {this.state.openSettings && this.renderSettingsDialog()}
-                <div className={`col-xs-12 col-sm-6 col-md-4 ${this.state.show ? styles.show : styles.hide}`}>
-                    <div className="col-xs-12" id={styles.title}><img height="40" src="https://www.vaultproject.io/assets/images/favicons/safari-pinned-tab-2d806584.svg"></img>AULT - UI</div>
+                <div className={`col-xs-12 col-sm-6 col-md-4`}>
+                    <div className="col-xs-12" id={styles.title}><img height="40" src={logoImage}></img>AULT - UI</div>
                     <div className="row">
                         <div className="col-xs-11">
                             {this.renderSelectedLoginOption()}

@@ -19,12 +19,11 @@ import styles from './awsec2.css';
 import sharedStyles from '../../shared/styles.css';
 import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
 import Checkbox from 'material-ui/Checkbox';
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx';
+import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
 import Avatar from 'material-ui/Avatar';
-import { browserHistory } from 'react-router'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 
@@ -124,7 +123,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                             snackBarMessage(error);
                         } else {
                             error.message = `This backend has not yet been configured`;
-                            browserHistory.push(`${this.state.baseUrl}backend`);
+                            history.push(`${this.state.baseUrl}backend`);
                             this.setState({ selectedTab: 'backend', isBackendConfigured: false });
                             snackBarMessage(error);
                         }
@@ -160,7 +159,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                         snackBarMessage(`Role ${roleId} has been updated`);
                         this.listEc2Roles();
                         this.setState({ openNewRoleDialog: false, openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema), selectedRoleId: '', newRoleId: '' });
-                        browserHistory.push(`${this.state.baseUrl}roles`);
+                        history.push(`${this.state.baseUrl}roles`);
                     })
                     .catch(snackBarMessage);
             })
@@ -190,7 +189,7 @@ export default class AwsEc2AuthBackend extends React.Component {
     componentWillMount() {
         let tab = this.props.location.pathname.split(this.state.baseUrl)[1];
         if (!tab) {
-            browserHistory.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
+            history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
             this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
         }
@@ -257,7 +256,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                             tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
                                 .then(() => {
                                     this.setState({ selectedRoleId: role });
-                                    browserHistory.push(`${this.state.baseUrl}roles/${role}`);
+                                    history.push(`${this.state.baseUrl}roles/${role}`);
                                 }).catch(() => {
                                     snackBarMessage(new Error('Access denied'));
                                 })
@@ -452,7 +451,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                     label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openEditRoleDialog: false, selectedRoleId: '' })
-                        browserHistory.push(`${this.state.baseUrl}roles/`);
+                        history.push(`${this.state.baseUrl}roles/`);
                     }}
                 />,
                 <FlatButton
@@ -472,7 +471,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                     open={this.state.openEditRoleDialog}
                     onRequestClose={() => {
                         this.setState({ openEditRoleDialog: false, selectedRoleId: '' });
-                        browserHistory.push(`${this.state.baseUrl}roles/`);
+                        history.push(`${this.state.baseUrl}roles/`);
                     }}
                     autoScrollBodyContent={true}
                 >
@@ -621,7 +620,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                 />
                 <Tabs
                     onChange={(e) => {
-                        browserHistory.push(`${this.state.baseUrl}${e}/`);
+                        history.push(`${this.state.baseUrl}${e}/`);
                         this.setState({ newConfigObj: _.clone(this.state.configObj) });
                     }}
                     value={this.state.selectedTab}

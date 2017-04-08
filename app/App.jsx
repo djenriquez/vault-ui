@@ -1,10 +1,12 @@
 import React from 'react'
+import axios from 'axios';
 import ReactDOM from 'react-dom';
 import Login from './components/Login/Login.jsx';
-import { Router, Route, browserHistory } from 'react-router'
+import { Router, Route } from 'react-router'
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { history } from './components/shared/VaultUtils.jsx';
 import App from './components/App/App.jsx';
 import SecretsGeneric from './components/Secrets/Generic/Generic.jsx';
 import PolicyManager from './components/Policies/Manage.jsx';
@@ -15,6 +17,10 @@ import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
 import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
+
+// Load here to signal webpack
+import 'flexboxgrid/dist/flexboxgrid.min.css';
+import './assets/favicon.ico';
 
 injectTapEventPlugin();
 
@@ -34,6 +40,22 @@ injectTapEventPlugin();
     window.CustomEvent = CustomEvent;
 })();
 
+const checkVaultUiServer = (nextState, replace, callback) => {
+    // If it's a web deployment, query the server for default connection parameters
+    // Those can be set using environment variables in the nodejs process
+    if (WEBPACK_DEF_TARGET_WEB) {
+        axios.get('/vaultui').then((resp) => {
+            window.defaultVaultUrl = resp.data.defaultVaultUrl;
+            window.defaultAuthMethod = resp.data.defaultAuthMethod;
+            window.defaultBackendPath = resp.data.defaultBackendPath;
+            window.suppliedAuthToken = resp.data.suppliedAuthToken;
+            callback();
+        }).catch((err) => callback())
+    } else {
+        callback();
+    }
+}
+
 const checkAccessToken = (nextState, replace, callback) => {
     let vaultAuthToken = window.localStorage.getItem('vaultAccessToken');
     if (!vaultAuthToken) {
@@ -49,8 +71,8 @@ const muiTheme = getMuiTheme({
 
 ReactDOM.render((
     <MuiThemeProvider muiTheme={muiTheme}>
-        <Router history={browserHistory}>
-            <Route path="/login" component={Login} />
+        <Router history={history}>
+            <Route path="/login" component={Login} onEnter={checkVaultUiServer} />
             <Route path="/unwrap" component={SecretUnwrapper} />
             <Route path="/" component={App} onEnter={checkAccessToken}>
                 <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric} />

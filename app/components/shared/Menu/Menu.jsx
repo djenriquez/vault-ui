@@ -2,14 +2,13 @@ import React, { PropTypes } from 'react';
 import _ from 'lodash';
 import styles from './menu.css';
 import Drawer from 'material-ui/Drawer';
-import { browserHistory } from 'react-router';
 import { List, ListItem, makeSelectable } from 'material-ui/List';
 import IconButton from 'material-ui/IconButton';
 import Build from 'material-ui/svg-icons/action/build';
 import ContentAdd from 'material-ui/svg-icons/content/add'
 import MountTuneDeleteDialog from '../MountUtils/MountTuneDelete.jsx'
 import NewMountDialog from '../MountUtils/NewMount.jsx'
-import { tokenHasCapabilities, callVaultApi } from '../VaultUtils.jsx'
+import { tokenHasCapabilities, callVaultApi, history } from '../VaultUtils.jsx'
 
 const SelectableList = makeSelectable(List);
 
@@ -179,7 +178,7 @@ class Menu extends React.Component {
         }
 
         let handleMenuChange = (e, v) => {
-            browserHistory.push(v)
+            history.push(v)
         }
 
         return (
@@ -217,7 +216,7 @@ class Menu extends React.Component {
                     onActionDeleteSuccess={(path, uipath) => {
                         snackBarMessage(`Mountpoint ${path} deleted`)
                         if (this.props.pathname.startsWith(uipath)) {
-                            browserHistory.push('/');
+                            history.push('/');
                         }
                         this.loadAuthBackends();
                         this.loadSecretBackends();

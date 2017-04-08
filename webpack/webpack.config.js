@@ -11,7 +11,7 @@ module.exports = {
     },
     output: {
         path: './dist',
-        publicPath: '/assets/',
+        publicPath: 'dist/',
         filename: 'bundle.js'
     },
     devtool: 'eval',
@@ -25,19 +25,22 @@ module.exports = {
             loader: 'json-loader',
             exclude: 'node_modules'
         }, {
-            test: /\.svg$/,
-            loader: 'url'
+            test: /\.(svg|png)$/,
+            loader: 'url-loader'
         }, {
             test: /\.css$/,
             loader: ExtractTextPlugin.extract('css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader'),
             exclude: /node_modules/
+        }, {
+            test: /\.ico$/,
+            loader: 'file-loader?name=[name].[ext]'  // <-- retain original file name
         }, {
             test: /\.css$/,
             loader: ExtractTextPlugin.extract('css!postcss-loader'),
             include: /node_modules/
         }]
     },
-    postcss: [ autoprefixer({ browsers: ['last 2 versions'] }) ],
+    postcss: [autoprefixer({ browsers: ['last 2 versions'] })],
     plugins: [
         new ExtractTextPlugin("styles.css"),
         new webpack.IgnorePlugin(/regenerator|nodent|js-beautify/, /ajv/)

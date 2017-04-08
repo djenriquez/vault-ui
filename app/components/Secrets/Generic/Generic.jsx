@@ -20,10 +20,10 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, white } from 'material-ui/styles/colors.js'
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
-import { browserHistory, Link } from 'react-router'
+import { Link } from 'react-router'
 
 const SORT_DIR = {
     ASC: 'asc',
@@ -279,7 +279,7 @@ class GenericSecretBackend extends React.Component {
             <SecretWrapper buttonLabel="Wrap Secret" path={this.state.currentLogicalPath} />,
             <FlatButton label="Cancel" primary={true} onTouchTap={() => {
                 this.setState({ openEditObjectModal: false, secretContent: '' });
-                browserHistory.push(this.getBaseDir(this.props.location.pathname));
+                history.push(this.getBaseDir(this.props.location.pathname));
             }
             } />,
             <FlatButton label="Save" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
@@ -288,7 +288,7 @@ class GenericSecretBackend extends React.Component {
         let submitUpdate = () => {
             this.CreateUpdateObject();
             this.setState({ openEditObjectModal: false, secretContent: '' });
-            browserHistory.push(this.getBaseDir(this.props.location.pathname));
+            history.push(this.getBaseDir(this.props.location.pathname));
         }
 
         var objectIsBasicRootKey = _.size(this.state.secretContent) == 1 && this.state.secretContent.hasOwnProperty(this.state.rootKey);
@@ -328,7 +328,7 @@ class GenericSecretBackend extends React.Component {
                 autoScrollBodyContent={true}
                 onRequestClose={() => {
                     this.setState({ openEditObjectModal: false, secretContent: '' })
-                    browserHistory.push(this.getBaseDir(this.props.location.pathname))
+                    history.push(this.getBaseDir(this.props.location.pathname))
                 }}
             >
                 {content}
@@ -404,7 +404,7 @@ class GenericSecretBackend extends React.Component {
                         onTouchTap={() => {
                             this.setState({ newSecretName: '' });
                             tokenHasCapabilities([capability], this.state.currentLogicalPath + key).then(() => {
-                                browserHistory.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
+                                history.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
                             }).catch(() => {
                                 snackBarMessage(new Error("Access denied"));
                             })

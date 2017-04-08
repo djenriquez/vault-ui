@@ -16,12 +16,10 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { red500 } from 'material-ui/styles/colors.js'
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
-import { browserHistory } from 'react-router'
 import update from 'immutability-helper';
-
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -178,7 +176,7 @@ class RadiusAuthBackend extends React.Component {
                     this.setState({ openNewUserDialog: false, newUserId: '' });
                     snackBarMessage(`User ${userid} has been registered`);
                 } else {
-                    browserHistory.push(this.state.baseUrl);
+                    history.push(this.state.baseUrl);
                     this.setState({ openEditUserDialog: false, selectedUserId: '' });
                     snackBarMessage(`User ${userid} has been updated`);
                 }
@@ -226,7 +224,7 @@ class RadiusAuthBackend extends React.Component {
                             this.setState({ newUserId: '' });
                             tokenHasCapabilities(['read'], userobj.path).then(() => {
                                 this.setState({ selectedUserId: userobj.id });
-                                browserHistory.push(`${this.state.baseUrl}${userobj.id}`);
+                                history.push(`${this.state.baseUrl}${userobj.id}`);
                             }).catch(() => {
                                 snackBarMessage(new Error("Access denied"));
                             })
@@ -244,7 +242,7 @@ class RadiusAuthBackend extends React.Component {
                     label="Cancel"
                     onTouchTap={() => {
                         this.setState({ openEditUserDialog: false, selectedUserId: '' })
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     }}
                 />,
                 <FlatButton

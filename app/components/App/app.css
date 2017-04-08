@@ -6,11 +6,6 @@
     margin-top: 80px;
 }
 
-#welcomeHeadline {
-    font-size: 60px;
-    font-weight: 200;
-}
-
 .snackbar {
     text-align: center;
 }
@@ -26,7 +21,6 @@
 }
 
 .welcomeHeader {
-    /*text-shadow: 0px 1px 1px #4d4d4d;*/
     text-align: center;
 }
 
@@ -37,5 +31,4 @@
     margin: 20px 15%;
     border-color: #f39c12;
     background-color: #fef5e6 !important;
-    /*text-align: center;*/
 }
