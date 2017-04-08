@@ -82,7 +82,7 @@ class Header extends React.Component {
                     <span key="infoSessionTimeout" className={styles.infoSectionItem}>
                         <span className={styles.infoSectionItemKey}>token ttl</span>
                         <span className={styles.infoSectionItemValue}>
-                            <CountDown startTime={this.props.tokenIdentity.ttl} />
+                            <CountDown countDown={this.props.tokenIdentity.ttl} retrigger={this.props.tokenIdentity.last_renewal_time} />
                         </span>
                     </span>
                 )

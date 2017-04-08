@@ -14,8 +14,8 @@ import JsonEditor from '../shared/JsonEditor.jsx';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import { callVaultApi, tokenHasCapabilities, history } from '../shared/VaultUtils.jsx'
 
-let twoMinuteWarningTimeout;
-let logoutTimeout;
+let twoMinuteWarningTimeoutId;
+let logoutTimeoutId;
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -77,8 +77,10 @@ export default class App extends React.Component {
                     let ttl = resp.data.data.ttl * 1000;
                     // The upper limit of setTimeout is 0x7FFFFFFF (or 2147483647 in decimal)
                     if (ttl > 0 && ttl < 2147483648) {
-                        setTimeout(logoutTimeout, ttl);
-                        setTimeout(twoMinuteWarningTimeout, ttl - TWO_MINUTES);
+                        clearTimeout(logoutTimeoutId);
+                        clearTimeout(twoMinuteWarningTimeoutId);
+                        logoutTimeoutId = setTimeout(logoutTimeout, ttl);
+                        twoMinuteWarningTimeoutId = setTimeout(twoMinuteWarningTimeout, ttl - TWO_MINUTES);
                     }
                 }
             })
@@ -118,11 +120,11 @@ export default class App extends React.Component {
         this.reloadSessionIdentity();
 
         // Check access to the sys/capabilities-self path
-        callVaultApi('post', 'sys/capabilities-self', null, {path: '/'})
-            .then(() =>{
+        callVaultApi('post', 'sys/capabilities-self', null, { path: '/' })
+            .then(() => {
                 this.setState({ tokenCanQueryCapabilities: true });
             })
-            .catch(() =>{
+            .catch(() => {
                 this.setState({ tokenCanQueryCapabilities: false });
             })
 
@@ -137,8 +139,8 @@ export default class App extends React.Component {
     }
 
     componentWillUnmount() {
-        clearTimeout(logoutTimeout);
-        clearTimeout(twoMinuteWarningTimeout);
+        clearTimeout(logoutTimeoutId);
+        clearTimeout(twoMinuteWarningTimeoutId);
     }
 
     renderSessionExpDialog() {
