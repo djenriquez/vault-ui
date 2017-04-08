@@ -49,7 +49,7 @@ djenriquez/vault-ui
 #### Advanced configuration options
 
 By default, connection and authentication parameters must be configured by clicking on the configuration cog on the login page.
-Using environement variables (via docker), an administrator can pre-configure those parameters.
+Using environment variables (via docker), an administrator can pre-configure those parameters.
 
 Example command to pre-configure the Vault server URL and authentication method
 ```bash
@@ -147,7 +147,7 @@ By default, secrets will display as their raw JSON value represented by the `dat
 Policies are managed also using the [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Currently, GitHub and raw Tokens are the only supported authentication backends for associated policies.
 
 ### Token Management
-Users have the ability to create and revoke tokens, manage token roles and list accesors.
+Users have the ability to create and revoke tokens, manage token roles and list accessors.
 
 ### Response Wrapping
 Vault-UI supports response-wrapping of secrets in _generic_ backends. Wrapping custom JSON data is also supported.
