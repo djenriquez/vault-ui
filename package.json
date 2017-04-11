@@ -73,7 +73,7 @@
     "webpack": "^1.13.3"
   },
   "dependencies": {
-    "axios": "^0.15.2",
+    "axios": "^0.16.1",
     "body-parser": "^1.15.2",
     "compression": "^1.6.2",
     "express": "^4.14.0",
