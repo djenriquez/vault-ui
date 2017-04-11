@@ -18,7 +18,6 @@ module.exports = function (env) {
         },
         output: {
             path: path.resolve(__dirname, './dist'),
-            publicPath: 'dist/',
             filename: buildfor + '-bundle.js'
         },
         module: {
@@ -50,13 +49,17 @@ module.exports = function (env) {
                 {
                     test: /\.(svg|png)$/,
                     use: ['url-loader']
-                }
+                },
+                {
+                    test: /\.(ttf|eot|svg|woff(2)?)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                    use: ["file-loader"]
+                },
             ]
         },
         plugins: [
             new ExtractTextPlugin("styles.css"),
             new webpack.IgnorePlugin(/regenerator|nodent|js-beautify/, /ajv/),
-            new webpack.DefinePlugin({WEBPACK_DEF_TARGET_WEB: (buildfor == "web")})
+            new webpack.DefinePlugin({ WEBPACK_DEF_TARGET_WEB: (buildfor == "web") })
         ]
     }
 };
