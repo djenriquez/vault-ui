@@ -4,7 +4,6 @@ var path = require('path');
 
 module.exports = function (env) {
     let buildfor = (env && env.target) ? env.target : "web";
-    let sourcemap = (env && env.sourcemap) ? "eval" : false;
 
     return {
         target: buildfor,
@@ -17,7 +16,6 @@ module.exports = function (env) {
             ],
             extensions: ['.js', '.jsx']
         },
-        devtool: sourcemap,
         output: {
             path: path.resolve(__dirname, './dist'),
             publicPath: 'dist/',
