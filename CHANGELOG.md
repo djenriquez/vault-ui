@@ -1,9 +1,13 @@
 # 2.1.0 (Unreleased)
+## Features
 - Support AWS EC2 authentication backend
-- Support Okta authentication backend
+- Support User/Pass authentication backend
 - Improve GitHub authentication backend
 - Provide ability to sort secrets
 - Allow naming tokens generated from roles
+
+## Bug Fixes
+- Fix 307 redirects
 
 # 2.0.1
 - Fix reference to Vault icon
