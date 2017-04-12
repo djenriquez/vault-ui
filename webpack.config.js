@@ -18,6 +18,7 @@ module.exports = function (env) {
         },
         output: {
             path: path.resolve(__dirname, './dist'),
+            publicPath: '/dist/',
             filename: buildfor + '-bundle.js'
         },
         module: {
@@ -48,10 +49,10 @@ module.exports = function (env) {
                 },
                 {
                     test: /\.(svg|png)$/,
-                    use: ['url-loader']
+                    use: ['file-loader']
                 },
                 {
-                    test: /\.(ttf|eot|svg|woff(2)?)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                    test: /\.(ttf|eot|woff(2)?)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                     use: ["file-loader"]
                 },
             ]
