@@ -159,14 +159,14 @@ export default class AwsEc2AuthBackend extends React.Component {
                         snackBarMessage(`Role ${roleId} has been updated`);
                         this.listEc2Roles();
                         this.setState({ openNewRoleDialog: false, openEditRoleDialog: false, newRoleConfig: _.clone(this.roleConfigSchema), selectedRoleId: '', newRoleId: '' });
-                        history.push(`${this.state.baseUrl}roles`);
+                        history.push(`${this.state.baseUrl}roles/`);
                     })
                     .catch(snackBarMessage);
             })
             .catch(() => {
                 this.setState({ selectedRoleId: '' })
                 snackBarMessage(new Error(`No permissions to display properties for role ${this.state.selectedRoleId}`));
-            })
+            });
     }
 
     displayRole() {
