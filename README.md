@@ -71,12 +71,18 @@ Supported environment variables:
 This defaults can be overridden if the user fills out the endpoint and auth method manually.
 
 
-Currently supported authentication methods:
+Current supported login methods:
 - `GITHUB` : When using the [GitHub](https://www.vaultproject.io/docs/auth/github.html) backend
 - `USERNAMEPASSWORD` : When using the [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html) or [RADIUS](https://www.vaultproject.io/docs/auth/radius.html) backends
 - `LDAP` : When using the [LDAP](https://www.vaultproject.io/docs/auth/ldap.html) backend
 - `TOKEN` : When using the [Tokens](https://www.vaultproject.io/docs/auth/token.html) backend
 
+Current supported management of backend auth methods:
+- [GitHub](https://www.vaultproject.io/docs/auth/github.html)
+- [RADIUS](https://www.vaultproject.io/docs/auth/radius.html)
+- [AWS-EC2](https://www.vaultproject.io/docs/auth/aws-ec2.html)
+- [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html)
+- [Token](https://www.vaultproject.io/docs/auth/token.html)
 
 In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
 
