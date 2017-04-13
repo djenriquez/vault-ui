@@ -5,6 +5,7 @@
 - Improve GitHub authentication backend
 - Provide ability to sort secrets
 - Allow naming tokens generated from roles
+- Add JSON diff view to compare updates
 
 ## Bug Fixes
 - Fix 307 redirects
