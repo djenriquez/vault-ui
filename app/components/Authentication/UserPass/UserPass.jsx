@@ -50,6 +50,7 @@ export default class UserPassAuthBackend extends React.Component {
             selectedUserId: '',
             newUserId: '',
             newUserPassword: '',
+            newUserPassword2: '',
             openItemDialog: false,
             openNewItemDialog: false,
             deleteUserPath: ''
@@ -248,6 +249,7 @@ export default class UserPassAuthBackend extends React.Component {
                 <FlatButton
                     label='Save'
                     primary={true}
+                    disabled={!(this.state.newUserPassword === this.state.newUserPassword2)}
                     onTouchTap={() => {
                         this.createUpdateUser(`${this.state.newUserId}`, true);
                     }}
@@ -256,7 +258,7 @@ export default class UserPassAuthBackend extends React.Component {
 
             return (
                 <Dialog
-                    title={`Adding new ${this.state.selectedTab}`}
+                    title={`Adding new user`}
                     modal={false}
                     actions={actions}
                     open={this.state.openNewItemDialog}
@@ -277,10 +279,10 @@ export default class UserPassAuthBackend extends React.Component {
                             onChange={(e) => {
                                 this.setState({ newUserId: e.target.value });
                             }}
-                        />
+                        /><br />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='Enter user password'
+                            hintText='Enter password'
                             floatingLabelFixed={true}
                             floatingLabelText='Password'
                             type='password'
@@ -289,7 +291,19 @@ export default class UserPassAuthBackend extends React.Component {
                             onChange={(e) => {
                                 this.setState({ newUserPassword: e.target.value });
                             }}
-                        />
+                        /><br />
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='Re-enter password'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Password'
+                            type='password'
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newUserPassword2: e.target.value });
+                            }}
+                        /><br />
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
                             height='250px'
