@@ -1,11 +1,18 @@
-# 2.1.0 (Unreleased)
+# 2.2.0 (Unreleased)
 ## Features
-- Support AWS EC2 authentication backend
-- Support User/Pass authentication backend
-- Improve GitHub authentication backend
-- Provide ability to sort secrets
-- Allow naming tokens generated from roles
 - Add JSON diff view to compare updates
+- Allow naming tokens generated from roles
+- Support Cubbyhole secret backend
+- Add ability to renew token
+
+# 2.1.0
+## Features
+- Support AWS EC2 authentication backend - https://github.com/djenriquez/vault-ui/pull/76
+- Support User/Pass authentication backend - https://github.com/djenriquez/vault-ui/pull/94
+- Improve GitHub authentication backend - https://github.com/djenriquez/vault-ui/pull/78
+- Provide ability to sort secrets - https://github.com/djenriquez/vault-ui/pull/82
+- Improvements to backend code + upgrade React components - https://github.com/djenriquez/vault-ui/pull/93
+- Support use with new Desktop App - https://github.com/djenriquez/vault-ui/pull/85
 
 ## Bug Fixes
 - Fix 307 redirects
