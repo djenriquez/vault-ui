@@ -48,6 +48,7 @@ class GenericSecretBackend extends React.Component {
             newSecretBtnDisabled: true,
             secretSortDir: SORT_DIR.ASC,
             secretList: [],
+            filteredSecretList: [],
             secretContent: {},
             newSecretName: '',
             currentLogicalPath: '',
@@ -100,7 +101,7 @@ class GenericSecretBackend extends React.Component {
                 // Load secret list at current path
                 callVaultApi('get', this.state.currentLogicalPath, { list: true }, null, null)
                     .then((resp) => {
-                        this.setState({ secretList: resp.data.data.keys });
+                        this.setState({ secretList: resp.data.data.keys, filteredSecretList: resp.data.data.keys });
                     })
                     .catch((err) => {
                         // 404 is expected when no secrets are present
@@ -365,7 +366,7 @@ class GenericSecretBackend extends React.Component {
 
     render() {
         let renderSecretListItems = (returndirs, returnobjs) => {
-            let sortedSecrets = _.orderBy(this.state.secretList, _.identity, this.state.secretSortDir);
+            let sortedSecrets = _.orderBy(this.state.filteredSecretList, _.identity, this.state.secretSortDir);
             return _.map(sortedSecrets, (key) => {
                 let avatar = (<Avatar icon={<ActionAssignment />} />);
                 let action = (
@@ -455,6 +456,18 @@ class GenericSecretBackend extends React.Component {
                                     />
                                 </ToolbarGroup>
                                 <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredSecretList: _.filter(this.state.secretList, (item) => {
+                                                    return item.includes(v);
+                                                })
+                                            })
+                                        }}
+                                    />
                                     <SelectField
                                         style={{width: 150}}
                                         autoWidth={true}
