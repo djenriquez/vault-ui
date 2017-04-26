@@ -122,6 +122,15 @@ export default class NewMountDialog extends Component {
                                     onChange={(e) => this.setState({ backendPath: e.target.value }) }
                                 />
                             </div>
+                            <div>
+                                <TextField
+                                    floatingLabelFixed={true}
+                                    floatingLabelText="Mount description"
+                                    fullWidth={true}
+                                    value={this.state.backendDescription}
+                                    onChange={(e) => this.setState({ backendDescription: e.target.value }) }
+                                />
+                            </div>
                         </div>
                     </Dialog >
                 }
