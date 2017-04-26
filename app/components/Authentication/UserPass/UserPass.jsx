@@ -3,7 +3,6 @@ import React, { PropTypes } from 'react';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
@@ -13,12 +12,10 @@ import Subheader from 'material-ui/Subheader';
 import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Toggle from 'material-ui/Toggle';
 // Styles
 import styles from './userpass.css';
 import sharedStyles from '../../shared/styles.css';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
-import Checkbox from 'material-ui/Checkbox';
+import { red500 } from 'material-ui/styles/colors.js';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
@@ -32,6 +29,10 @@ function snackBarMessage(message) {
 }
 
 export default class UserPassAuthBackend extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+        location: PropTypes.object.isRequired
+    };
 
     userPassConfigSchema = {
         id: undefined,
@@ -124,7 +125,7 @@ export default class UserPassAuthBackend extends React.Component {
         this.listUsers();
         let user = this.props.location.pathname.split(this.state.baseUrl)[1];
         if (user) {
-            this.state.selectedUserId = user;
+            this.setState({selectedUserId: user});
             this.displayItem();
         }
     }
