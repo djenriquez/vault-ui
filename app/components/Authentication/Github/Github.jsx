@@ -51,7 +51,9 @@ export default class GithubAuthBackend extends React.Component {
             baseUrl: `/auth/github/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             teams: [],
+            filteredTeamList: [],
             users: [],
+            filteredUserList: [],
             config: this.backendConfigSchema,
             newConfig: this.backendConfigSchema,
             itemConfig: this.teamConfigSchema,
@@ -78,13 +80,13 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/teams`, { list: true }, null)
                     .then((resp) => {
                         let teams = _.get(resp, 'data.data.keys', []);
-                        this.setState({ teams: _.valuesIn(teams) });
+                        this.setState({ teams: _.valuesIn(teams), filteredTeamList: _.valuesIn(teams) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ teams: [] });
+                            this.setState({ teams: [], filteredTeamList: [] });
                         }
                     });
             })
@@ -99,13 +101,13 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/users`, { list: true }, null)
                     .then((resp) => {
                         let users = _.get(resp, 'data.data.keys', []);
-                        this.setState({ users: _.valuesIn(users) });
+                        this.setState({ users: _.valuesIn(users), filteredUserList: _.valuesIn(users) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ users: [] });
+                            this.setState({ users: [], filteredUserList: [] });
                         }
                     });
             })
@@ -254,7 +256,7 @@ export default class GithubAuthBackend extends React.Component {
 
     render() {
         let renderListItems = () => {
-            let items = this.state.selectedTab === 'teams' ? this.state.teams : this.state.users;
+            let items = this.state.selectedTab === 'teams' ? this.state.filteredTeamList : this.state.filteredUserList;
             return _.map(items, (item) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
@@ -435,6 +437,20 @@ export default class GithubAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredTeamList: _.filter(this.state.teams, (item) => {
+                                                    return item.includes(v);
+                                                })
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
                             </Toolbar>
                             <List className={sharedStyles.listStyle}>
                                 {renderListItems()}
@@ -463,6 +479,20 @@ export default class GithubAuthBackend extends React.Component {
                                                 newItemId: '',
                                                 openNewItemDialog: true,
                                                 itemConfig: _.clone(this.itemConfigSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredUserList: _.filter(this.state.users, (item) => {
+                                                    return item.includes(v);
+                                                })
                                             })
                                         }}
                                     />
