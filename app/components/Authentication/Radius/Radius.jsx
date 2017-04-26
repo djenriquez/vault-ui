@@ -94,7 +94,7 @@ class RadiusAuthBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ userList: [] })
+                this.setState({ userList: [], filteredUserList: [] })
                 snackBarMessage(new Error(`No permissions to list users`));
             })
     }

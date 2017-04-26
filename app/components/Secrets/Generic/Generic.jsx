@@ -110,7 +110,7 @@ class GenericSecretBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ secretList: [] })
+                this.setState({ secretList: [], filteredSecretList: [] })
                 snackBarMessage(new Error(`No permissions to list content at ${this.state.currentLogicalPath}`));
             })
     }

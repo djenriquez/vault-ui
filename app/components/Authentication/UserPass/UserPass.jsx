@@ -71,7 +71,7 @@ export default class UserPassAuthBackend extends React.Component {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ users: [] });
+                            this.setState({ users: [], filteredUserList: [] });
                         }
                     });
             })
