@@ -46,6 +46,7 @@ export default class UserPassAuthBackend extends React.Component {
             baseUrl: `/auth/userpass/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             users: [],
+            filteredUserList: [],
             config: this.userPassConfigSchema,
             selectedUserId: '',
             newUserId: '',
@@ -63,7 +64,7 @@ export default class UserPassAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/users`, { list: true }, null)
                     .then((resp) => {
                         let users = _.get(resp, 'data.data.keys', []);
-                        this.setState({ users: _.valuesIn(users) });
+                        this.setState({ users: _.valuesIn(users), filteredUserList: _.valuesIn(users) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
@@ -158,7 +159,7 @@ export default class UserPassAuthBackend extends React.Component {
 
     render() {
         let renderListItems = () => {
-            let items = this.state.users;
+            let items = this.state.filteredUserList;
             return _.map(items, (item) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
@@ -348,6 +349,20 @@ export default class UserPassAuthBackend extends React.Component {
                                                 newUserId: '',
                                                 openNewItemDialog: true,
                                                 config: _.clone(this.userPassConfigSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredUserList: _.filter(this.state.users, (item) => {
+                                                    return item.includes(v);
+                                                })
                                             })
                                         }}
                                     />
