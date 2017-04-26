@@ -130,11 +130,22 @@ class Menu extends React.Component {
                     config: backend.config
                 }
 
+                let secondaryText = (
+                    <p>
+                        {backend.description &&
+                            <span className={styles.mountSecondaryText}>{backend.description}<br /></span>
+                        }
+                        <span className={styles.mountSecondaryText}>type: {backend.type}</span>
+                    </p>
+                )
+
                 return (
                     <ListItem
                         key={idx}
+                        className={styles.menuItem}
                         primaryText={backend.path}
-                        secondaryText={`type: ${backend.type}`}
+                        secondaryText={secondaryText}
+                        secondaryTextLines={backend.description ? 2 : 1}
                         value={`/secrets/${backend.type}/${backend.path}`}
                         rightIconButton={
                             <IconButton
@@ -158,11 +169,22 @@ class Menu extends React.Component {
                     config: backend.config
                 }
 
+                let secondaryText = (
+                    <p>
+                        {backend.description &&
+                            <span className={styles.mountSecondaryText}>{backend.description}<br /></span>
+                        }
+                        <span className={styles.mountSecondaryText}>type: {backend.type}</span>
+                    </p>
+                )
+
                 return (
                     <ListItem
                         key={idx}
+                        className={styles.menuItem}
                         primaryText={backend.path}
-                        secondaryText={`type: ${backend.type}`}
+                        secondaryText={secondaryText}
+                        secondaryTextLines={backend.description ? 2 : 1}
                         value={`/auth/${backend.type}/${backend.path}`}
                         rightIconButton={
                             <IconButton
@@ -227,6 +249,7 @@ class Menu extends React.Component {
                 <Drawer containerClassName={styles.root} docked={true} open={true} >
                     <SelectableList value={this.state.selectedPath} onChange={handleMenuChange}>
                         <ListItem
+                            className={styles.menuItem}
                             primaryText="Secret Backends"
                             primaryTogglesNestedList={true}
                             initiallyOpen={true}
@@ -235,13 +258,14 @@ class Menu extends React.Component {
                                 <IconButton
                                     style={{ opacity: 0.1 }}
                                     hoveredStyle={{ opacity: 1.0 }}
-                                    onTouchTap={() => this.setState({openNewSecretMountDialog: true})}
+                                    onTouchTap={() => this.setState({ openNewSecretMountDialog: true })}
                                 >
                                     <ContentAdd />
                                 </IconButton>
                             }
                         />
                         <ListItem
+                            className={styles.menuItem}
                             primaryText="Auth Backends"
                             primaryTogglesNestedList={true}
                             initiallyOpen={true}
@@ -250,7 +274,7 @@ class Menu extends React.Component {
                                 <IconButton
                                     style={{ opacity: 0.1 }}
                                     hoveredStyle={{ opacity: 1.0 }}
-                                    onTouchTap={() => this.setState({openNewAuthMountDialog: true})}
+                                    onTouchTap={() => this.setState({ openNewAuthMountDialog: true })}
                                 >
                                     <ContentAdd />
                                 </IconButton>
@@ -258,15 +282,17 @@ class Menu extends React.Component {
 
                         />
                         <ListItem
+                            className={styles.menuItem}
                             primaryText="System"
                             primaryTogglesNestedList={true}
                             initiallyOpen={true}
                             nestedItems={[
-                                <ListItem primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/sys/policies" />,
-                                <ListItem primaryText="Data Wrapper" secondaryText="Securely Forward JSON Data" value="/responsewrapper" />
+                                <ListItem className={styles.menuItem} primaryText="Policies" secondaryText="Manage Vault Access Policies" value="/sys/policies" />,
+                                <ListItem className={styles.menuItem} primaryText="Data Wrapper" secondaryText="Securely Forward JSON Data" value="/responsewrapper" />
                             ]}
                         />
                         <ListItem
+                            className={styles.menuItem}
                             primaryText="Preferences"
                             secondaryText="Customize Vault-UI"
                             primaryTogglesNestedList={false}

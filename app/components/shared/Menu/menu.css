@@ -4,9 +4,9 @@
     height: calc(100% - 60px) !important;
 }
 
-.root span {
-    font-size: 20px !important;
-    font-weight: 200 !important;
+.menuItem > div > div > div {
+    font-size: 20px;
+    font-weight: 250;
 }
 
 .link {
@@ -31,4 +31,11 @@
 
 .disabled {
     display: none;
+}
+
+.mountSecondaryText {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
