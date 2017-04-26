@@ -3,7 +3,6 @@ import React, { PropTypes } from 'react';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
@@ -13,10 +12,8 @@ import Subheader from 'material-ui/Subheader';
 import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Toggle from 'material-ui/Toggle';
 import Avatar from 'material-ui/Avatar';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
-import Checkbox from 'material-ui/Checkbox';
+import { red500 } from 'material-ui/styles/colors.js';
 
 // Styles
 import styles from './github.css';
@@ -33,6 +30,11 @@ function snackBarMessage(message) {
 }
 
 export default class GithubAuthBackend extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+        location: PropTypes.object.isRequired
+    };
+
     backendConfigSchema = {
         organization: '',
         base_url: undefined,
@@ -181,7 +183,6 @@ export default class GithubAuthBackend extends React.Component {
     }
 
     createUpdateItem(id) {
-        let itemId = this.state.selectedTab;
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${id}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
@@ -206,7 +207,7 @@ export default class GithubAuthBackend extends React.Component {
         if (!tab) {
             history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
-            this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
+            this.setState({selectedTab: tab.includes('/') ? tab.split('/')[0] : tab});
         }
     }
 

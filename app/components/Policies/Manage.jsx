@@ -1,17 +1,16 @@
 import React, { PropTypes } from 'react'
 import _ from 'lodash';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
+import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Paper from 'material-ui/Paper';
 import styles from './policies.css';
 import sharedStyles from '../shared/styles.css';
 import FlatButton from 'material-ui/FlatButton';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js'
+import { green500, green400, red500, red300, white } from 'material-ui/styles/colors.js'
 import { List, ListItem } from 'material-ui/List';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import hcltojson from 'hcl-to-json'
 import jsonschema from './vault-policy-schema.json'
@@ -20,7 +19,6 @@ import Avatar from 'material-ui/Avatar';
 import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
-import { Link } from 'react-router'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -73,7 +71,7 @@ export default class PolicyManager extends React.Component {
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
+    componentDidUpdate(prevProps) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
             if (this.props.params.splat) {
                 this.displayPolicy();
@@ -221,7 +219,7 @@ export default class PolicyManager extends React.Component {
     updatePolicy(policyName, isNewPolicy) {
         let stringifiedPolicy = JSON.stringify(this.state.currentPolicy);
         callVaultApi('put', `sys/policy/${policyName}`, null, { rules: stringifiedPolicy }, null)
-            .then((resp) => {
+            .then(() => {
                 if (isNewPolicy) {
                     let policies = this.state.policies;
                     policies.push(policyName);
@@ -264,7 +262,7 @@ export default class PolicyManager extends React.Component {
                 // Attempt to parse into JSON incase a stringified JSON was sent
                 try {
                     rules_obj = JSON.parse(rules);
-                } catch (e) { }
+                } catch (e) { console.log(e) }
 
                 if (!rules_obj) {
                     // Previous parse failed, attempt HCL to JSON conversion
@@ -285,7 +283,7 @@ export default class PolicyManager extends React.Component {
 
     deletePolicy(policyName) {
         callVaultApi('delete', `sys/policy/${policyName}`, null, null, null)
-            .then((resp) => {
+            .then(() => {
                 let policies = this.state.policies;
                 let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete === policyName });
                 policies = _.pull(policies, policyToDelete);
