@@ -43,6 +43,7 @@ export default class PolicyManager extends React.Component {
             focusPolicy: -1,
             deletingPolicy: '',
             policies: [],
+            filteredPolicyList: [],
             currentPolicy: '',
             disableSubmit: false,
             forbidden: false,
@@ -142,7 +143,7 @@ export default class PolicyManager extends React.Component {
                 return;
             }
 
-            if (_.filter(this.state.policies, x => x.name === this.state.focusPolicy).length > 0) {
+            if (_.filter(this.state.policies, x => x === this.state.focusPolicy).length > 0) {
                 snackBarMessage(new Error(DUPLICATE_POLICY_ERROR));
                 return;
             }
@@ -223,7 +224,7 @@ export default class PolicyManager extends React.Component {
             .then((resp) => {
                 if (isNewPolicy) {
                     let policies = this.state.policies;
-                    policies.push({ name: policyName });
+                    policies.push(policyName);
                     this.setState({
                         policies: policies
                     });
@@ -243,14 +244,9 @@ export default class PolicyManager extends React.Component {
     listPolicies() {
         callVaultApi('get', `sys/policy`, null, null, null)
             .then((resp) => {
-                let policies = _.map(resp.data.policies, (policy) => {
-                    return {
-                        name: policy
-                    }
-                });
-
                 this.setState({
-                    policies: policies,
+                    policies: resp.data.policies,
+                    filteredPolicyList: resp.data.policies,
                     buttonColor: green500
                 });
             })
@@ -291,7 +287,7 @@ export default class PolicyManager extends React.Component {
         callVaultApi('delete', `sys/policy/${policyName}`, null, null, null)
             .then((resp) => {
                 let policies = this.state.policies;
-                let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete.name === policyName });
+                let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete === policyName });
                 policies = _.pull(policies, policyToDelete);
                 this.setState({
                     policies: policies,
@@ -327,20 +323,20 @@ export default class PolicyManager extends React.Component {
     }
 
     renderPolicies() {
-        return _.map(this.state.policies, (policy) => {
+        return _.map(this.state.filteredPolicyList, (policy) => {
             return (
                 <ListItem
-                    key={policy.name}
+                    key={policy}
                     leftAvatar={<Avatar icon={<HardwareSecurity />} />}
                     onTouchTap={() => {
-                        tokenHasCapabilities(['read'], 'sys/policy/' + policy.name).then(() => {
-                            history.push(`/sys/policies/` + policy.name);
+                        tokenHasCapabilities(['read'], 'sys/policy/' + policy).then(() => {
+                            history.push(`/sys/policies/` + policy);
                         }).catch(() => {
                             snackBarMessage(new Error("Access denied"));
                         })
                     }}
-                    primaryText={<div className={policy.name}>{policy.name}</div>}
-                    rightIconButton={this.showDelete(policy.name)}>
+                    primaryText={<div className={policy}>{policy}</div>}
+                    rightIconButton={this.showDelete(policy)}>
                 </ListItem>
             );
         });
@@ -374,6 +370,20 @@ export default class PolicyManager extends React.Component {
                                             focusPolicy: '',
                                             currentPolicy: { path: { 'sample/path': { capabilities: ['read'] } } }
                                         })}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredPolicyList: _.filter(this.state.policies, (item) => {
+                                                    return item.includes(v);
+                                                })
+                                            })
+                                        }}
                                     />
                                 </ToolbarGroup>
                             </Toolbar>
