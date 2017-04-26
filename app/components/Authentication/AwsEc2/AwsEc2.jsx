@@ -62,6 +62,7 @@ export default class AwsEc2AuthBackend extends React.Component {
             baseUrl: `/auth/aws-ec2/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             ec2Roles: [],
+            filteredEc2RoleList: [],
             configObj: this.ec2ConfigSchema,
             newConfigObj: this.ec2ConfigSchema,
             newRoleConfig: this.roleConfigSchema,
@@ -91,13 +92,13 @@ export default class AwsEc2AuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/role`, { list: true }, null)
                     .then((resp) => {
                         let roles = _.get(resp, 'data.data.keys', []);
-                        this.setState({ ec2Roles: _.valuesIn(roles) });
+                        this.setState({ ec2Roles: _.valuesIn(roles), filteredEc2RoleList: _.valuesIn(roles) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ ec2Roles: [] });
+                            this.setState({ ec2Roles: [], filteredEc2RoleList: [] });
                         }
                     });
             })
@@ -234,7 +235,7 @@ export default class AwsEc2AuthBackend extends React.Component {
 
     render() {
         let renderRoleListItems = () => {
-            return _.map(this.state.ec2Roles, (role) => {
+            return _.map(this.state.filteredEc2RoleList, (role) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
@@ -645,6 +646,20 @@ export default class AwsEc2AuthBackend extends React.Component {
                                             this.setState({
                                                 openNewRoleDialog: true,
                                                 newRoleConfig: _.clone(this.roleConfigSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredEc2RoleList: _.filter(this.state.ec2Roles, (item) => {
+                                                    return item.includes(v);
+                                                })
                                             })
                                         }}
                                     />
