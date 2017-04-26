@@ -224,6 +224,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                 baseUrl: `/auth/aws-ec2/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 ec2Roles: [],
+                filteredEc2RoleList: [],
                 selectedRoleId: '',
                 newConfigObj: this.ec2ConfigSchema,
                 configObj: this.ec2ConfigSchema,

@@ -149,7 +149,8 @@ class GenericSecretBackend extends React.Component {
         if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             // Reset
             this.setState({
-                secretList: []
+                secretList: [],
+                filteredSecretList: []
             })
         }
     }

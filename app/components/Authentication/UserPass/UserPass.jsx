@@ -146,6 +146,7 @@ export default class UserPassAuthBackend extends React.Component {
                 baseUrl: `/auth/userpass/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 users: [],
+                filteredUserList: [],
                 config: this.userPassConfigSchema,
                 selectedUserId: '',
                 newUserId: '',

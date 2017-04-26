@@ -148,6 +148,7 @@ class RadiusAuthBackend extends React.Component {
                 baseUrl: `/auth/radius/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 userList: [],
+                filteredUserList: [],
                 selectedUserId: '',
                 newConfigObj: this.radiusConfigSchema,
                 configObj: this.radiusConfigSchema
