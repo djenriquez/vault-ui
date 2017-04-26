@@ -59,6 +59,9 @@ class GenericSecretBackend extends React.Component {
             wrapPath: null,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
+            description: '',
+            disableDescEdit: true,
+            genericName: ''
         }
 
         _.bindAll(
@@ -71,7 +74,13 @@ class GenericSecretBackend extends React.Component {
             'DeleteObject',
             'renderNewObjectDialog',
             'renderEditObjectDialog',
-            'renderDeleteConfirmationDialog'
+            'renderDeleteConfirmationDialog',
+            /*
+            TODO:
+            Waiting on the ability to update mount description: https://github.com/hashicorp/vault/issues/2645
+            'editDescription',
+            'updateDescription'
+            */
         );
     }
 
@@ -131,11 +140,54 @@ class GenericSecretBackend extends React.Component {
             })
     }
 
+    getMountDescription() {
+        this.setState({ genericName: this.props.params.namespace });
+        tokenHasCapabilities(['read'], 'sys/mounts')
+            .then(() => {
+                callVaultApi('get', 'sys/mounts')
+                    .then((resp) => {
+                        let desc = _.get(resp, `data.data.${this.state.genericName}/.description`, null);
+                        if (desc) this.setState({ description: desc })
+                    });
+            })
+            .catch();
+    }
+
+    /*
+    TODO:
+    Waiting on the ability to update mount description: https://github.com/hashicorp/vault/issues/2645
+    
+    editDescription() {
+        let uri = `/sys/mounts/${this.state.genericName}`;
+        tokenHasCapabilities(['post'], uri)
+            .then(() => {
+                this.setState({ disableDescEdit: false });
+            })
+            .catch();
+    }
+
+    updateDescription() {
+        let uri = `/sys/mounts/${this.state.genericName}`;
+        tokenHasCapabilities(['post'], uri)
+            .then(() => {
+                callVaultApi('post', uri, {}, { description: this.state.description, type: 'generic', path: this.state.genericName })
+                    .then((resp) => {
+                        snackBarMessage('Description updated')
+                    })
+                    .catch((error) => {
+                        snackBarMessage(error);
+                    });
+            })
+            .catch();
+    }
+    */
+
     componentWillMount() {
         this.setState({ currentLogicalPath: `${this.props.params.namespace}/${this.props.params.splat}` })
     }
 
     componentDidMount() {
+        this.getMountDescription();
         if (this.isPathDirectory(this.props.params.splat)) {
             this.loadSecretsList();
         } else {
@@ -148,13 +200,15 @@ class GenericSecretBackend extends React.Component {
         if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             // Reset
             this.setState({
-                secretList: []
+                secretList: [],
+                description: ''
             })
         }
     }
 
     componentDidUpdate(prevProps) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
+            this.getMountDescription();
             if (this.isPathDirectory(this.props.params.splat)) {
                 this.loadSecretsList();
             } else {
@@ -432,7 +486,29 @@ class GenericSecretBackend extends React.Component {
                 {this.renderDeleteConfirmationDialog()}
                 <Tabs>
                     <Tab label="Browse Secrets" >
-                        <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
+                        <Paper
+                            className={sharedStyles.TabInfoSection}
+                            zDepth={0}
+                            onDoubleClick={this.editDescription}
+                        >
+                            {this.state.description ? <TextField
+                                inputStyle={{ textAlign: 'center' }}
+                                underlineShow={false}
+                                fullWidth={true}
+                                value={this.state.description}
+                                /*
+                                TODO:
+                                Waiting on the ability to update: https://github.com/hashicorp/vault/issues/2645
+                                */
+                                disabled={true}
+                                onBlur={() => {
+                                    this.setState({ disableDescEdit: true });
+                                    this.updateDescription();
+                                }}
+                                onChange={(e) => {
+                                    this.setState({ description: e.target.value })
+                                }}
+                            /> : null}
                             Here you can browse, edit, create and delete secrets.
                         </Paper>
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
@@ -456,14 +532,14 @@ class GenericSecretBackend extends React.Component {
                                 </ToolbarGroup>
                                 <ToolbarGroup lastChild={true}>
                                     <SelectField
-                                        style={{width: 150}}
+                                        style={{ width: 150 }}
                                         autoWidth={true}
                                         floatingLabelText="Sort Secrets"
                                         floatingLabelFixed={true}
-                                        value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}
+                                        value={this.state.secretSortDir} onChange={(e, i, v) => { this.setState({ secretSortDir: v }) }}
                                     >
-                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending"/>
-                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending"/>
+                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending" />
+                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending" />
                                     </SelectField>
                                 </ToolbarGroup>
                             </Toolbar>
