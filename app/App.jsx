@@ -51,7 +51,7 @@ const checkVaultUiServer = (nextState, replace, callback) => {
             window.defaultBackendPath = resp.data.defaultBackendPath;
             window.suppliedAuthToken = resp.data.suppliedAuthToken;
             callback();
-        }).catch((err) => callback())
+        }).catch(() => callback())
     } else {
         callback();
     }

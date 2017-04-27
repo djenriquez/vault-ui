@@ -3,7 +3,6 @@ import React, { PropTypes } from 'react';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
@@ -17,8 +16,7 @@ import Toggle from 'material-ui/Toggle';
 // Styles
 import styles from './awsec2.css';
 import sharedStyles from '../../shared/styles.css';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
-import Checkbox from 'material-ui/Checkbox';
+import { red500 } from 'material-ui/styles/colors.js';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
@@ -32,6 +30,10 @@ function snackBarMessage(message) {
 }
 
 export default class AwsEc2AuthBackend extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+        location: PropTypes.object.isRequired
+    };
 
     ec2ConfigSchema = {
         access_key: '',
@@ -62,6 +64,7 @@ export default class AwsEc2AuthBackend extends React.Component {
             baseUrl: `/auth/aws-ec2/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             ec2Roles: [],
+            filteredEc2RoleList: [],
             configObj: this.ec2ConfigSchema,
             newConfigObj: this.ec2ConfigSchema,
             newRoleConfig: this.roleConfigSchema,
@@ -91,13 +94,13 @@ export default class AwsEc2AuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/role`, { list: true }, null)
                     .then((resp) => {
                         let roles = _.get(resp, 'data.data.keys', []);
-                        this.setState({ ec2Roles: _.valuesIn(roles) });
+                        this.setState({ ec2Roles: _.valuesIn(roles), filteredEc2RoleList: _.valuesIn(roles) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ ec2Roles: [] });
+                            this.setState({ ec2Roles: [], filteredEc2RoleList: [] });
                         }
                     });
             })
@@ -191,7 +194,7 @@ export default class AwsEc2AuthBackend extends React.Component {
         if (!tab) {
             history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
-            this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
+            this.setState({selectedTab: tab.includes('/') ? tab.split('/')[0] : tab});
         }
     }
 
@@ -200,7 +203,7 @@ export default class AwsEc2AuthBackend extends React.Component {
         this.getEc2AuthConfig();
         let uri = this.props.location.pathname.split(this.state.baseUrl)[1];
         if(uri.includes('roles/') && uri.split('roles/')[1]) {
-            this.state.selectedRoleId = uri.split('roles/')[1];
+            this.setState({selectedRoleId: uri.split('roles/')[1]});
             this.displayRole();
         }
     }
@@ -221,6 +224,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                 baseUrl: `/auth/aws-ec2/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 ec2Roles: [],
+                filteredEc2RoleList: [],
                 selectedRoleId: '',
                 newConfigObj: this.ec2ConfigSchema,
                 configObj: this.ec2ConfigSchema,
@@ -234,7 +238,7 @@ export default class AwsEc2AuthBackend extends React.Component {
 
     render() {
         let renderRoleListItems = () => {
-            return _.map(this.state.ec2Roles, (role) => {
+            return _.map(this.state.filteredEc2RoleList, (role) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
@@ -645,6 +649,20 @@ export default class AwsEc2AuthBackend extends React.Component {
                                             this.setState({
                                                 openNewRoleDialog: true,
                                                 newRoleConfig: _.clone(this.roleConfigSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredEc2RoleList: _.filter(this.state.ec2Roles, (item) => {
+                                                    return item.includes(v);
+                                                })
                                             })
                                         }}
                                     />

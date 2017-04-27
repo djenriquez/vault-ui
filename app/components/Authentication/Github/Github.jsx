@@ -3,7 +3,6 @@ import React, { PropTypes } from 'react';
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
@@ -13,10 +12,8 @@ import Subheader from 'material-ui/Subheader';
 import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Toggle from 'material-ui/Toggle';
 import Avatar from 'material-ui/Avatar';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
-import Checkbox from 'material-ui/Checkbox';
+import { red500 } from 'material-ui/styles/colors.js';
 
 // Styles
 import styles from './github.css';
@@ -33,6 +30,11 @@ function snackBarMessage(message) {
 }
 
 export default class GithubAuthBackend extends React.Component {
+    static propTypes = {
+        params: PropTypes.object.isRequired,
+        location: PropTypes.object.isRequired
+    };
+
     backendConfigSchema = {
         organization: '',
         base_url: undefined,
@@ -51,7 +53,9 @@ export default class GithubAuthBackend extends React.Component {
             baseUrl: `/auth/github/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             teams: [],
+            filteredTeamList: [],
             users: [],
+            filteredUserList: [],
             config: this.backendConfigSchema,
             newConfig: this.backendConfigSchema,
             itemConfig: this.teamConfigSchema,
@@ -78,13 +82,13 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/teams`, { list: true }, null)
                     .then((resp) => {
                         let teams = _.get(resp, 'data.data.keys', []);
-                        this.setState({ teams: _.valuesIn(teams) });
+                        this.setState({ teams: _.valuesIn(teams), filteredTeamList: _.valuesIn(teams) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ teams: [] });
+                            this.setState({ teams: [], filteredTeamList: [] });
                         }
                     });
             })
@@ -99,13 +103,13 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/users`, { list: true }, null)
                     .then((resp) => {
                         let users = _.get(resp, 'data.data.keys', []);
-                        this.setState({ users: _.valuesIn(users) });
+                        this.setState({ users: _.valuesIn(users), filteredUserList: _.valuesIn(users) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ users: [] });
+                            this.setState({ users: [], filteredUserList: [] });
                         }
                     });
             })
@@ -179,7 +183,6 @@ export default class GithubAuthBackend extends React.Component {
     }
 
     createUpdateItem(id) {
-        let itemId = this.state.selectedTab;
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/map/${id}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
@@ -204,7 +207,7 @@ export default class GithubAuthBackend extends React.Component {
         if (!tab) {
             history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
-            this.state.selectedTab = tab.includes('/') ? tab.split('/')[0] : tab;
+            this.setState({selectedTab: tab.includes('/') ? tab.split('/')[0] : tab});
         }
     }
 
@@ -237,7 +240,9 @@ export default class GithubAuthBackend extends React.Component {
                 baseUrl: `/auth/github/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 users: [],
+                filteredUserList: [],
                 teams: [],
+                filteredTeamList: [],
                 selectedItemId: '',
                 newConfig: this.backendConfigSchema,
                 config: this.backendConfigSchema,
@@ -254,7 +259,7 @@ export default class GithubAuthBackend extends React.Component {
 
     render() {
         let renderListItems = () => {
-            let items = this.state.selectedTab === 'teams' ? this.state.teams : this.state.users;
+            let items = this.state.selectedTab === 'teams' ? this.state.filteredTeamList : this.state.filteredUserList;
             return _.map(items, (item) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
@@ -435,6 +440,20 @@ export default class GithubAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredTeamList: _.filter(this.state.teams, (item) => {
+                                                    return item.includes(v);
+                                                })
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
                             </Toolbar>
                             <List className={sharedStyles.listStyle}>
                                 {renderListItems()}
@@ -463,6 +482,20 @@ export default class GithubAuthBackend extends React.Component {
                                                 newItemId: '',
                                                 openNewItemDialog: true,
                                                 itemConfig: _.clone(this.itemConfigSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredUserList: _.filter(this.state.users, (item) => {
+                                                    return item.includes(v);
+                                                })
                                             })
                                         }}
                                     />

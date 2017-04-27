@@ -55,6 +55,7 @@ class RadiusAuthBackend extends React.Component {
             baseUrl: `/auth/radius/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             userList: [],
+            filteredUserList: [],
             newUserId: '',
             newUserObject: {},
             selectedUserId: '',
@@ -84,7 +85,7 @@ class RadiusAuthBackend extends React.Component {
                         let userlist = _.map(resp.data.data.keys, (userid) => {
                             return { id: userid, path: `${this.state.baseVaultPath}/users/${userid}` };
                         })
-                        this.setState({ userList: userlist });
+                        this.setState({ userList: userlist, filteredUserList: userlist });
                     })
                     .catch((err) => {
                         // 404 is expected when no users are registered
@@ -93,7 +94,7 @@ class RadiusAuthBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ userList: [] })
+                this.setState({ userList: [], filteredUserList: [] })
                 snackBarMessage(new Error(`No permissions to list users`));
             })
     }
@@ -147,6 +148,7 @@ class RadiusAuthBackend extends React.Component {
                 baseUrl: `/auth/radius/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 userList: [],
+                filteredUserList: [],
                 selectedUserId: '',
                 newConfigObj: this.radiusConfigSchema,
                 configObj: this.radiusConfigSchema
@@ -202,7 +204,7 @@ class RadiusAuthBackend extends React.Component {
 
     render() {
         let renderUserListItems = () => {
-            return _.map(this.state.userList, (userobj) => {
+            return _.map(this.state.filteredUserList, (userobj) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
@@ -375,6 +377,20 @@ class RadiusAuthBackend extends React.Component {
                                                 openNewUserDialog: true,
                                                 newUserId: '',
                                                 newUserObject: _.clone(this.radiusUserSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredUserList: _.filter(this.state.userList, (item) => {
+                                                    return item.id.includes(v);
+                                                })
                                             })
                                         }}
                                     />
