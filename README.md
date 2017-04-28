@@ -62,7 +62,7 @@ djenriquez/vault-ui
 ```
 
 Supported environment variables:
-- `NODE_TLS_REJECT_UNAUTHORIZED` disable TLS server side validation (ex. vault deployed with self-signed certificate)
+- `NODE_TLS_REJECT_UNAUTHORIZED` 0 or 1 (default: 0), disable TLS server side validation (ex. vault deployed with self-signed certificate)
 - `VAULT_URL_DEFAULT` will set the default vault endpoint.
 - `VAULT_AUTH_DEFAULT` will set the default authentication method type. See below for supported authentication methods.
 - `VAULT_AUTH_BACKEND_PATH` will set the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
