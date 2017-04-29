@@ -4,6 +4,12 @@
     font-style: italic;
 }
 
+.centered {  
+    display: flex;
+    justify-content: center;
+    align-items: center;
+} 
+
 .TabContentSection {
     padding: 10px;
 }
