@@ -94,7 +94,7 @@ class GenericSecretBackend extends React.Component {
         return path.substring(0, _.lastIndexOf(path, '/') + 1);
     }
 
-    loadSecretsList() {
+    loadSecretsList(prevProps) {
         // Control the new secret button
         tokenHasCapabilities(['create'], this.state.currentLogicalPath)
             .then(() => {
@@ -109,11 +109,16 @@ class GenericSecretBackend extends React.Component {
                 // Load secret list at current path
                 callVaultApi('get', this.state.currentLogicalPath, { list: true }, null, null)
                     .then((resp) => {
-                        this.setState(
-                            {
-                                fullSecretList: resp.data.data.keys,
-                            });
-                        this.setPage(this.state.currentPage, resp.data.data.keys);
+                        this.setState({ fullSecretList: resp.data.data.keys });
+
+                        // Load to the page with the secret directed to
+                        let page = this.state.currentPage;
+                        if (prevProps && prevProps.params.splat) {
+                            let _pagedSecrets = _.chunk(resp.data.data.keys, this.state.maxItemsPerPage);
+                            page = _.findIndex(_pagedSecrets, (secret) => { return _.indexOf(secret, prevProps.params.splat) >= 0 }) + 1;
+                        }
+
+                        this.setPage(page, resp.data.data.keys);
                     })
                     .catch((err) => {
                         // 404 is expected when no secrets are present
@@ -194,7 +199,8 @@ class GenericSecretBackend extends React.Component {
             this.setState({
                 secretList: [],
                 filteredSecretList: [],
-                fullSecretList: []
+                fullSecretList: [],
+                currentPage: 1
             })
         }
     }
@@ -202,7 +208,7 @@ class GenericSecretBackend extends React.Component {
     componentDidUpdate(prevProps) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
             if (this.isPathDirectory(this.props.params.splat)) {
-                this.loadSecretsList();
+                this.loadSecretsList(prevProps);
             } else {
                 this.displaySecret();
             }
