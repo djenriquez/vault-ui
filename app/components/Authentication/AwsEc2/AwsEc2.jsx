@@ -194,7 +194,7 @@ export default class AwsEc2AuthBackend extends React.Component {
         if (!tab) {
             history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
-            this.setState({selectedTab: tab.includes('/') ? tab.split('/')[0] : tab});
+            this.setState({ selectedTab: tab.includes('/') ? tab.split('/')[0] : tab });
         }
     }
 
@@ -202,8 +202,8 @@ export default class AwsEc2AuthBackend extends React.Component {
         this.listEc2Roles();
         this.getEc2AuthConfig();
         let uri = this.props.location.pathname.split(this.state.baseUrl)[1];
-        if(uri.includes('roles/') && uri.split('roles/')[1]) {
-            this.setState({selectedRoleId: uri.split('roles/')[1]});
+        if (uri.includes('roles/') && uri.split('roles/')[1]) {
+            this.setState({ selectedRoleId: uri.split('roles/')[1] });
             this.displayRole();
         }
     }
@@ -659,11 +659,13 @@ export default class AwsEc2AuthBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredEc2RoleList: _.filter(this.state.ec2Roles, (item) => {
-                                                    return item.includes(v);
-                                                })
-                                            })
+                                            let filtered = _.filter(this.state.ec2Roles, (item) => {
+                                                return item.includes(v.toLowerCase());
+                                            });
+                                            if (filtered.length > 0)
+                                                this.setState({
+                                                    filteredEc2RoleList: filtered
+                                                });
                                         }}
                                     />
                                 </ToolbarGroup>

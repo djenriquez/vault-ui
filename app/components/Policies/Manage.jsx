@@ -376,11 +376,13 @@ export default class PolicyManager extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredPolicyList: _.filter(this.state.policies, (item) => {
-                                                    return item.includes(v);
-                                                })
-                                            })
+                                            let filtered = _.filter(this.state.policies, (item) => {
+                                                return item.includes(v.toLowerCase());
+                                            });
+                                            if (filtered.length > 0)
+                                                this.setState({
+                                                    filteredPolicyList: filtered
+                                                });
                                         }}
                                     />
                                 </ToolbarGroup>
