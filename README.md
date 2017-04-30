@@ -175,9 +175,9 @@ If major changes are made, be sure to run `docker-compose build` to rebuild depe
 The following will spin up a Vault UI server only. It will not set up
 Vault for you:
 ```sh
-npm install
-npm run dev-pack &
-npm start
+npm install yarn
+yarn run dev-pack &
+yarn start
 ```
 
 # Licensing
