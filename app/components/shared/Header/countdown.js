@@ -6,23 +6,24 @@ class CountDown extends Component {
 
 
     static propTypes = {
-        startTime: PropTypes.number,
+        countDown: PropTypes.number,
+        retrigger: PropTypes.number,
         className: PropTypes.string
     }
 
     constructor(props) {
         super(props)
-        this.state = { time: props.startTime * 10 }
+        this.state = { time: props.countDown * 10 }
         this.tick = this.tick.bind(this)
         this.splitTimeComponents = this.splitTimeComponents.bind(this)
-        this.stopTime = Date.now() + (props.startTime * 1000)
+        this.stopTime = Date.now() + (props.countDown * 1000)
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.startTime != this.props.startTime) {
+        if(nextProps.retrigger !== this.props.retrigger) {
             clearInterval(this.time);
-            this.time = nextProps.startTime;
-            this.stopTime = Date.now() + (nextProps.startTime * 1000)
+            this.time = nextProps.countDown;
+            this.stopTime = Date.now() + (nextProps.countDown * 1000)
             this.time = setInterval(this.tick, 100)
         }
     }
@@ -62,6 +63,6 @@ class CountDown extends Component {
     }
 }
 CountDown.propTypes = {
-    startTime: PropTypes.number.isRequired
+    countDown: PropTypes.number.isRequired
 }
 export default CountDown

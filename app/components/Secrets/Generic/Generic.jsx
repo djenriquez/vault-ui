@@ -10,6 +10,8 @@ import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import IconButton from 'material-ui/IconButton';
 import Divider from 'material-ui/Divider';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem'
 import { List, ListItem } from 'material-ui/List';
 import { Step, Stepper, StepLabel } from 'material-ui/Stepper';
 import sharedStyles from '../../shared/styles.css';
@@ -18,11 +20,15 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { green500, green400, red500, red300, white } from 'material-ui/styles/colors.js'
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx'
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
-import { browserHistory, Link } from 'react-router'
+import { Link } from 'react-router'
 
+const SORT_DIR = {
+    ASC: 'asc',
+    DESC: 'desc'
+};
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -40,7 +46,9 @@ class GenericSecretBackend extends React.Component {
 
         this.state = {
             newSecretBtnDisabled: true,
+            secretSortDir: SORT_DIR.ASC,
             secretList: [],
+            filteredSecretList: [],
             secretContent: {},
             newSecretName: '',
             currentLogicalPath: '',
@@ -93,7 +101,7 @@ class GenericSecretBackend extends React.Component {
                 // Load secret list at current path
                 callVaultApi('get', this.state.currentLogicalPath, { list: true }, null, null)
                     .then((resp) => {
-                        this.setState({ secretList: resp.data.data.keys });
+                        this.setState({ secretList: resp.data.data.keys, filteredSecretList: resp.data.data.keys });
                     })
                     .catch((err) => {
                         // 404 is expected when no secrets are present
@@ -102,7 +110,7 @@ class GenericSecretBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ secretList: [] })
+                this.setState({ secretList: [], filteredSecretList: [] })
                 snackBarMessage(new Error(`No permissions to list content at ${this.state.currentLogicalPath}`));
             })
     }
@@ -141,7 +149,8 @@ class GenericSecretBackend extends React.Component {
         if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             // Reset
             this.setState({
-                secretList: []
+                secretList: [],
+                filteredSecretList: []
             })
         }
     }
@@ -272,7 +281,7 @@ class GenericSecretBackend extends React.Component {
             <SecretWrapper buttonLabel="Wrap Secret" path={this.state.currentLogicalPath} />,
             <FlatButton label="Cancel" primary={true} onTouchTap={() => {
                 this.setState({ openEditObjectModal: false, secretContent: '' });
-                browserHistory.push(this.getBaseDir(this.props.location.pathname));
+                history.push(this.getBaseDir(this.props.location.pathname));
             }
             } />,
             <FlatButton label="Save" disabled={this.state.disableSubmit} primary={true} onTouchTap={() => submitUpdate()} />
@@ -281,7 +290,7 @@ class GenericSecretBackend extends React.Component {
         let submitUpdate = () => {
             this.CreateUpdateObject();
             this.setState({ openEditObjectModal: false, secretContent: '' });
-            browserHistory.push(this.getBaseDir(this.props.location.pathname));
+            history.push(this.getBaseDir(this.props.location.pathname));
         }
 
         var objectIsBasicRootKey = _.size(this.state.secretContent) == 1 && this.state.secretContent.hasOwnProperty(this.state.rootKey);
@@ -321,7 +330,7 @@ class GenericSecretBackend extends React.Component {
                 autoScrollBodyContent={true}
                 onRequestClose={() => {
                     this.setState({ openEditObjectModal: false, secretContent: '' })
-                    browserHistory.push(this.getBaseDir(this.props.location.pathname))
+                    history.push(this.getBaseDir(this.props.location.pathname))
                 }}
             >
                 {content}
@@ -358,7 +367,8 @@ class GenericSecretBackend extends React.Component {
 
     render() {
         let renderSecretListItems = (returndirs, returnobjs) => {
-            return _.map(this.state.secretList, (key) => {
+            let sortedSecrets = _.orderBy(this.state.filteredSecretList, _.identity, this.state.secretSortDir);
+            return _.map(sortedSecrets, (key) => {
                 let avatar = (<Avatar icon={<ActionAssignment />} />);
                 let action = (
                     <IconButton
@@ -396,7 +406,7 @@ class GenericSecretBackend extends React.Component {
                         onTouchTap={() => {
                             this.setState({ newSecretName: '' });
                             tokenHasCapabilities([capability], this.state.currentLogicalPath + key).then(() => {
-                                browserHistory.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
+                                history.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
                             }).catch(() => {
                                 snackBarMessage(new Error("Access denied"));
                             })
@@ -445,6 +455,30 @@ class GenericSecretBackend extends React.Component {
                                             })
                                         }}
                                     />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredSecretList: _.filter(this.state.secretList, (item) => {
+                                                    return item.includes(v);
+                                                })
+                                            })
+                                        }}
+                                    />
+                                    <SelectField
+                                        style={{width: 150}}
+                                        autoWidth={true}
+                                        floatingLabelText="Sort Secrets"
+                                        floatingLabelFixed={true}
+                                        value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}
+                                    >
+                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending"/>
+                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending"/>
+                                    </SelectField>
                                 </ToolbarGroup>
                             </Toolbar>
                             <List className={sharedStyles.listStyle}>

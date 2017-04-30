@@ -16,12 +16,10 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { red500 } from 'material-ui/styles/colors.js'
-import { callVaultApi, tokenHasCapabilities } from '../../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx'
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
-import { browserHistory } from 'react-router'
 import update from 'immutability-helper';
-
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -57,6 +55,7 @@ class RadiusAuthBackend extends React.Component {
             baseUrl: `/auth/radius/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             userList: [],
+            filteredUserList: [],
             newUserId: '',
             newUserObject: {},
             selectedUserId: '',
@@ -86,7 +85,7 @@ class RadiusAuthBackend extends React.Component {
                         let userlist = _.map(resp.data.data.keys, (userid) => {
                             return { id: userid, path: `${this.state.baseVaultPath}/users/${userid}` };
                         })
-                        this.setState({ userList: userlist });
+                        this.setState({ userList: userlist, filteredUserList: userlist });
                     })
                     .catch((err) => {
                         // 404 is expected when no users are registered
@@ -95,7 +94,7 @@ class RadiusAuthBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ userList: [] })
+                this.setState({ userList: [], filteredUserList: [] })
                 snackBarMessage(new Error(`No permissions to list users`));
             })
     }
@@ -149,6 +148,7 @@ class RadiusAuthBackend extends React.Component {
                 baseUrl: `/auth/radius/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 userList: [],
+                filteredUserList: [],
                 selectedUserId: '',
                 newConfigObj: this.radiusConfigSchema,
                 configObj: this.radiusConfigSchema
@@ -178,7 +178,7 @@ class RadiusAuthBackend extends React.Component {
                     this.setState({ openNewUserDialog: false, newUserId: '' });
                     snackBarMessage(`User ${userid} has been registered`);
                 } else {
-                    browserHistory.push(this.state.baseUrl);
+                    history.push(this.state.baseUrl);
                     this.setState({ openEditUserDialog: false, selectedUserId: '' });
                     snackBarMessage(`User ${userid} has been updated`);
                 }
@@ -204,7 +204,7 @@ class RadiusAuthBackend extends React.Component {
 
     render() {
         let renderUserListItems = () => {
-            return _.map(this.state.userList, (userobj) => {
+            return _.map(this.state.filteredUserList, (userobj) => {
                 let avatar = (<Avatar icon={<ActionAccountBox />} />);
                 let action = (
                     <IconButton
@@ -226,7 +226,7 @@ class RadiusAuthBackend extends React.Component {
                             this.setState({ newUserId: '' });
                             tokenHasCapabilities(['read'], userobj.path).then(() => {
                                 this.setState({ selectedUserId: userobj.id });
-                                browserHistory.push(`${this.state.baseUrl}${userobj.id}`);
+                                history.push(`${this.state.baseUrl}${userobj.id}`);
                             }).catch(() => {
                                 snackBarMessage(new Error("Access denied"));
                             })
@@ -244,7 +244,7 @@ class RadiusAuthBackend extends React.Component {
                     label="Cancel"
                     onTouchTap={() => {
                         this.setState({ openEditUserDialog: false, selectedUserId: '' })
-                        browserHistory.push(this.state.baseUrl);
+                        history.push(this.state.baseUrl);
                     }}
                 />,
                 <FlatButton
@@ -377,6 +377,20 @@ class RadiusAuthBackend extends React.Component {
                                                 openNewUserDialog: true,
                                                 newUserId: '',
                                                 newUserObject: _.clone(this.radiusUserSchema)
+                                            })
+                                        }}
+                                    />
+                                </ToolbarGroup>
+                                <ToolbarGroup lastChild={true}>
+                                    <TextField
+                                        floatingLabelFixed={true}
+                                        floatingLabelText="Filter"
+                                        hintText="Filter list items"
+                                        onChange={(e, v) => {
+                                            this.setState({
+                                                filteredUserList: _.filter(this.state.userList, (item) => {
+                                                    return item.id.includes(v);
+                                                })
                                             })
                                         }}
                                     />

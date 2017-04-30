@@ -7,16 +7,15 @@ import Snackbar from 'material-ui/Snackbar';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import Paper from 'material-ui/Paper';
-import { browserHistory } from 'react-router';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import { green500, red500 } from 'material-ui/styles/colors.js'
 import styles from './app.css';
 import JsonEditor from '../shared/JsonEditor.jsx';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
-import { callVaultApi, tokenHasCapabilities } from '../shared/VaultUtils.jsx'
+import { callVaultApi, tokenHasCapabilities, history } from '../shared/VaultUtils.jsx'
 
-let twoMinuteWarningTimeout;
-let logoutTimeout;
+let twoMinuteWarningTimeoutId;
+let logoutTimeoutId;
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -39,6 +38,7 @@ export default class App extends React.Component {
             logoutOpen: false,
             logoutPromptSeen: false,
             identity: {},
+            tokenCanQueryCapabilities: true,
             tokenCanListSecretBackends: true,
             tokenCanListAuthBackends: true,
         }
@@ -66,7 +66,7 @@ export default class App extends React.Component {
         }
 
         let logoutTimeout = () => {
-            browserHistory.push('/login');
+            history.push('/login');
         }
 
         // Retrieve session identity information
@@ -77,15 +77,17 @@ export default class App extends React.Component {
                     let ttl = resp.data.data.ttl * 1000;
                     // The upper limit of setTimeout is 0x7FFFFFFF (or 2147483647 in decimal)
                     if (ttl > 0 && ttl < 2147483648) {
-                        setTimeout(logoutTimeout, ttl);
-                        setTimeout(twoMinuteWarningTimeout, ttl - TWO_MINUTES);
+                        clearTimeout(logoutTimeoutId);
+                        clearTimeout(twoMinuteWarningTimeoutId);
+                        logoutTimeoutId = setTimeout(logoutTimeout, ttl);
+                        twoMinuteWarningTimeoutId = setTimeout(twoMinuteWarningTimeout, ttl - TWO_MINUTES);
                     }
                 }
             })
             .catch((err) => {
                 if (_.has(err, 'response.status') && err.response.status >= 400) {
                     window.localStorage.removeItem('vaultAccessToken');
-                    browserHistory.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
+                    history.push(`/login?returnto=${encodeURI(this.props.location.pathname)}`);
                 } else throw err;
             });
     }
@@ -117,6 +119,15 @@ export default class App extends React.Component {
 
         this.reloadSessionIdentity();
 
+        // Check access to the sys/capabilities-self path
+        callVaultApi('post', 'sys/capabilities-self', null, { path: '/' })
+            .then(() => {
+                this.setState({ tokenCanQueryCapabilities: true });
+            })
+            .catch(() => {
+                this.setState({ tokenCanQueryCapabilities: false });
+            })
+
         // Check capabilities to list backends
         tokenHasCapabilities(['read'], 'sys/mounts').catch(() => {
             this.setState({ tokenCanListSecretBackends: false });
@@ -128,8 +139,8 @@ export default class App extends React.Component {
     }
 
     componentWillUnmount() {
-        clearTimeout(logoutTimeout);
-        clearTimeout(twoMinuteWarningTimeout);
+        clearTimeout(logoutTimeoutId);
+        clearTimeout(twoMinuteWarningTimeoutId);
     }
 
     renderSessionExpDialog() {
@@ -161,6 +172,32 @@ export default class App extends React.Component {
                 <div className={styles.error}>Your session token will expire soon. Use the renew button to request a lease extension</div>
             </Dialog>
         );
+    }
+
+    renderWarningCapabilities() {
+        return (
+            <Paper className={styles.warningMsg} zDepth={0}>
+                <Card initiallyExpanded={false}>
+                    <CardHeader
+                        title="Your token doesn't have permissions to query for capabilities"
+                        subtitle="Vault UI needs some permissions granted to your token. Tap on this message for more information"
+                        avatar={<Warning style={{ color: '#ffab00' }} />}
+                        actAsExpander={true}
+                        showExpandableButton={true}
+                    />
+                    <CardText expandable={true}>
+                        Your token has been assigned the following policies:
+                        <ul>
+                            {_.map(this.state.identity.policies, (pol, idx) => {
+                                return (<li key={idx}>{pol}</li>)
+                            })}
+                        </ul>
+                        and none of them contains the following permissions:
+                        <JsonEditor mode="text" modes={["text"]} value={{ path: { "sys/capabilities-self": { capabilities: ["update"] } } }} />
+                    </CardText>
+                </Card>
+            </Paper>
+        )
     }
 
     renderWarningAuthBackends() {
@@ -222,14 +259,9 @@ export default class App extends React.Component {
                     <Tab className={styles.welcomeTab} label="WELCOME TO VAULT-UI" >
                         <Paper className={styles.welcomeScreen} zDepth={0}>
                             <Paper className={styles.welcomeHeader} zDepth={0}>
-                                <h1>Get started by using the left menu to navigate your vault</h1>
+                                <h2>Get started by using the left menu to navigate your Vault</h2>
                             </Paper>
-                            {/*{ !this.state.tokenCanListSecretBackends ? 
-                                <Paper className={styles.warningMsg} zDepth={0}>
-                                    <h3>Your token doesn't have permissions to list secret backends</h3>
-                                    <div>To correctly navigate the backends, Vault UI needs the following capabilities in </div>
-                                </Paper>
-                            : null }*/}
+                            {!this.state.tokenCanQueryCapabilities ? this.renderWarningCapabilities() : null}
                             {!this.state.tokenCanListSecretBackends ? this.renderWarningSecretBackends() : null}
                             {!this.state.tokenCanListAuthBackends ? this.renderWarningAuthBackends() : null}
                         </Paper>
