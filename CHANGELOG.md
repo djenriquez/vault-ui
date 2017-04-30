@@ -5,6 +5,9 @@
 - Support Cubbyhole secret backend
 - Add ability to renew token
 
+## Bug fixes
+- Fix docker build electron dependency - https://github.com/djenriquez/vault-ui/pull/112
+
 # 2.1.0
 ## Features
 - Support AWS EC2 authentication backend - https://github.com/djenriquez/vault-ui/pull/76
