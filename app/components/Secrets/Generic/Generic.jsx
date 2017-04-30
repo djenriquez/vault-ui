@@ -24,6 +24,7 @@ import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultU
 import JsonEditor from '../../shared/JsonEditor.jsx';
 import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
 import { Link } from 'react-router'
+import UltimatePagination from 'react-ultimate-pagination-material-ui'
 
 const SORT_DIR = {
     ASC: 'asc',
@@ -60,6 +61,11 @@ class GenericSecretBackend extends React.Component {
             wrapPath: null,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
+            fullSecretList: [],
+            maxItemsPerPage: 25,
+            currentPage: 1,
+            totalPages: 1,
+            pagedSecrets: []
         }
 
         _.bindAll(
@@ -72,7 +78,9 @@ class GenericSecretBackend extends React.Component {
             'DeleteObject',
             'renderNewObjectDialog',
             'renderEditObjectDialog',
-            'renderDeleteConfirmationDialog'
+            'renderDeleteConfirmationDialog',
+            'setPage',
+            'setNewMaxItems'
         );
     }
 
@@ -86,7 +94,7 @@ class GenericSecretBackend extends React.Component {
         return path.substring(0, _.lastIndexOf(path, '/') + 1);
     }
 
-    loadSecretsList() {
+    loadSecretsList(prevProps) {
         // Control the new secret button
         tokenHasCapabilities(['create'], this.state.currentLogicalPath)
             .then(() => {
@@ -101,7 +109,16 @@ class GenericSecretBackend extends React.Component {
                 // Load secret list at current path
                 callVaultApi('get', this.state.currentLogicalPath, { list: true }, null, null)
                     .then((resp) => {
-                        this.setState({ secretList: resp.data.data.keys, filteredSecretList: resp.data.data.keys });
+                        this.setState({ fullSecretList: resp.data.data.keys });
+
+                        // Load to the page with the secret directed to
+                        let page = this.state.currentPage;
+                        if (prevProps && prevProps.params.splat) {
+                            let _pagedSecrets = _.chunk(resp.data.data.keys, this.state.maxItemsPerPage);
+                            page = _.findIndex(_pagedSecrets, (secret) => { return _.indexOf(secret, prevProps.params.splat) >= 0 }) + 1;
+                        }
+
+                        this.setPage(page, resp.data.data.keys);
                     })
                     .catch((err) => {
                         // 404 is expected when no secrets are present
@@ -110,9 +127,40 @@ class GenericSecretBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ secretList: [], filteredSecretList: [] })
+                this.setState({ fullSecretList: [], secretList: [], filteredSecretList: [] })
                 snackBarMessage(new Error(`No permissions to list content at ${this.state.currentLogicalPath}`));
             })
+    }
+
+    setPage(page, filteredSecretList) {
+        // Never allow a 0th or negative page
+        page = page <= 0 ? 1 : page;
+        let _pagedSecrets = _.chunk(filteredSecretList, this.state.maxItemsPerPage);
+        this.setState(
+            {
+                filteredSecretList: filteredSecretList,
+                currentPage: page,
+                totalPages: Math.ceil(filteredSecretList.length / this.state.maxItemsPerPage),
+                pagedSecrets: _pagedSecrets,
+                secretList: _pagedSecrets[page - 1]
+            });
+    }
+
+    //TODO: Incase we add functionality to allow users to modify maximum secrets on screen
+    setNewMaxItems(maxItems) {
+        let _pagedSecrets = _.chunk(this.state.filteredSecretList, maxItems);
+        let _maxPage = Math.ceil(this.state.filteredSecretList.length / maxItems);
+        let _currentPage = this.state.currentPage > _maxPage ? _maxPage : this.state.currentPage;
+
+        this.setState(
+            {
+                maxItemsPerPage: maxItems,
+                totalPages: _maxPage,
+                pagedSecrets: _pagedSecrets,
+                currentPage: _currentPage,
+                secretList: _pagedSecrets[_currentPage - 1]
+            }
+        )
     }
 
 
@@ -150,7 +198,9 @@ class GenericSecretBackend extends React.Component {
             // Reset
             this.setState({
                 secretList: [],
-                filteredSecretList: []
+                filteredSecretList: [],
+                fullSecretList: [],
+                currentPage: 1
             })
         }
     }
@@ -158,7 +208,7 @@ class GenericSecretBackend extends React.Component {
     componentDidUpdate(prevProps) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
             if (this.isPathDirectory(this.props.params.splat)) {
-                this.loadSecretsList();
+                this.loadSecretsList(prevProps);
             } else {
                 this.displaySecret();
             }
@@ -221,7 +271,7 @@ class GenericSecretBackend extends React.Component {
                 return;
             }
 
-            if (_.filter(this.state.secretList, x => x === this.state.newSecretName).length > 0) {
+            if (_.filter(this.state.fullSecretList, x => x === this.state.newSecretName).length > 0) {
                 snackBarMessage(new Error(DUPLICATE_KEY_ERROR));
                 return;
             }
@@ -367,7 +417,7 @@ class GenericSecretBackend extends React.Component {
 
     render() {
         let renderSecretListItems = (returndirs, returnobjs) => {
-            let sortedSecrets = _.orderBy(this.state.filteredSecretList, _.identity, this.state.secretSortDir);
+            let sortedSecrets = _.orderBy(this.state.secretList, _.identity, this.state.secretSortDir);
             return _.map(sortedSecrets, (key) => {
                 let avatar = (<Avatar icon={<ActionAssignment />} />);
                 let action = (
@@ -462,22 +512,22 @@ class GenericSecretBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredSecretList: _.filter(this.state.secretList, (item) => {
-                                                    return item.includes(v);
-                                                })
-                                            })
+                                            let filtered = v ? _.filter(this.state.fullSecretList, (item) => { return item.toLowerCase().includes(v.toLowerCase()); }) : this.state.fullSecretList;
+                                            if (filtered.length > 0) {
+                                                let maxPage = Math.ceil(filtered.length / this.state.maxItemsPerPage);
+                                                this.setPage(this.state.currentPage > maxPage ? maxPage : this.state.currentPage, filtered);
+                                            }
                                         }}
                                     />
                                     <SelectField
-                                        style={{width: 150}}
+                                        style={{ width: 150 }}
                                         autoWidth={true}
                                         floatingLabelText="Sort Secrets"
                                         floatingLabelFixed={true}
-                                        value={this.state.secretSortDir} onChange={(e,i,v) => {this.setState({secretSortDir: v})}}
+                                        value={this.state.secretSortDir} onChange={(e, i, v) => { this.setState({ secretSortDir: v }) }}
                                     >
-                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending"/>
-                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending"/>
+                                        <MenuItem value={SORT_DIR.ASC} primaryText="Ascending" />
+                                        <MenuItem value={SORT_DIR.DESC} primaryText="Descending" />
                                     </SelectField>
                                 </ToolbarGroup>
                             </Toolbar>
@@ -496,6 +546,13 @@ class GenericSecretBackend extends React.Component {
                                 <Divider inset={true} />
                                 {renderSecretListItems(false, true)}
                             </List>
+                            <div className={sharedStyles.centered}>
+                                <UltimatePagination
+                                    currentPage={this.state.currentPage}
+                                    totalPages={this.state.totalPages}
+                                    onChange={(e) => { this.setPage(e, this.state.filteredSecretList) }}
+                                />
+                            </div>
                         </Paper>
                     </Tab>
                 </Tabs>

@@ -162,7 +162,7 @@ export default class GithubAuthBackend extends React.Component {
 
                         let policies = _.get(item, 'value', undefined);
                         item.policies = policies ? policies.split(',') : [];
-                        
+
                         this.setState({ itemConfig: item, openItemDialog: true });
                     })
                     .catch(snackBarMessage)
@@ -207,7 +207,7 @@ export default class GithubAuthBackend extends React.Component {
         if (!tab) {
             history.push(`${this.state.baseUrl}${this.state.selectedTab}/`);
         } else {
-            this.setState({selectedTab: tab.includes('/') ? tab.split('/')[0] : tab});
+            this.setState({ selectedTab: tab.includes('/') ? tab.split('/')[0] : tab });
         }
     }
 
@@ -446,11 +446,13 @@ export default class GithubAuthBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredTeamList: _.filter(this.state.teams, (item) => {
-                                                    return item.includes(v);
-                                                })
-                                            })
+                                            let filtered = _.filter(this.state.teams, (item) => {
+                                                return item.toLowerCase().includes(v.toLowerCase());
+                                            });
+                                            if (filtered.length > 0)
+                                                this.setState({
+                                                    filteredTeamList: filtered
+                                                });
                                         }}
                                     />
                                 </ToolbarGroup>
@@ -492,11 +494,13 @@ export default class GithubAuthBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredUserList: _.filter(this.state.users, (item) => {
-                                                    return item.includes(v);
-                                                })
-                                            })
+                                            let filtered = _.filter(this.state.users, (item) => {
+                                                return item.toLowerCase().includes(v.toLowerCase());
+                                            });
+                                            if (filtered.length > 0)
+                                                this.setState({
+                                                    filteredUserList: filtered
+                                                });
                                         }}
                                     />
                                 </ToolbarGroup>

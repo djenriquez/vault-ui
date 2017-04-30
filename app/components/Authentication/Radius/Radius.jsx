@@ -355,7 +355,7 @@ class RadiusAuthBackend extends React.Component {
                     path={this.state.deleteUserPath}
                     onReceiveResponse={() => {
                         snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({deleteUserPath: ''})
+                        this.setState({ deleteUserPath: '' })
                         this.loadUserList();
                     }}
                     onReceiveError={(err) => snackBarMessage(err)}
@@ -387,11 +387,13 @@ class RadiusAuthBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredUserList: _.filter(this.state.userList, (item) => {
-                                                    return item.id.includes(v);
-                                                })
-                                            })
+                                            let filtered = _.filter(this.state.userList, (item) => {
+                                                return item.id.toLowerCase().includes(v.toLowerCase());
+                                            });
+                                            if (filtered.length > 0)
+                                                this.setState({
+                                                    filteredUserList: filtered
+                                                });
                                         }}
                                     />
                                 </ToolbarGroup>
@@ -482,7 +484,7 @@ class RadiusAuthBackend extends React.Component {
                                         this.setState({ newConfigObj: update(this.state.newConfigObj, { unregistered_user_policies: { $set: policies } }) });
                                     }}
                                 />
-                                <div style={{paddingTop: '20px', textAlign: 'center'}}>
+                                <div style={{ paddingTop: '20px', textAlign: 'center' }}>
                                     <FlatButton
                                         primary={true}
                                         label="Save"

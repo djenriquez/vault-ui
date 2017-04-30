@@ -1,8 +1,10 @@
 # 2.2.0 (Unreleased)
 ## Features
-- Add JSON diff view to compare updates
+- Add backend mount description field - https://github.com/djenriquez/vault-ui/pull/105
+- Add filtering to all lists - https://github.com/djenriquez/vault-ui/pull/106
+- Add pagination to secrets list - https://github.com/djenriquez/vault-ui/pull/110
+- Add JSON diff view to compare updates - https://github.com/djenriquez/vault-ui/pull/84
 - Allow naming tokens generated from roles
-- Support Cubbyhole secret backend
 - Add ability to renew token
 
 ## Bug fixes
