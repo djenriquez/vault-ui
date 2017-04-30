@@ -16,8 +16,8 @@ import TokenAuthBackend from './components/Authentication/Token/Token.jsx';
 import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
 import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
-import UserPassAuthBackend from './components/Authentication/UserPass/UserPass.jsx';
 import OktaAuthBackend from './components/Authentication/Okta/Okta.jsx';
+import UserPassAuthBackend from './components/Authentication/UserPass/UserPass.jsx';
 import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
 
 // Load here to signal webpack
