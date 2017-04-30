@@ -512,7 +512,7 @@ class GenericSecretBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            let filtered = v ? _.filter(this.state.fullSecretList, (item) => { return item.includes(v.toLowerCase()); }) : this.state.fullSecretList;
+                                            let filtered = v ? _.filter(this.state.fullSecretList, (item) => { return item.toLowerCase().includes(v.toLowerCase()); }) : this.state.fullSecretList;
                                             if (filtered.length > 0) {
                                                 let maxPage = Math.ceil(filtered.length / this.state.maxItemsPerPage);
                                                 this.setPage(this.state.currentPage > maxPage ? maxPage : this.state.currentPage, filtered);

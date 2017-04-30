@@ -388,7 +388,7 @@ class RadiusAuthBackend extends React.Component {
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
                                             let filtered = _.filter(this.state.userList, (item) => {
-                                                return item.id.includes(v.toLowerCase());
+                                                return item.id.toLowerCase().includes(v.toLowerCase());
                                             });
                                             if (filtered.length > 0)
                                                 this.setState({

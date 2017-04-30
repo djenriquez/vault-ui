@@ -362,7 +362,7 @@ export default class UserPassAuthBackend extends React.Component {
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
                                             let filtered = _.filter(this.state.users, (item) => {
-                                                return item.includes(v.toLowerCase());
+                                                return item.toLowerCase().includes(v.toLowerCase());
                                             });
                                             if (filtered.length > 0)
                                                 this.setState({

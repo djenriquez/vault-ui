@@ -660,7 +660,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
                                             let filtered = _.filter(this.state.ec2Roles, (item) => {
-                                                return item.includes(v.toLowerCase());
+                                                return item.toLowerCase().includes(v.toLowerCase());
                                             });
                                             if (filtered.length > 0)
                                                 this.setState({
