@@ -1,6 +1,6 @@
 #!/bin/sh
-echo "------------- npm install -------------"
-npm install
+echo "------------- yarn install -------------"
+yarn install
 
 echo "------------- docker-compose up -d -------------"
 docker-compose up -d

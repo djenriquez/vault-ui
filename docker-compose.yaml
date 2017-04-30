@@ -31,4 +31,4 @@ services:
     build: .
     volumes:
       - .:/app
-    command: npm run dev-pack
+    command: yarn run dev-pack

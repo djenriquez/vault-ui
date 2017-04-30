@@ -174,8 +174,9 @@ If major changes are made, be sure to run `docker-compose build` to rebuild depe
 ### Without Docker
 The following will spin up a Vault UI server only. It will not set up
 Vault for you:
+
+Install the [yarn](https://yarnpkg.com/en/docs/install) package manager
 ```sh
-npm install yarn
 yarn run dev-pack &
 yarn start
 ```
