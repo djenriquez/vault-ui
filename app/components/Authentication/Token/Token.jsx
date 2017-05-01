@@ -415,7 +415,6 @@ export default class TokenAuthBackend extends React.Component {
             >
                 <div>
                     <JsonEditor
-                        height={'300px'}
                         rootName={`auth/token/accessors/${this.state.selectedAccessor}`}
                         value={this.state.accessorDetails[this.state.selectedAccessor]}
                         mode={'view'}
