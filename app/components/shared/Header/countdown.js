@@ -20,7 +20,7 @@ class CountDown extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.retrigger !== this.props.retrigger) {
+        if (nextProps !== this.props) {
             clearInterval(this.time);
             this.time = nextProps.countDown;
             this.stopTime = Date.now() + (nextProps.countDown * 1000)
