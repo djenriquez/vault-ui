@@ -55,8 +55,8 @@ Example command to pre-configure the Vault server URL and authentication method
 ```bash
 docker run -d \
 -p 8000:8000 \
--e VAULT_URL_DEFAULT=http://vault.server.org:8200
--e VAULT_AUTH_DEFAULT=GITHUB
+-e VAULT_URL_DEFAULT=http://vault.server.org:8200 \
+-e VAULT_AUTH_DEFAULT=GITHUB \
 --name vault-ui \
 djenriquez/vault-ui
 ```
