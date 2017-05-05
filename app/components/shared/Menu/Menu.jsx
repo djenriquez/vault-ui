@@ -21,7 +21,7 @@ const supported_auth_backend_types = [
     'github',
     'radius',
     'aws-ec2',
-    'userpass'
+    'userpass',
     'okta'
 ]
 
