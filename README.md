@@ -160,6 +160,7 @@ Vault-UI supports response-wrapping of secrets in _generic_ backends. Wrapping c
 
 
 ## Development
+Install the [yarn](https://yarnpkg.com/en/docs/install) package manager
 
 ### With Docker
 The command below will use [Docker Compose](https://docs.docker.com/compose/)
@@ -175,9 +176,8 @@ If major changes are made, be sure to run `docker-compose build` to rebuild depe
 The following will spin up a Vault UI server only. It will not set up
 Vault for you:
 ```sh
-npm install
-npm run dev-pack &
-npm start
+yarn run dev-pack &
+yarn start
 ```
 
 # Licensing

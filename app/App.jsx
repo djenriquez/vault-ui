@@ -84,6 +84,7 @@ ReactDOM.render((
                 <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
                 <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
                 <Route path="/auth/userpass/:namespace(/**)" component={UserPassAuthBackend} />
+                <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/responsewrapper" component={ResponseWrapper} />
                 <Route path="/sys/policies(/**)" component={PolicyManager} />

@@ -94,6 +94,8 @@ export default class Login extends React.Component {
                 return 'ldap'
             case 'USERNAMEPASSWORD':
                 return 'userpass'
+            case 'OKTA':
+                return 'okta'
             default:
                 return ''
         }
@@ -129,6 +131,11 @@ export default class Login extends React.Component {
                 data = { password: this.state.password };
                 break;
             case "USERNAMEPASSWORD":
+                method = 'post';
+                uri = `auth/${this.state.authBackendPath}/login/${this.state.username}`;
+                data = { password: this.state.password };
+                break;
+            case "OKTA":
                 method = 'post';
                 uri = `auth/${this.state.authBackendPath}/login/${this.state.username}`;
                 data = { password: this.state.password };
@@ -301,6 +308,7 @@ export default class Login extends React.Component {
                         <MenuItem value={"TOKEN"} primaryText="Token" />
                         <MenuItem value={"LDAP"} primaryText="LDAP" />
                         <MenuItem value={"USERNAMEPASSWORD"} primaryText="Username & Password" />
+                        <MenuItem value={"OKTA"} primaryText="Okta" />
                     </SelectField>
                 </div>
                 <div>
@@ -388,7 +396,28 @@ export default class Login extends React.Component {
                         />
                         <div className={styles.error}>{this.state.errorMessage}</div>
                     </div>
-                )
+                );
+            case "OKTA":
+                return (
+                    <div>
+                        <TextField
+                            fullWidth={true}
+                            className="col-xs-12"
+                            hintText="Enter username"
+                            onKeyDown={this.validateUsernamePassword}
+                            onChange={(e, v) => this.setState({ username: v })}
+                        />
+                        <TextField
+                            fullWidth={true}
+                            className="col-xs-12"
+                            type="password"
+                            hintText="Enter password"
+                            onKeyDown={this.validateUsernamePassword}
+                            onChange={(e, v) => this.setState({ password: v })}
+                        />
+                        <div className={styles.error}>{this.state.errorMessage}</div>
+                    </div>
+                );
         }
     }
 

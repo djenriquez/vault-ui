@@ -104,7 +104,7 @@ export default class UserPassAuthBackend extends React.Component {
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/users/${user}`)
             .then(() => {
                 let updateObj = _.clone(this.state.config);
-                if(newUser) updateObj.password = this.state.newUserPassword;
+                if (newUser) updateObj.password = this.state.newUserPassword;
                 updateObj.policies = updateObj.policies.join(',');
                 callVaultApi('post', `${this.state.baseVaultPath}/users/${user}`, null, updateObj)
                     .then(() => {
@@ -125,7 +125,7 @@ export default class UserPassAuthBackend extends React.Component {
         this.listUsers();
         let user = this.props.location.pathname.split(this.state.baseUrl)[1];
         if (user) {
-            this.setState({selectedUserId: user});
+            this.setState({ selectedUserId: user });
             this.displayItem();
         }
     }
@@ -361,11 +361,13 @@ export default class UserPassAuthBackend extends React.Component {
                                         floatingLabelText="Filter"
                                         hintText="Filter list items"
                                         onChange={(e, v) => {
-                                            this.setState({
-                                                filteredUserList: _.filter(this.state.users, (item) => {
-                                                    return item.includes(v);
-                                                })
-                                            })
+                                            let filtered = _.filter(this.state.users, (item) => {
+                                                return item.toLowerCase().includes(v.toLowerCase());
+                                            });
+                                            if (filtered.length > 0)
+                                                this.setState({
+                                                    filteredUserList: filtered
+                                                });
                                         }}
                                     />
                                 </ToolbarGroup>
