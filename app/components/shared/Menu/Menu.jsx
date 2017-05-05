@@ -20,6 +20,7 @@ const supported_auth_backend_types = [
     'token',
     'github',
     'radius',
+    'okta',
     'aws-ec2',
     'userpass',
     'okta'

@@ -82,6 +82,7 @@ ReactDOM.render((
                 <Route path="/auth/aws-ec2/:namespace(/**)" component={AwsEc2AuthBackend} />
                 <Route path="/auth/github/:namespace(/**)" component={GithubAuthBackend} />
                 <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
+                <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
                 <Route path="/auth/userpass/:namespace(/**)" component={UserPassAuthBackend} />
                 <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
                 <Route path="/settings" component={Settings} />
