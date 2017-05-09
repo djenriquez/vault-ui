@@ -413,12 +413,14 @@ export default class TokenAuthBackend extends React.Component {
                 open={this.state.accessorInfoDialog}
                 onRequestClose={() => this.setState({ accessorInfoDialog: false })}
             >
-                <JsonEditor
-                    rootName={`auth/token/accessors/${this.state.selectedAccessor}`}
-                    value={this.state.accessorDetails[this.state.selectedAccessor]}
-                    mode={'view'}
-                    modes={['view']}
-                />
+                <div>
+                    <JsonEditor
+                        rootName={`auth/token/accessors/${this.state.selectedAccessor}`}
+                        value={this.state.accessorDetails[this.state.selectedAccessor]}
+                        mode={'view'}
+                        modes={['view']}
+                    />
+                </div>
             </Dialog>
         )
     }
