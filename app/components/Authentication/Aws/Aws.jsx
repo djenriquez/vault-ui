@@ -656,7 +656,7 @@ export default class AwsAuthBackend extends React.Component {
                         disabled={!this.state.isBackendConfigured}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
-                            Here you can configure EC2 roles.
+                            Here you can configure AWS roles.
                         </Paper>
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <Toolbar>
@@ -701,7 +701,7 @@ export default class AwsAuthBackend extends React.Component {
                         onActive={() => this.setState({ selectedTab: 'backend' })}
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
-                            Here you can configure connection details to your EC2 account.
+                            Here you can configure connection details to your AWS account.
                         </Paper>
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <List>
