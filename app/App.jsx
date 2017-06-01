@@ -14,6 +14,7 @@ import Settings from './components/Settings/Settings.jsx';
 import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
 import TokenAuthBackend from './components/Authentication/Token/Token.jsx';
 import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
+import AwsAuthBackend from './components/Authentication/Aws/Aws.jsx';
 import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import UserPassAuthBackend from './components/Authentication/UserPass/UserPass.jsx';
@@ -78,6 +79,7 @@ ReactDOM.render((
             <Route path="/" component={App} onEnter={checkAccessToken}>
                 <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric} />
                 <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
+                <Route path="/auth/aws/:namespace(/**)" component={AwsAuthBackend} />
                 <Route path="/auth/aws-ec2/:namespace(/**)" component={AwsEc2AuthBackend} />
                 <Route path="/auth/github/:namespace(/**)" component={GithubAuthBackend} />
                 <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
