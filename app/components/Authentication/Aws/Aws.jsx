@@ -176,7 +176,7 @@ export default class AwsAuthBackend extends React.Component {
                 updateObj.policies = updateObj.policies.join(',');
 
                 // This field is not allowed for IAM types
-                if(updateObj.auth_type === 'iam') {
+                if (updateObj.auth_type === 'iam') {
                     updateObj.disallow_reauthentication = undefined;
                     updateObj.allow_instance_migration = undefined;
                 }
@@ -270,7 +270,7 @@ export default class AwsAuthBackend extends React.Component {
 
     render() {
         let renderFields = () => {
-            let renderIamField = () => {
+            let renderIamFields = () => {
                 return (
                     [
                         <TextField
@@ -301,6 +301,37 @@ export default class AwsAuthBackend extends React.Component {
                 )
             };
 
+            let renderRoleTagFields = () => {
+                return (
+                    [
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Role Tag Key'
+                            value={this.state.newRoleConfig.role_tag}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='overwrite current value'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Role Tag Value'
+                            value={this.state.newRoleConfig.role_tag_value}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag_value: { $set: e.target.value } }) });
+                            }}
+                        />
+                    ]
+                )
+            };
+
             let renderMenuItems = () => {
                 return this.authTypes.map((authType) => (
                     <MenuItem
@@ -319,9 +350,12 @@ export default class AwsAuthBackend extends React.Component {
                             {
                                 auth_type: { $set: auth_type },
                                 auth_type_value: { $set: value },
-                                disallow_reauthentication: { $set: auth_type === 'iam' ? undefined : this.state.disallow_reauthentication },
-                                inferred_entity_type: {$set: auth_type === 'iam' ? 'ec2_instance': undefined },
-                                inferred_aws_region: {$set: auth_type === 'iam' ? this.state.inferred_aws_region : undefined }
+                                disallow_reauthentication: { $set: auth_type === 'ec2' ? this.state.disallow_reauthentication : undefined },
+                                role_tag: { $set: auth_type === 'ec2' ? this.state.role_tag : undefined },
+                                role_tag_value: { $set: auth_type === 'ec2' ? this.state.role_tag_value : undefined },
+                                bound_iam_principal_arn: { $set: auth_type === 'iam' ? this.state.bound_iam_principal_arn : undefined },
+                                inferred_entity_type: { $set: auth_type === 'iam' ? 'ec2_instance' : undefined },
+                                inferred_aws_region: { $set: auth_type === 'iam' ? this.state.inferred_aws_region : undefined }
                             }),
 
                     });
@@ -346,36 +380,12 @@ export default class AwsAuthBackend extends React.Component {
                         floatingLabelText="Auth Type"
                         value={this.state.newRoleConfig.auth_type_value}
                         onChange={authTypeChanged}
+                        disabled={this.state.openEditRoleDialog}
                     >
                         {renderMenuItems()}
                     </SelectField>
-                    {this.state.newRoleConfig.auth_type === "iam" && renderIamField()}
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Role Tag Key'
-                        disabled={this.state.newRoleConfig.auth_type === 'iam'}
-                        value={this.state.newRoleConfig.role_tag}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='overwrite current value'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Role Tag Value'
-                        disabled={this.state.newRoleConfig.auth_type === 'iam'}
-                        value={this.state.newRoleConfig.role_tag_value}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag_value: { $set: e.target.value } }) });
-                        }}
-                    />
+                    {this.state.newRoleConfig.auth_type === "iam" && renderIamFields()}
+                    {this.state.newRoleConfig.auth_type === "ec2" && renderRoleTagFields()}
                     <TextField
                         className={styles.textFieldStyle}
                         hintText='optional'
