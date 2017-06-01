@@ -4,8 +4,9 @@
 - Add filtering to all lists - https://github.com/djenriquez/vault-ui/pull/106
 - Add pagination to secrets list - https://github.com/djenriquez/vault-ui/pull/110
 - Add JSON diff view to compare updates - https://github.com/djenriquez/vault-ui/pull/84
+- Add ability to renew token - https://github.com/djenriquez/vault-ui/pull/114
+- Add AWS auth backend with IAM - https://github.com/djenriquez/vault-ui/pull/126
 - Allow naming tokens generated from roles
-- Add ability to renew token
 
 ## Bug fixes
 - Fix docker build electron dependency - https://github.com/djenriquez/vault-ui/pull/112
