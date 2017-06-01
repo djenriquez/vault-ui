@@ -7,6 +7,9 @@
 - Allow naming tokens generated from roles
 - Add ability to renew token
 
+## Enhancements
+- Optimize Docker image size + caching - https://github.com/djenriquez/vault-ui/pull/122
+
 ## Bug fixes
 - Fix docker build electron dependency - https://github.com/djenriquez/vault-ui/pull/112
 
