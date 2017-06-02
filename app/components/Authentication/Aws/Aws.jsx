@@ -44,12 +44,13 @@ export default class AwsAuthBackend extends React.Component {
     };
 
     authTypes = [
-        { value: 0, type: 'ec2' },
-        { value: 1, type: 'iam' },
+        'ec2',
+        'iam'
     ]
 
     inferredEntityTypes = [
-        { value: 0, type: 'ec2_instance' }
+        'none',
+        'ec2_instance'
     ]
 
     roleConfigSchema = {
@@ -69,9 +70,9 @@ export default class AwsAuthBackend extends React.Component {
         allow_instance_migration: undefined,
         disallow_reauthentication: false,
         auth_type: 'ec2',
-        auth_type_value: 0,
         bound_iam_principal_arn: undefined,
         inferred_entity_type: undefined,
+        inferred_entity_type_string: 'none',
         inferred_aws_region: undefined
     };
 
@@ -99,7 +100,8 @@ export default class AwsAuthBackend extends React.Component {
             'listEc2Roles',
             'getEc2AuthConfig',
             'createUpdateConfig',
-            'createUpdateRole'
+            'createUpdateRole',
+            'parseRoleConfig'
         );
 
     }
@@ -210,8 +212,8 @@ export default class AwsAuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/role/${roleId}`, null, null)
                     .then((resp) => {
-                        let roleConfig = _.get(resp, 'data.data', {});
-                        roleConfig.auth_type_value = _.get(_.find(this.authTypes, ['type', roleConfig.auth_type]), 'value', 'ec2');
+                        let roleConfig = this.parseRoleConfig(_.get(resp, 'data.data', {}));
+                        
                         this.setState({ newRoleConfig: roleConfig, openEditRoleDialog: true });
                     })
                     .catch(snackBarMessage)
@@ -220,6 +222,18 @@ export default class AwsAuthBackend extends React.Component {
                 this.setState({ selectedRoleId: '' })
                 snackBarMessage(new Error(`No permissions to display properties for role ${this.state.selectedRoleId}`));
             })
+    }
+
+    // Parses the config received from Vault
+    // Puts the object in a state readable by the UI and in a state that can be passed to the update/create method
+    parseRoleConfig(roleConfig) {
+        // Clear falsy values
+        roleConfig = _.pickBy(roleConfig, _.identity);
+
+        // Set string value for inferred entity type
+        roleConfig.inferred_entity_type_string = roleConfig.inferred_entity_type ?  roleConfig.inferred_entity_type : 'none';
+
+        return roleConfig;
     }
 
     componentWillMount() {
@@ -258,7 +272,7 @@ export default class AwsAuthBackend extends React.Component {
                 ec2Roles: [],
                 filteredEc2RoleList: [],
                 selectedRoleId: '',
-                newConfigObj: this.ec2ConfigSchema,
+                newConfigObj: this.roleConfigSchema,
                 configObj: this.ec2ConfigSchema,
                 selectedTab: 'roles'
             }, () => {
@@ -270,12 +284,51 @@ export default class AwsAuthBackend extends React.Component {
 
     render() {
         let renderFields = () => {
+            let renderAuthTypes = () => {
+                return this.authTypes.map((authType) => (
+                    <MenuItem
+                        value={authType}
+                        primaryText={authType}
+                    />
+                ));
+            };
+
+            let renderInferredEntityTypes = () => {
+                return this.inferredEntityTypes.map((entityType) => (
+                    <MenuItem
+                        value={entityType}
+                        primaryText={entityType}
+                    />
+                ));
+            };
             let renderIamFields = () => {
                 return (
                     [
+                        <SelectField
+                            floatingLabelText="Inferred Entity Type"
+                            value={this.state.newRoleConfig.inferred_entity_type_string}
+                            onChange={(e,i,v) => {
+                                this.setState({
+                                    newRoleConfig: update(this.state.newRoleConfig, {
+                                        inferred_entity_type: {
+                                            $set: v === 'none' ? undefined : v
+                                        },
+                                        inferred_entity_type_string: {
+                                            $set: v
+                                        },
+                                        inferred_aws_region: {
+                                            $set: v === 'none' ? '' : this.state.inferred_aws_region
+                                        }
+                                    })
+                                });
+                            }}
+                            disabled={this.state.openEditRoleDialog}
+                        >
+                            {renderInferredEntityTypes()}
+                        </SelectField>,
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='Enter the new role name'
+                            hintText='arn:aws:iam::123456789012:role/MyRole'
                             floatingLabelFixed={true}
                             floatingLabelText='Bound IAM Principle ARN'
                             value={this.state.newRoleConfig.bound_iam_principal_arn}
@@ -287,11 +340,12 @@ export default class AwsAuthBackend extends React.Component {
                         />,
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='Enter the EC2 IAM Profile AWS region'
+                            hintText='us-east-1, us-west-2, eu-west-1'
                             floatingLabelFixed={true}
                             floatingLabelText='Inferred AWS Region'
                             value={this.state.newRoleConfig.inferred_aws_region}
                             fullWidth={false}
+                            disabled={!this.state.newRoleConfig.inferred_entity_type}
                             autoFocus
                             onChange={(e) => {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { inferred_aws_region: { $set: e.target.value } }) });
@@ -313,7 +367,7 @@ export default class AwsAuthBackend extends React.Component {
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
-                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag: { $set: e.target.value } }) });
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag: { $set: e.target.value ? e.target.value : undefined } }) });
                             }}
                         />,
                         <TextField
@@ -332,29 +386,20 @@ export default class AwsAuthBackend extends React.Component {
                 )
             };
 
-            let renderMenuItems = () => {
-                return this.authTypes.map((authType) => (
-                    <MenuItem
-                        value={authType.value}
-                        primaryText={authType.type}
-                    />
-                ));
-            };
-
             let authTypeChanged = (event, index, value) => {
-                let auth_type = _.get(_.find(this.authTypes, ['value', value]), 'type', 'ec2');
+                let auth_type = value;
 
                 this.setState(
                     {
                         newRoleConfig: update(this.state.newRoleConfig,
                             {
                                 auth_type: { $set: auth_type },
-                                auth_type_value: { $set: value },
                                 disallow_reauthentication: { $set: auth_type === 'ec2' ? this.state.disallow_reauthentication : undefined },
                                 role_tag: { $set: auth_type === 'ec2' ? this.state.role_tag : undefined },
                                 role_tag_value: { $set: auth_type === 'ec2' ? this.state.role_tag_value : undefined },
                                 bound_iam_principal_arn: { $set: auth_type === 'iam' ? this.state.bound_iam_principal_arn : undefined },
-                                inferred_entity_type: { $set: auth_type === 'iam' ? 'ec2_instance' : undefined },
+                                inferred_entity_type: { $set: undefined },
+                                inferred_entity_type_string: { $set: 'none' },
                                 inferred_aws_region: { $set: auth_type === 'iam' ? this.state.inferred_aws_region : undefined }
                             }),
 
@@ -378,11 +423,11 @@ export default class AwsAuthBackend extends React.Component {
                     />
                     <SelectField
                         floatingLabelText="Auth Type"
-                        value={this.state.newRoleConfig.auth_type_value}
+                        value={this.state.newRoleConfig.auth_type}
                         onChange={authTypeChanged}
                         disabled={this.state.openEditRoleDialog}
                     >
-                        {renderMenuItems()}
+                        {renderAuthTypes()}
                     </SelectField>
                     {this.state.newRoleConfig.auth_type === "iam" && renderIamFields()}
                     {this.state.newRoleConfig.auth_type === "ec2" && renderRoleTagFields()}
