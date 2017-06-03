@@ -68,7 +68,7 @@ export default class AwsAuthBackend extends React.Component {
         period: undefined,
         policies: [],
         allow_instance_migration: undefined,
-        disallow_reauthentication: false,
+        disallow_reauthentication: undefined,
         auth_type: 'ec2',
         bound_iam_principal_arn: undefined,
         inferred_entity_type: undefined,
@@ -213,7 +213,7 @@ export default class AwsAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/role/${roleId}`, null, null)
                     .then((resp) => {
                         let roleConfig = this.parseRoleConfig(_.get(resp, 'data.data', {}));
-                        
+
                         this.setState({ newRoleConfig: roleConfig, openEditRoleDialog: true });
                     })
                     .catch(snackBarMessage)
@@ -231,7 +231,7 @@ export default class AwsAuthBackend extends React.Component {
         roleConfig = _.pickBy(roleConfig, _.identity);
 
         // Set string value for inferred entity type
-        roleConfig.inferred_entity_type_string = roleConfig.inferred_entity_type ?  roleConfig.inferred_entity_type : 'none';
+        roleConfig.inferred_entity_type_string = roleConfig.inferred_entity_type ? roleConfig.inferred_entity_type : 'none';
 
         return roleConfig;
     }
@@ -283,6 +283,7 @@ export default class AwsAuthBackend extends React.Component {
     }
 
     render() {
+        
         let renderFields = () => {
             let renderAuthTypes = () => {
                 return this.authTypes.map((authType) => (
@@ -301,13 +302,58 @@ export default class AwsAuthBackend extends React.Component {
                     />
                 ));
             };
+
+            let renderTopFields = () => {
+                return (
+                    [
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='Enter the new role name'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Role Name'
+                            fullWidth={false}
+                            value={this.state.selectedRoleId}
+                            disabled={this.state.openEditRoleDialog}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ selectedRoleId: e.target.value });
+                            }}
+                        />,
+                        <SelectField
+                            floatingLabelText="Auth Type"
+                            value={this.state.newRoleConfig.auth_type}
+                            onChange={authTypeChanged}
+                            disabled={this.state.openEditRoleDialog}
+                        >
+                            {renderAuthTypes()}
+                        </SelectField>
+                    ]
+                )
+            }
+
+            let renderBottomFields = () => {
+                return (
+                    [
+                        <Subheader>Assigned Policies</Subheader>,
+                        <PolicyPicker
+                            height='200px'
+                            selectedPolicies={this.state.newRoleConfig.policies}
+                            onSelectedChange={(newPolicies) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { policies: { $set: newPolicies } }) });
+                            }}
+                        />
+                    ]
+                )
+            }
+
+            // Fields available only for IAM auth
             let renderIamFields = () => {
                 return (
                     [
                         <SelectField
                             floatingLabelText="Inferred Entity Type"
                             value={this.state.newRoleConfig.inferred_entity_type_string}
-                            onChange={(e,i,v) => {
+                            onChange={(e, i, v) => {
                                 this.setState({
                                     newRoleConfig: update(this.state.newRoleConfig, {
                                         inferred_entity_type: {
@@ -337,25 +383,13 @@ export default class AwsAuthBackend extends React.Component {
                             onChange={(e) => {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_principal_arn: { $set: e.target.value } }) });
                             }}
-                        />,
-                        <TextField
-                            className={styles.textFieldStyle}
-                            hintText='us-east-1, us-west-2, eu-west-1'
-                            floatingLabelFixed={true}
-                            floatingLabelText='Inferred AWS Region'
-                            value={this.state.newRoleConfig.inferred_aws_region}
-                            fullWidth={false}
-                            disabled={!this.state.newRoleConfig.inferred_entity_type}
-                            autoFocus
-                            onChange={(e) => {
-                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { inferred_aws_region: { $set: e.target.value } }) });
-                            }}
                         />
                     ]
                 )
             };
 
-            let renderRoleTagFields = () => {
+            // Fields available only for EC2 auth
+            let renderEc2Fields = () => {
                 return (
                     [
                         <TextField
@@ -381,14 +415,160 @@ export default class AwsAuthBackend extends React.Component {
                             onChange={(e) => {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { role_tag_value: { $set: e.target.value } }) });
                             }}
-                        />
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Region'
+                            value={this.state.newRoleConfig.bound_region}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_region: { $set: e.target.value } }) });
+                            }}
+                        />,
                     ]
                 )
             };
 
+            // Fields available for IAM auth with ec2_instance inferred
+            let renderEc2EntityTypeFields = () => {
+                return (
+                    [
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='us-east-1, us-west-2, eu-west-1'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Inferred AWS Region'
+                            value={this.state.newRoleConfig.inferred_aws_region}
+                            fullWidth={false}
+                            disabled={!this.state.newRoleConfig.inferred_entity_type}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { inferred_aws_region: { $set: e.target.value } }) });
+                            }}
+                        />
+                    ]
+                )
+            }
+
+            // Fields available for IAM auth with ec2_instance inferred and EC2 auth
+            let renderInferredFields = () => {
+                return (
+                    [
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='AMI ID'
+                            value={this.state.newRoleConfig.bound_ami_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_ami_id: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='IAM Role ARN'
+                            value={this.state.newRoleConfig.bound_iam_role_arn}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_role_arn: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Account ID'
+                            value={this.state.newRoleConfig.bound_account_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_account_id: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='VPC ID'
+                            value={this.state.newRoleConfig.bound_vpc_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_vpc_id: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='IAM Instance Profile ARN'
+                            value={this.state.newRoleConfig.bound_iam_instance_profile_arn}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_instance_profile_arn: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Subnet ID'
+                            value={this.state.newRoleConfig.bound_subnet_id}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_subnet_id: { $set: e.target.value } }) });
+                            }}
+                        />
+                    ]
+                )
+            }
+
+            // Fields available for all AWS auth types
+            let renderGlobalFields = () => {
+                return (
+                    [
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='TTL'
+                            value={this.state.newRoleConfig.ttl}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { ttl: { $set: e.target.value } }) });
+                            }}
+                        />,
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText='optional'
+                            floatingLabelFixed={true}
+                            floatingLabelText='Max TTL'
+                            value={this.state.newRoleConfig.max_ttl}
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ newRoleConfig: update(this.state.newRoleConfig, { max_ttl: { $set: e.target.value } }) });
+                            }}
+                        />
+                    ]
+                )
+            }
+
             let authTypeChanged = (event, index, value) => {
                 let auth_type = value;
 
+                // Reset fields
                 this.setState(
                     {
                         newRoleConfig: update(this.state.newRoleConfig,
@@ -408,153 +588,20 @@ export default class AwsAuthBackend extends React.Component {
 
             return (
                 <List>
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='Enter the new role name'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Role Name'
-                        fullWidth={false}
-                        value={this.state.selectedRoleId}
-                        disabled={this.state.openEditRoleDialog}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ selectedRoleId: e.target.value });
-                        }}
-                    />
-                    <SelectField
-                        floatingLabelText="Auth Type"
-                        value={this.state.newRoleConfig.auth_type}
-                        onChange={authTypeChanged}
-                        disabled={this.state.openEditRoleDialog}
-                    >
-                        {renderAuthTypes()}
-                    </SelectField>
+                    {renderTopFields()}
                     {this.state.newRoleConfig.auth_type === "iam" && renderIamFields()}
-                    {this.state.newRoleConfig.auth_type === "ec2" && renderRoleTagFields()}
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='AMI ID'
-                        value={this.state.newRoleConfig.bound_ami_id}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_ami_id: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='IAM Role ARN'
-                        value={this.state.newRoleConfig.bound_iam_role_arn}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_role_arn: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Account ID'
-                        value={this.state.newRoleConfig.bound_account_id}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_account_id: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Region'
-                        value={this.state.newRoleConfig.bound_region}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_region: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='VPC ID'
-                        value={this.state.newRoleConfig.bound_vpc_id}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_vpc_id: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Subnet ID'
-                        value={this.state.newRoleConfig.bound_subnet_id}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_subnet_id: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='IAM Instance Profile ARN'
-                        value={this.state.newRoleConfig.bound_iam_instance_profile_arn}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { bound_iam_instance_profile_arn: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='TTL'
-                        value={this.state.newRoleConfig.ttl}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { ttl: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText='optional'
-                        floatingLabelFixed={true}
-                        floatingLabelText='Max TTL'
-                        value={this.state.newRoleConfig.max_ttl}
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { max_ttl: { $set: e.target.value } }) });
-                        }}
-                    />
-                    <ListItem primaryText='Disallow Reauthentication'>
+                    {this.state.newRoleConfig.auth_type === "iam" && this.state.newRoleConfig.inferred_entity_type && _.concat(renderInferredFields(), renderEc2EntityTypeFields())}
+                    {this.state.newRoleConfig.auth_type === "ec2" && _.concat(renderEc2Fields(), renderInferredFields())}
+                    {renderGlobalFields()}
+                    {this.state.newRoleConfig.auth_type === "ec2" && <ListItem primaryText='Disallow Reauthentication'>
                         <Toggle
                             toggled={this.state.newRoleConfig.disallow_reauthentication}
                             onToggle={(e, v) => {
                                 this.setState({ newRoleConfig: update(this.state.newRoleConfig, { disallow_reauthentication: { $set: v } }) });
                             }}
                         />
-                    </ListItem>
-                    <Subheader>Assigned Policies</Subheader>
-                    <PolicyPicker
-                        height='200px'
-                        selectedPolicies={this.state.newRoleConfig.policies}
-                        onSelectedChange={(newPolicies) => {
-                            this.setState({ newRoleConfig: update(this.state.newRoleConfig, { policies: { $set: newPolicies } }) });
-                        }}
-                    />
+                    </ListItem>}
+                    {renderBottomFields()}
                 </List>
             )
         }
