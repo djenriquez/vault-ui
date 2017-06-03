@@ -80,7 +80,8 @@ class GenericSecretBackend extends React.Component {
             'renderEditObjectDialog',
             'renderDeleteConfirmationDialog',
             'setPage',
-            'setNewMaxItems'
+            'setNewMaxItems',
+            'resetPage'
         );
     }
 
@@ -149,6 +150,12 @@ class GenericSecretBackend extends React.Component {
             });
     }
 
+    resetPage() {
+        this.setState({
+            currentPage: 1
+        });
+    }
+
     //TODO: Incase we add functionality to allow users to modify maximum secrets on screen
     setNewMaxItems(maxItems) {
         let _pagedSecrets = _.chunk(this.state.filteredSecretList, maxItems);
@@ -211,6 +218,7 @@ class GenericSecretBackend extends React.Component {
     componentDidUpdate(prevProps) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
             if (this.isPathDirectory(this.props.params.splat)) {
+                this.resetPage();
                 this.loadSecretsList(prevProps);
             } else {
                 this.displaySecret();
