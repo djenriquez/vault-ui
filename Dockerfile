@@ -1,10 +1,10 @@
-FROM node:alpine
+FROM node:7-alpine
 
 MAINTAINER Vault-UI Contributors
 
 ADD . /app
 WORKDIR /app
-RUN yarn install --pure-lockfile --silent && yarn run build-web && npm prune --silent --production
+RUN yarn install --pure-lockfile --silent && yarn run build-web && npm prune --silent --production && yarn cache clean && rm -f /root/.electron/* 
 
 EXPOSE 8000
 

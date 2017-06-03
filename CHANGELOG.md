@@ -8,8 +8,13 @@
 - Add AWS auth backend with IAM - https://github.com/djenriquez/vault-ui/pull/126
 - Allow naming tokens generated from roles
 
+## Enhancements
+- Optimize Docker image size + caching - https://github.com/djenriquez/vault-ui/pull/122
+
 ## Bug fixes
+- Fix issue with secrets loading causing UI to be unresponsive - https://github.com/djenriquez/vault-ui/pull/110
 - Fix docker build electron dependency - https://github.com/djenriquez/vault-ui/pull/112
+- Fix issue with sorting/pagination of secrets not affecting the entire secret namespace - https://github.com/djenriquez/vault-ui/pull/127
 
 # 2.1.0
 ## Features
