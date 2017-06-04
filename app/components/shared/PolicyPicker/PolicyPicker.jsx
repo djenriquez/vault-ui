@@ -22,7 +22,7 @@ class PolicyPicker extends React.Component {
         fixedPolicyList: [],
         selectedPolicies: [],
         onError: (err) => { console.error(err) },
-        onSelectedChange: () => {},
+        onSelectedChange: () => { },
         excludePolicies: [],
         height: "300px",
     };
@@ -54,7 +54,7 @@ class PolicyPicker extends React.Component {
                     .then((resp) => {
 
                         let policyList = _.filter(resp.data.data.keys, (item) => {
-                            return (!_.includes(this.props.excludePolicies, item)) && ( item !== 'root');
+                            return !_.includes(this.props.excludePolicies, item);
                         })
 
                         this.setState({
@@ -70,13 +70,13 @@ class PolicyPicker extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(!_.isEqual(this.props.selectedPolicies, nextProps.selectedPolicies)) {
-            this.setState({selectedPolicies: nextProps.selectedPolicies})
+        if (!_.isEqual(this.props.selectedPolicies, nextProps.selectedPolicies)) {
+            this.setState({ selectedPolicies: nextProps.selectedPolicies })
         }
     }
 
     componentDidMount() {
-        if(_.isEmpty(this.props.fixedPolicyList)) {
+        if (_.isEmpty(this.props.fixedPolicyList)) {
             this.reloadPolicyList();
         }
     }
@@ -86,7 +86,7 @@ class PolicyPicker extends React.Component {
             this.props.onSelectedChange(nextState.selectedPolicies);
         }
     }
-    
+
 
     componentDidUpdate(prevProps, prevState) {
         let newAvailPol = _(this.state.availablePolicies).difference(this.state.selectedPolicies).value();
@@ -95,7 +95,7 @@ class PolicyPicker extends React.Component {
             (!_.isEqual(this.state.selectedPolicies.sort(), prevState.selectedPolicies.sort())) ||
             (!_.isEqual(this.state.availablePolicies.sort(), prevState.availablePolicies.sort())) ||
             (this.state.searchText !== prevState.searchText)
-         ) {
+        ) {
             let newList = _.filter(newAvailPol, (item) => {
                 return _.includes(item, this.state.searchText);
             });
@@ -104,7 +104,7 @@ class PolicyPicker extends React.Component {
             });
         }
 
-        
+
 
     }
 
@@ -130,11 +130,11 @@ class PolicyPicker extends React.Component {
                 return (
                     <ListItem
                         className={styles.ppList}
-                        onTouchTap={() => { this.selectedPolicyAdd(key) } }
+                        onTouchTap={() => { this.selectedPolicyAdd(key) }}
                         key={key}
                         rightIcon={<KeyboardArrowRight />}
                         primaryText={key}
-                        />
+                    />
                 )
             });
         };
@@ -149,12 +149,12 @@ class PolicyPicker extends React.Component {
                 return (
                     <ListItem
                         className={styles.ppList}
-                        onTouchTap={() => { this.selectedPolicyRemove(key) } }
+                        onTouchTap={() => { this.selectedPolicyRemove(key) }}
                         style={style}
                         key={key}
                         rightIcon={<Clear />}
                         primaryText={key}
-                        />
+                    />
                 )
             });
         };
@@ -169,7 +169,7 @@ class PolicyPicker extends React.Component {
                         <ToolbarGroup lastChild={true}>
                         </ToolbarGroup>
                     </Toolbar>
-                    <div style={{height: this.props.height}} className={styles.ppListContainer}>
+                    <div style={{ height: this.props.height }} className={styles.ppListContainer}>
                         <List>
                             {renderAvailablePoliciesListItems()}
                         </List>
@@ -190,22 +190,21 @@ class PolicyPicker extends React.Component {
                                     this.setState({
                                         searchText: searchText
                                     });
-                                } }
+                                }}
                                 onNewRequest={(chosenRequest) => {
                                     if (
-                                        (!_.includes(this.props.excludePolicies, chosenRequest)) &&
-                                        (chosenRequest !== 'root')
+                                        !_.includes(this.props.excludePolicies, chosenRequest)
                                     ) {
                                         this.selectedPolicyAdd(chosenRequest);
                                         this.setState({
                                             searchText: ''
                                         })
                                     }
-                                } }
-                                />
+                                }}
+                            />
                         </ToolbarGroup>
                     </Toolbar>
-                    <div style={{height: this.props.height}} className={styles.ppListContainer}>
+                    <div style={{ height: this.props.height }} className={styles.ppListContainer}>
                         <List>
                             {renderSelectedPoliciesListItems()}
                         </List>
