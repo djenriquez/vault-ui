@@ -21,7 +21,8 @@ const supported_auth_backend_types = [
     'github',
     'radius',
     'aws-ec2',
-    'userpass'
+    'userpass',
+    'aws'
 ]
 
 function snackBarMessage(message) {
