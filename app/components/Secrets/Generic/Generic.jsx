@@ -396,6 +396,7 @@ class GenericSecretBackend extends React.Component {
                 modal={false}
                 actions={actions}
                 open={this.state.openEditObjectModal}
+                autoDetectWindowHeight={true}
                 autoScrollBodyContent={true}
                 onRequestClose={() => {
                     this.setState({ openEditObjectModal: false, secretContent: '' })
