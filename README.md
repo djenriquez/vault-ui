@@ -93,7 +93,7 @@ In some cases, users might want to use middleware to authenticate into Vault-UI 
 A user/token accessing Vault-UI requires a basic set of capabilities in order to correctly discover and display the various mounted backends.
 Please make sure your user is granted a policy with at least the following permissions:
 
-#### JSON Version:
+#### JSON
 ```json
 {
   "path": {
@@ -121,7 +121,7 @@ Please make sure your user is granted a policy with at least the following permi
 }
 ```
 
-#### HCL Version:
+#### HCL
 ```
 path "auth/token/lookup-self" {
     capabilities = [ "read" ]
@@ -153,7 +153,36 @@ By default, secrets will display as their raw JSON value represented by the `dat
 Policies are managed also using the [josdejong/jsoneditor](https://github.com/josdejong/jsoneditor) JSON editor. Currently, GitHub and raw Tokens are the only supported authentication backends for associated policies.
 
 ### Token Management
-Users have the ability to create and revoke tokens, manage token roles and list accessors.
+Users have the ability to create and revoke tokens, manage token roles and list accessors. The following permissions are needed at minimum for this feature:
+
+#### JSON:
+```json
+{
+  "path": {
+     "auth/token/accessors": {
+       "capabilities": [
+         "sudo", 
+         "list"
+       ]
+    },
+     "auth/token/lookup-accessor/*": {
+       "capabilities": [
+         "read"
+       ]
+    }
+  }
+}
+```
+#### HCL
+```hcl
+path "auth/token/accessors" {
+    capabilities = [ "sudo", "list" ]
+}
+
+path "auth/token/lookup-accessor/*" {
+    capabilities = [ "read" ]
+}
+```
 
 ### Response Wrapping
 Vault-UI supports response-wrapping of secrets in _generic_ backends. Wrapping custom JSON data is also supported.
