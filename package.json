@@ -38,7 +38,8 @@
     "presets": [
       "es2015",
       "react",
-      "stage-2"
+      "stage-2",
+      "stage-0"
     ]
   },
   "homepage": "https://github.com/djenriquez/vault-ui#readme",
