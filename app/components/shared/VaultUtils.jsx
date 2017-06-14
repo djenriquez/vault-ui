@@ -39,15 +39,19 @@ function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken =
 
     var instance;
 
+    // Normalize vault address by removing trailing slashes
+    let normVaultAddr = vaultUrl || window.localStorage.getItem("vaultUrl");
+    normVaultAddr = normVaultAddr.replace(/\/*$/g, "");
+
     if(WEBPACK_DEF_TARGET_WEB) {
         instance = axios.create({
             baseURL: '/v1/',
-            params: { "vaultaddr": vaultUrl || window.localStorage.getItem("vaultUrl") },
+            params: { "vaultaddr": normVaultAddr },
             headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
         });
     } else {
         instance = axios.create({
-            baseURL: `${window.localStorage.getItem("vaultUrl")}/v1/`,
+            baseURL: `${normVaultAddr}/v1/`,
             headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
         }); 
     }
