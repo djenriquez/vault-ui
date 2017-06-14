@@ -1,4 +1,4 @@
-FROM node:7-alpine
+FROM node:8.1.0-alpine
 
 MAINTAINER Vault-UI Contributors
 
