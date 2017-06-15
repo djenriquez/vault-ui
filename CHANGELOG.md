@@ -1,9 +1,9 @@
 # 2.3.0 (Unreleased)
 - Allow naming tokens generated from roles
+- Add backend mount description field - https://github.com/djenriquez/vault-ui/pull/105
 
 # 2.2.0
 ## Features
-- Add backend mount description field - https://github.com/djenriquez/vault-ui/pull/105
 - Add filtering to all lists - https://github.com/djenriquez/vault-ui/pull/106
 - Add pagination to secrets list - https://github.com/djenriquez/vault-ui/pull/110
 - Add JSON diff view to compare updates - https://github.com/djenriquez/vault-ui/pull/84
