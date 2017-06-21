@@ -94,7 +94,7 @@ class JsonEditor extends React.Component {
                 <JsonDiffReact
                     left={this.state.initialValue}
                     right={this.props.value}
-                    annotated={true}
+                    annotated={window.localStorage.getItem("enableDiffAnnotations") === "true"}
                 />
             );
         }
