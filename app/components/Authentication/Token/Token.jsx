@@ -316,7 +316,7 @@ export default class TokenAuthBackend extends React.Component {
     }
 
     reloadAccessors() {
-        tokenHasCapabilities(['sudo', 'list'], 'auth/token/accessors')
+        tokenHasCapabilities(['sudo', 'list'], 'auth/token/accessors/*')
             .then(() => {
                 return callVaultApi('get', 'auth/token/accessors', { list: true }).then((resp) => {
                     this.setState({
