@@ -159,27 +159,36 @@ Users have the ability to create and revoke tokens, manage token roles and list 
 ```json
 {
   "path": {
-     "auth/token/accessors": {
-       "capabilities": [
-         "sudo", 
-         "list"
-       ]
+    "auth/token/accessors/*": {
+      "capabilities": [
+        "sudo",
+        "list"
+      ]
     },
-     "auth/token/lookup-accessor/*": {
-       "capabilities": [
-         "read"
-       ]
+    "auth/token/lookup-accessor/*": {
+      "capabilities": [
+        "read"
+      ]
+    },
+    "sys/auth": {
+      "capabilities": [
+        "read"
+      ]
     }
   }
 }
 ```
 #### HCL
 ```hcl
-path "auth/token/accessors" {
+path "auth/token/accessors/*" {
     capabilities = [ "sudo", "list" ]
 }
 
 path "auth/token/lookup-accessor/*" {
+    capabilities = [ "read" ]
+}
+
+path "sys/auth" {
     capabilities = [ "read" ]
 }
 ```
