@@ -33,6 +33,10 @@ class Settings extends React.Component {
         });
     }
 
+    setDiffAnnotationsPreference(e, isChecked) {
+        window.localStorage.setItem('enableDiffAnnotations', isChecked);
+    }
+
     setCapCachePreference(e, isChecked) {
         window.localStorage.setItem('enableCapabilitiesCache', isChecked);
     }
@@ -61,6 +65,10 @@ class Settings extends React.Component {
                                     label="Enable capabilities cache"
                                     onCheck={this.setCapCachePreference}
                                     defaultChecked={window.localStorage.getItem('enableCapabilitiesCache') === 'true'} />
+                                <Checkbox
+                                    label="Display annotations for JSON diff"
+                                    onCheck={this.setDiffAnnotationsPreference}
+                                    defaultChecked={window.localStorage.getItem('enableDiffAnnotations') === 'true'} />
                             </div>
                             <div>
                                 <h2>Secrets</h2>

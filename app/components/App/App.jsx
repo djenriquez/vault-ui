@@ -99,6 +99,9 @@ export default class App extends React.Component {
         if (!window.localStorage.getItem('enableCapabilitiesCache')) {
             window.localStorage.setItem('enableCapabilitiesCache', 'true');
         }
+        if (!window.localStorage.getItem('enableDiffAnnotations')) {
+            window.localStorage.setItem('enableDiffAnnotations', 'false');
+        }
         document.addEventListener("snackbar", (e) => {
             let messageStyle = { backgroundColor: green500 };
             let message = e.detail.message.toString();
