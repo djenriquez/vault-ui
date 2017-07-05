@@ -62,6 +62,7 @@ djenriquez/vault-ui
 ```
 
 Supported environment variables:
+- `CUSTOM_CA_CERT` Pass a self-signed certificate that the system should trust
 - `NODE_TLS_REJECT_UNAUTHORIZED` disable TLS server side validation (ex. vault deployed with self-signed certificate)
 - `VAULT_URL_DEFAULT` will set the default vault endpoint.
 - `VAULT_AUTH_DEFAULT` will set the default authentication method type. See below for supported authentication methods.
@@ -161,7 +162,7 @@ Users have the ability to create and revoke tokens, manage token roles and list 
   "path": {
      "auth/token/accessors": {
        "capabilities": [
-         "sudo", 
+         "sudo",
          "list"
        ]
     },
