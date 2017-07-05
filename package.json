@@ -1,6 +1,6 @@
 {
   "name": "Vault-UI",
-  "version": "2.2.0",
+  "version": "2.2.1-dev",
   "description": "Graphical interface for Hashicorp Vault",
   "main": "main.js",
   "browserslist": [
@@ -18,7 +18,7 @@
     "package-mac": "yarn run build-desktop && build --mac=zip --ia32 --x64 --publish never",
     "package-win32": "yarn run build-desktop && build --win=nsis --ia32 --x64 --publish never",
     "package-linux": "yarn run build-desktop && build --linux=appimage --ia32 --x64 --publish never",
-    "publish": "yarn run build-desktop && build --mac=zip --win=nsis --linux=appimage --ia32 --x64 --publish always",
+    "publish": "yarn run build-desktop && build --mac zip --win nsis --linux appimage --ia32 --x64 --publish onTag",
     "cleanup": "mop -v"
   },
   "repository": {
