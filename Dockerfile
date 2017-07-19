@@ -1,4 +1,4 @@
-FROM node:7-alpine
+FROM node:8.1.4-alpine
 
 MAINTAINER Vault-UI Contributors
 
@@ -7,7 +7,9 @@ COPY . .
 
 RUN yarn install --pure-lockfile --silent && \
     yarn run build-web && \
-    npm prune --silent --production && \
+    yarn install --silent --production && \
+    yarn check --verify-tree --production && \
+    yarn global add nodemon && \
     yarn cache clean && \
     rm -f /root/.electron/*
 
