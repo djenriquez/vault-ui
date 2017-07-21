@@ -535,7 +535,7 @@ export default class GithubAuthBackend extends React.Component {
                                     floatingLabelText='GitHub endpoint'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
-                                    value={this.state.newConfig.endpoint}
+                                    value={this.state.newConfig.base_url}
                                     onChange={(e) => {
                                         this.setState({ newConfig: update(this.state.newConfig, { endpoint: { $set: e.target.value } }) });
                                     }}
