@@ -12,7 +12,7 @@ import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
 import JsonEditor from '../shared/JsonEditor.jsx';
-import hcltojson from 'hcl-to-json'
+import ghcl from 'gopher-hcl';
 import jsonschema from './vault-policy-schema.json'
 import { callVaultApi, tokenHasCapabilities, history } from '../shared/VaultUtils.jsx'
 import Avatar from 'material-ui/Avatar';
@@ -266,7 +266,7 @@ export default class PolicyManager extends React.Component {
 
                 if (!rules_obj) {
                     // Previous parse failed, attempt HCL to JSON conversion
-                    rules_obj = hcltojson(rules);
+                    rules_obj = ghcl.parse(rules);
                 }
 
                 if (rules_obj) {
