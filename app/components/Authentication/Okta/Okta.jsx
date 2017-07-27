@@ -65,9 +65,7 @@ export default class OktaAuthBackend extends React.Component {
             configObj: this.oktaConfigSchema,
             selectedTab: 'users',
             selectedItemId: '',
-            isBackendConfigured: false,
-            disableSave: true,
-            disableCreate: true
+            isBackendConfigured: false
         };
 
         _.bindAll(
@@ -569,7 +567,16 @@ export default class OktaAuthBackend extends React.Component {
                                     <FlatButton
                                         primary={true}
                                         label='Save'
-                                        onTouchTap={() => this.createUpdateConfig(this.state.configObj)}
+                                        onTouchTap={() => {
+                                            if(!this.state.configObj.organization) {
+                                                snackBarMessage(new Error(`Must specify an organization`));
+                                                return;
+                                            } else {
+                                                console.log(this.state.configObj.organization);
+                                            }
+                                            this.createUpdateConfig(this.state.configObj);
+                                
+                                        }}
                                     />
                                 </div>
                             </List>
