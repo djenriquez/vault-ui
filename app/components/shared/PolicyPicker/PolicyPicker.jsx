@@ -16,15 +16,20 @@ class PolicyPicker extends React.Component {
         selectedPolicies: PropTypes.array,
         fixedPolicyList: PropTypes.array,
         height: PropTypes.string,
+        type: PropTypes.string,
+        item: PropTypes.string,
+        vaultPath: PropTypes.string
     };
 
     static defaultProps = {
         fixedPolicyList: [],
         selectedPolicies: [],
         onError: (err) => { console.error(err) },
-        onSelectedChange: () => {},
+        onSelectedChange: () => { },
         excludePolicies: [],
         height: "300px",
+        item: "policies",
+        type: "policy"
     };
 
     constructor(props) {
@@ -47,15 +52,39 @@ class PolicyPicker extends React.Component {
         )
     }
 
-    reloadPolicyList() {
-        tokenHasCapabilities(['read'], 'sys/policy')
+    reloadPolicyList(type) {
+        let allowed_methods = ['']
+        let http_method = ''
+        let path = ''
+        let params = null
+        switch (type) {
+            case "okta/users":
+                allowed_methods = ['list']
+                http_method = 'get'
+                params = { list: true }
+                path = this.props.vaultPath
+                break;
+            default:
+                allowed_methods = ['get']
+                http_method = 'get'
+                path = 'sys/policy'
+                break;
+        }
+        tokenHasCapabilities(allowed_methods, path)
             .then(() => {
-                callVaultApi('get', 'sys/policy', null, null, null)
+                callVaultApi(http_method, path, params, null, null)
                     .then((resp) => {
+                        let policyList = []
 
-                        let policyList = _.filter(resp.data.data.keys, (item) => {
-                            return (!_.includes(this.props.excludePolicies, item)) && ( item !== 'root');
-                        })
+                        if (this.props.type === 'policy') {
+                            policyList = _.filter(resp.data.data.keys, (item) => {
+                                return (!_.includes(this.props.excludePolicies, item)) && (item !== 'root');
+                            })
+                        } else {
+                            policyList = _.filter(resp.data.data.keys, (item) => {
+                                return (!_.includes(this.props.excludePolicies, item));
+                            })
+                        }
 
                         this.setState({
                             availablePolicies: policyList,
@@ -66,18 +95,19 @@ class PolicyPicker extends React.Component {
             })
             .catch(() => {
                 this.setState({ policyListAvailable: false })
-            })
+            });
     }
 
     componentWillReceiveProps(nextProps) {
-        if(!_.isEqual(this.props.selectedPolicies, nextProps.selectedPolicies)) {
-            this.setState({selectedPolicies: nextProps.selectedPolicies})
+        if (!_.isEqual(this.props.selectedPolicies, nextProps.selectedPolicies)) {
+            this.setState({ selectedPolicies: nextProps.selectedPolicies })
         }
     }
 
     componentDidMount() {
-        if(_.isEmpty(this.props.fixedPolicyList)) {
-            this.reloadPolicyList();
+        console.log(this.props.type);
+        if (_.isEmpty(this.props.fixedPolicyList)) {
+            this.reloadPolicyList(this.props.type);
         }
     }
 
@@ -86,7 +116,7 @@ class PolicyPicker extends React.Component {
             this.props.onSelectedChange(nextState.selectedPolicies);
         }
     }
-    
+
 
     componentDidUpdate(prevProps, prevState) {
         let newAvailPol = _(this.state.availablePolicies).difference(this.state.selectedPolicies).value();
@@ -95,7 +125,7 @@ class PolicyPicker extends React.Component {
             (!_.isEqual(this.state.selectedPolicies.sort(), prevState.selectedPolicies.sort())) ||
             (!_.isEqual(this.state.availablePolicies.sort(), prevState.availablePolicies.sort())) ||
             (this.state.searchText !== prevState.searchText)
-         ) {
+        ) {
             let newList = _.filter(newAvailPol, (item) => {
                 return _.includes(item, this.state.searchText);
             });
@@ -104,7 +134,7 @@ class PolicyPicker extends React.Component {
             });
         }
 
-        
+
 
     }
 
@@ -130,11 +160,11 @@ class PolicyPicker extends React.Component {
                 return (
                     <ListItem
                         className={styles.ppList}
-                        onTouchTap={() => { this.selectedPolicyAdd(key) } }
+                        onTouchTap={() => { this.selectedPolicyAdd(key) }}
                         key={key}
                         rightIcon={<KeyboardArrowRight />}
                         primaryText={key}
-                        />
+                    />
                 )
             });
         };
@@ -149,12 +179,12 @@ class PolicyPicker extends React.Component {
                 return (
                     <ListItem
                         className={styles.ppList}
-                        onTouchTap={() => { this.selectedPolicyRemove(key) } }
+                        onTouchTap={() => { this.selectedPolicyRemove(key) }}
                         style={style}
                         key={key}
                         rightIcon={<Clear />}
                         primaryText={key}
-                        />
+                    />
                 )
             });
         };
@@ -164,12 +194,12 @@ class PolicyPicker extends React.Component {
                 <div style={{ marginRight: "1%" }} className={styles.ppColumn}>
                     <Toolbar className={styles.ppToolbar}>
                         <ToolbarGroup>
-                            <ToolbarTitle text="Available Policies" />
+                            <ToolbarTitle text={`Available ${this.props.item}`} />
                         </ToolbarGroup>
                         <ToolbarGroup lastChild={true}>
                         </ToolbarGroup>
                     </Toolbar>
-                    <div style={{height: this.props.height}} className={styles.ppListContainer}>
+                    <div style={{ height: this.props.height }} className={styles.ppListContainer}>
                         <List>
                             {renderAvailablePoliciesListItems()}
                         </List>
@@ -178,7 +208,7 @@ class PolicyPicker extends React.Component {
                 <div style={{ marginLeft: "1%" }} className={styles.ppColumn}>
                     <Toolbar className={styles.ppToolbar}>
                         <ToolbarGroup>
-                            <ToolbarTitle text="Selected Policies" />
+                            <ToolbarTitle text={`Selected ${this.props.item}`} />
                         </ToolbarGroup>
                         <ToolbarGroup lastChild={true}>
 
@@ -190,7 +220,7 @@ class PolicyPicker extends React.Component {
                                     this.setState({
                                         searchText: searchText
                                     });
-                                } }
+                                }}
                                 onNewRequest={(chosenRequest) => {
                                     if (
                                         (!_.includes(this.props.excludePolicies, chosenRequest)) &&
@@ -201,11 +231,11 @@ class PolicyPicker extends React.Component {
                                             searchText: ''
                                         })
                                     }
-                                } }
-                                />
+                                }}
+                            />
                         </ToolbarGroup>
                     </Toolbar>
-                    <div style={{height: this.props.height}} className={styles.ppListContainer}>
+                    <div style={{ height: this.props.height }} className={styles.ppListContainer}>
                         <List>
                             {renderSelectedPoliciesListItems()}
                         </List>
