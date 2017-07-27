@@ -105,7 +105,6 @@ class PolicyPicker extends React.Component {
     }
 
     componentDidMount() {
-        console.log(this.props.type);
         if (_.isEmpty(this.props.fixedPolicyList)) {
             this.reloadPolicyList(this.props.type);
         }

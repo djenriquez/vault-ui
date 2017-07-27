@@ -146,7 +146,6 @@ export default class Login extends React.Component {
 
         callVaultApi(method, uri, null, data, null, this.state.loginMethodType == 'TOKEN' ? this.state.authToken : null, this.state.vaultUrl)
             .then((resp) => {
-                //console.log(resp);
                 if (this.state.loginMethodType == "TOKEN") {
                     this.setAccessToken({
                         client_token: resp.data.data.id,
