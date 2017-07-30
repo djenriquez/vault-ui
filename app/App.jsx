@@ -19,6 +19,7 @@ import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import UserPassAuthBackend from './components/Authentication/UserPass/UserPass.jsx';
 import SecretUnwrapper from './components/shared/Wrapping/Unwrapper';
+import OktaAuthBackend from './components/Authentication/Okta/Okta.jsx';
 
 // Load here to signal webpack
 import 'flexboxgrid/dist/flexboxgrid.min.css';
@@ -83,6 +84,7 @@ ReactDOM.render((
                 <Route path="/auth/aws-ec2/:namespace(/**)" component={AwsEc2AuthBackend} />
                 <Route path="/auth/github/:namespace(/**)" component={GithubAuthBackend} />
                 <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
+                <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
                 <Route path="/auth/userpass/:namespace(/**)" component={UserPassAuthBackend} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/responsewrapper" component={ResponseWrapper} />

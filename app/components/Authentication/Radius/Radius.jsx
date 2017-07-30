@@ -268,6 +268,7 @@ class RadiusAuthBackend extends React.Component {
                     <List>
                         <Subheader>Assigned Policies</Subheader>
                         <PolicyPicker
+                            type="Radius"
                             height="250px"
                             selectedPolicies={this.state.selectedUserObject.policies}
                             onSelectedChange={(policies) => {
