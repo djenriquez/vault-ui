@@ -6,7 +6,7 @@ var path = require('path');
 var routeHandler = require('./src/routeHandler');
 var compression = require('compression');
 
-var PORT = 8000;
+var PORT = process.env.PORT || 8000;
 
 var app = express();
 app.set('view engine', 'html');
