@@ -153,7 +153,21 @@ export default class AppRoleAuthBackend extends React.Component {
         let renderFields = () => {
 
             let renderNewFields = () => {
-
+                return (
+                    [
+                        <TextField
+                            className={styles.textFieldStyle}
+                            hintText={`Enter the role name`}
+                            floatingLabelFixed={true}
+                            floatingLabelText='Role Name'
+                            fullWidth={false}
+                            autoFocus
+                            onChange={(e) => {
+                                this.setState({ itemConfig: update(this.state.itemConfig, { role_name: { $set: e.target.value } }) });
+                            }}
+                        />
+                    ]
+                )
             }
 
             let renderEditFields = () => {
@@ -199,17 +213,7 @@ export default class AppRoleAuthBackend extends React.Component {
             }
             return (
                 <List>
-                    <TextField
-                        className={styles.textFieldStyle}
-                        hintText={`Enter the role name`}
-                        floatingLabelFixed={true}
-                        floatingLabelText='Role Name'
-                        fullWidth={false}
-                        autoFocus
-                        onChange={(e) => {
-                            this.setState({ itemConfig: update(this.state.itemConfig, { role_name: { $set: e.target.value } }) });
-                        }}
-                    />
+                    {this.state.openNewItemDialog && renderNewFields()}
                     {renderConstantFields()}
                     <Subheader>Assigned Groups</Subheader>
                     <PolicyPicker
