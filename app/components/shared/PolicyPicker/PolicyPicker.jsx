@@ -65,7 +65,7 @@ class PolicyPicker extends React.Component {
                 path = this.props.vaultPath
                 break;
             default:
-                allowed_methods = ['get']
+                allowed_methods = ['read']
                 http_method = 'get'
                 path = 'sys/policy'
                 break;
