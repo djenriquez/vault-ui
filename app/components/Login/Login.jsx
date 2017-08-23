@@ -11,6 +11,7 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import _ from 'lodash';
 import { callVaultApi, history } from '../shared/VaultUtils.jsx';
 import logoImage from '../../assets/vault-ui-logo.svg';
+import RaisedButton from 'material-ui/RaisedButton';
 
 export default class Login extends React.Component {
     static propTypes = {
@@ -47,7 +48,9 @@ export default class Login extends React.Component {
             'renderSelectedLoginOption',
             'validateUsernamePassword',
             'checkSettings',
-            'login'
+            'login',
+            'clickLogin',
+            'pressEnter'
         )
     }
 
@@ -167,53 +170,48 @@ export default class Login extends React.Component {
             });
     }
 
-    validateUsernamePassword(e) {
-        if (e.keyCode === 13) {
-            if (!this.getVaultUrl()) {
-                this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
-                return;
-            }
-            if (!this.state.username) {
-                this.setState({ errorMessage: "No username provided." });
-                return;
-            }
+    validateUsernamePassword() {
 
-            if (!this.state.password) {
-                this.setState({ errorMessage: "No password provided." });
-                return;
-            }
-
-            this.login();
+        if (!this.getVaultUrl()) {
+            this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
+            return;
         }
+        if (!this.state.username) {
+            this.setState({ errorMessage: "No username provided." });
+            return;
+        }
+
+        if (!this.state.password) {
+            this.setState({ errorMessage: "No password provided." });
+            return;
+        }
+
+        this.login();
     }
 
-    validateToken(e) {
-        if (e.keyCode === 13) {
-            if (!this.getVaultUrl()) {
-                this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
-                return;
-            }
-            if (!this.state.authToken) {
-                this.setState({ errorMessage: "No auth token provided." });
-                return;
-            }
-            this.login();
+    validateToken() {
+        if (!this.getVaultUrl()) {
+            this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
+            return;
         }
+        if (!this.state.authToken) {
+            this.setState({ errorMessage: "No auth token provided." });
+            return;
+        }
+        this.login();
     }
 
-    validateAuthToken(e) {
-        if (e.keyCode === 13) {
-            if (!this.getVaultUrl()) {
-                this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
-                return;
-            }
-            if (!this.state.authToken) {
-                this.setState({ errorMessage: "No auth token provided." });
-                return;
-            }
-
-            this.login();
+    validateAuthToken() {
+        if (!this.getVaultUrl()) {
+            this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
+            return;
         }
+        if (!this.state.authToken) {
+            this.setState({ errorMessage: "No auth token provided." });
+            return;
+        }
+
+        this.login();
     }
 
     setAccessToken(resp) {
@@ -330,6 +328,27 @@ export default class Login extends React.Component {
         )
     }
 
+    pressEnter(e) {
+        if (e.keyCode === 13)
+            this.clickLogin();
+    }
+
+    clickLogin() {
+        switch (this.state.loginMethodType) {
+            case "GITHUB":
+                this.validateAuthToken();
+                break;
+            case "TOKEN":
+                this.validateToken();
+                break;
+            case "LDAP":
+            case "USERNAMEPASSWORD":
+            case "OKTA":
+                this.validateUsernamePassword();
+                break;
+        }
+    }
+
     renderSelectedLoginOption() {
         switch (this.state.loginMethodType) {
             case "GITHUB":
@@ -339,7 +358,7 @@ export default class Login extends React.Component {
                         className="col-xs-12"
                         errorText={this.state.errorMessage}
                         hintText="Enter Github token"
-                        onKeyDown={this.validateAuthToken}
+                        onKeyDown={this.pressEnter}
                         onChange={(e, v) => this.setState({ authToken: v })}
                     />
                 );
@@ -350,7 +369,7 @@ export default class Login extends React.Component {
                         className="col-xs-12"
                         errorText={this.state.errorMessage}
                         hintText="Enter token"
-                        onKeyDown={this.validateToken}
+                        onKeyDown={this.pressEnter}
                         onChange={(e, v) => this.setState({ authToken: v })}
                     />
                 );
@@ -361,7 +380,7 @@ export default class Login extends React.Component {
                             fullWidth={true}
                             className="col-xs-12"
                             hintText="Enter LDAP username"
-                            onKeyDown={this.validateUsernamePassword}
+                            onKeyDown={this.pressEnter}
                             onChange={(e, v) => this.setState({ username: v })}
                         />
                         <TextField
@@ -369,7 +388,7 @@ export default class Login extends React.Component {
                             className="col-xs-12"
                             type="password"
                             hintText="Enter LDAP password"
-                            onKeyDown={this.validateUsernamePassword}
+                            onKeyDown={this.pressEnter}
                             onChange={(e, v) => this.setState({ password: v })}
                         />
                         <div className={styles.error}>{this.state.errorMessage}</div>
@@ -382,7 +401,7 @@ export default class Login extends React.Component {
                             fullWidth={true}
                             className="col-xs-12"
                             hintText="Enter username"
-                            onKeyDown={this.validateUsernamePassword}
+                            onKeyDown={this.pressEnter}
                             onChange={(e, v) => this.setState({ username: v })}
                         />
                         <TextField
@@ -390,7 +409,7 @@ export default class Login extends React.Component {
                             className="col-xs-12"
                             type="password"
                             hintText="Enter password"
-                            onKeyDown={this.validateUsernamePassword}
+                            onKeyDown={this.pressEnter}
                             onChange={(e, v) => this.setState({ password: v })}
                         />
                         <div className={styles.error}>{this.state.errorMessage}</div>
@@ -403,7 +422,7 @@ export default class Login extends React.Component {
                             fullWidth={true}
                             className="col-xs-12"
                             hintText="Enter username"
-                            onKeyDown={this.validateUsernamePassword}
+                            onKeyDown={this.pressEnter}
                             onChange={(e, v) => this.setState({ username: v })}
                         />
                         <TextField
@@ -411,7 +430,7 @@ export default class Login extends React.Component {
                             className="col-xs-12"
                             type="password"
                             hintText="Enter password"
-                            onKeyDown={this.validateUsernamePassword}
+                            onKeyDown={this.pressEnter}
                             onChange={(e, v) => this.setState({ password: v })}
                         />
                         <div className={styles.error}>{this.state.errorMessage}</div>
@@ -443,6 +462,12 @@ export default class Login extends React.Component {
                                 <Settings />
                             </IconButton>
                         </div>
+                    </div>
+                    <div style={{ margin: 30 }}>
+                        <RaisedButton
+                            label="Login"
+                            onClick={this.login}
+                        />
                     </div>
                 </div>
             </div>
