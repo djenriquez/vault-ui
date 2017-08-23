@@ -37,8 +37,9 @@ export default class AppRoleAuthBackend extends React.Component {
     };
 
     itemConfigSchema = {
+        role_name: undefined,
         bind_secret_id: undefined,
-        bind_cidr_list: undefined,
+        bound_cidr_list: undefined,
         policies: [],
         secret_id_num_uses: undefined,
         secret_id_ttl: undefined,
@@ -52,9 +53,11 @@ export default class AppRoleAuthBackend extends React.Component {
 
     constructor(props) {
         super(props);
+
+        this.baseUrl = `/auth/approle/${this.props.params.namespace}/`;
+        this.baseVaultPath = `auth/${this.props.params.namespace}`;
+
         this.state = {
-            baseUrl: `/auth/approle/${this.props.params.namespace}/`,
-            baseVaultPath: `auth/${this.props.params.namespace}`,
             deleteUserPath: '',
             selectedTab: 'roles',
             itemConfig: this.appRoleConfigSchema,
@@ -68,7 +71,9 @@ export default class AppRoleAuthBackend extends React.Component {
         _.bindAll(
             this,
             'listAppRoles',
-            'getAppRoleConfig'
+            'getAppRoleConfig',
+            'getAppRoleId',
+            'updateRoleId'
         );
     }
 
@@ -76,23 +81,45 @@ export default class AppRoleAuthBackend extends React.Component {
     componentDidMount() {
         this.listAppRoles();
         // If an approle is requested by URI
-        let uri = this.props.location.pathname.split(this.state.baseUrl)[1];
-        let appRole = uri.split('/')[1];
-        if (appRole) {
-            this.setState({ selectedItemName: appRole });
+        let uri = this.props.location.pathname.split(this.baseUrl)[1];
+        let roleName = uri.split('/')[1];
+        if (roleName) {
+            this.setState({ selectedItemName: roleName });
         }
     }
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.selectedItemName && (this.state.selectedItemName !== prevState.selectedItemName)) {
             this.getAppRoleConfig();
+            this.getAppRoleId();
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
+            // Reset
+            this.baseUrl = `/auth/approle/${nextProps.params.namespace}/`;
+            this.baseVaultPath = `auth/${nextProps.params.namespace}`;
+            this.setState({
+                deleteUserPath: '',
+                selectedTab: 'roles',
+                itemConfig: this.appRoleConfigSchema,
+                openNewItemDialog: false,
+                openEditItemDialog: false,
+                selectedItemName: '',
+                itemList: [],
+                filteredItemList: []
+            }, () => {
+                history.push(`${this.baseUrl}`);
+                this.listAppRoles()
+            });
         }
     }
 
     getAppRoleConfig() {
-        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${this.state.selectedItemName}`)
+        tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${this.state.selectedItemName}`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.selectedItemName}`, null, null)
+                callVaultApi('get', `${this.baseVaultPath}/role/${this.state.selectedItemName}`, null, null)
                     .then((resp) => {
                         let appRole = _.get(resp, 'data.data', {});
                         this.setState({ itemConfig: appRole, openEditItemDialog: true });
@@ -107,13 +134,34 @@ export default class AppRoleAuthBackend extends React.Component {
             })
             .catch(() => {
                 snackBarMessage(new Error('Access denied'));
+            });
+    }
+
+    getAppRoleId() {
+        tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`)
+            .then(() => {
+                callVaultApi('get', `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`, null, null)
+                    .then((resp) => {
+                        let roleId = _.get(resp, 'data.data.role_id', '');
+                        this.setState({ itemConfig: update(this.state.itemConfig, { role_id: { $set: roleId } }) });
+                    })
+                    .catch((error) => {
+                        if (error.response.status !== 404) {
+                            snackBarMessage(error);
+                        } else {
+                            this.setState({ itemConfig: this.itemConfigSchema });
+                        }
+                    })
             })
+            .catch(() => {
+                snackBarMessage(new Error('Access denied'));
+            });
     }
 
     listAppRoles() {
-        tokenHasCapabilities(['list'], `${this.state.baseVaultPath}/role`)
+        tokenHasCapabilities(['list'], `${this.baseVaultPath}/role`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/role`, { list: true }, null)
+                callVaultApi('get', `${this.baseVaultPath}/role`, { list: true }, null)
                     .then((resp) => {
                         let roles = _.get(resp, 'data.data.keys', []);
                         this.setState({ itemList: _.valuesIn(roles), filteredItemList: _.valuesIn(roles) });
@@ -132,9 +180,9 @@ export default class AppRoleAuthBackend extends React.Component {
     }
 
     listSecretIdAccessors() {
-        tokenHasCapabilities(['list'], `${this.state.baseVaultPath}/role/${this.state.selectedItemName}/secret-id`)
+        tokenHasCapabilities(['list'], `${this.baseVaultPath}/role/${this.state.selectedItemName}/secret-id`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/role/${this.state.selectedItemName}/secret-id`, { list: true }, null)
+                callVaultApi('get', `${this.baseVaultPath}/role/${this.state.selectedItemName}/secret-id`, { list: true }, null)
                     .then((resp) => {
 
                     })
@@ -148,14 +196,18 @@ export default class AppRoleAuthBackend extends React.Component {
     }
 
     createUpdateItem() {
-        tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/role/${this.state.selectedItemName}`)
+        let role_name = this.state.itemConfig.role_name ? this.state.itemConfig.role_name : this.state.selectedItemName;
+        tokenHasCapabilities(['create', 'update'], `${this.baseVaultPath}/role/${role_name}`)
             .then(() => {
                 let updateObj = _.clone(this.state.itemConfig);
                 if (updateObj.policies.length > 0)
                     updateObj.policies = this.state.itemConfig.policies.join(',');
-                callVaultApi('post', `${this.state.baseVaultPath}/role/${this.state.selectedItemName}`, null, updateObj)
-                    .then((resp) => {
-                        history.push(`${this.state.baseUrl}`);
+                else
+                    updateObj.policies = '';
+                callVaultApi('post', `${this.baseVaultPath}/role/${role_name}`, null, updateObj)
+                    .then(() => {
+                        history.push(`${this.baseUrl}`);
+                        this.listAppRoles();
                         this.setState({ openEditItemDialog: false, openNewItemDialog: false, itemConfig: this.itemConfigSchema, selectedItemName: '' })
                     })
                     .catch((error) => {
@@ -164,7 +216,23 @@ export default class AppRoleAuthBackend extends React.Component {
             })
             .catch(() => {
                 snackBarMessage(new Error('Access denied'));
-            })
+            });
+    }
+
+    updateRoleId() {
+        if (this.state.itemConfig.role_id) {
+            console.log()
+            tokenHasCapabilities(['update'], `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`)
+                .then(() => {
+                    callVaultApi('post', `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`, null, { role_id: this.state.itemConfig.role_id })
+                        .catch((error) => {
+                            snackBarMessage(error);
+                        })
+                })
+                .catch(() => {
+                    snackBarMessage(new Error('Access denied'));
+                });
+        }
     }
 
     render() {
@@ -181,7 +249,7 @@ export default class AppRoleAuthBackend extends React.Component {
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
-                                this.setState({ selectedItemName: e.target.value });
+                                this.setState({ itemConfig: update(this.state.itemConfig, { role_name: { $set: e.target.value } }) });
                             }}
                         />
                     ]
@@ -201,8 +269,7 @@ export default class AppRoleAuthBackend extends React.Component {
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
-                                let val = e.target.value.split(',');
-                                this.setState({ itemConfig: update(this.state.itemConfig, { role_id: { $set: val } }) });
+                                this.setState({ itemConfig: update(this.state.itemConfig, { role_id: { $set: e.target.value } }) });
                             }}
                         />
                     ]
@@ -212,18 +279,18 @@ export default class AppRoleAuthBackend extends React.Component {
             let renderConstantFields = () => {
                 return (
                     [
-                        <ListItem primaryText='Bind Secret ID'>
-                            <Toggle
-                                toggled={this.state.itemConfig.bind_secret_id}
-                                value={this.state.bind_secret_id}
-                                onToggle={(e, v) => {
-                                    this.setState({ itemConfig: update(this.state.itemConfig, { bind_secret_id: { $set: v } }) });
-                                }}
-                            />
-                        </ListItem>,
+                        <Toggle
+                            label="Bind Secret ID"
+                            toggled={this.state.itemConfig.bind_secret_id}
+                            value={this.state.bind_secret_id}
+                            style={{ width: 250 }}
+                            onToggle={(e, v) => {
+                                this.setState({ itemConfig: update(this.state.itemConfig, { bind_secret_id: { $set: v } }) });
+                            }}
+                        />,
                         <TextField
-                            key='bind_cidr_list'
-                            value={this.state.itemConfig.bind_cidr_list}
+                            key='bound_cidr_list'
+                            value={this.state.itemConfig.bound_cidr_list}
                             className={styles.textFieldStyle}
                             hintText={`Enter the CIDR blocks`}
                             floatingLabelFixed={true}
@@ -231,8 +298,7 @@ export default class AppRoleAuthBackend extends React.Component {
                             fullWidth={false}
                             autoFocus
                             onChange={(e) => {
-                                let val = e.target.value.split(',');
-                                this.setState({ itemConfig: update(this.state.itemConfig, { bind_cidr_list: { $set: val } }) });
+                                this.setState({ itemConfig: update(this.state.itemConfig, { bound_cidr_list: { $set: e.target.value } }) });
                             }}
                         />,
                         <TextField
@@ -338,7 +404,7 @@ export default class AppRoleAuthBackend extends React.Component {
         let renderNewDialog = () => {
 
             let validateAndSubmit = () => {
-                if (this.state.selectedItemName === '') {
+                if (this.state.itemConfig.role_name === '') {
                     snackBarMessage(new Error(`Name cannot be empty`));
                     return;
                 }
@@ -351,7 +417,7 @@ export default class AppRoleAuthBackend extends React.Component {
                     label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openNewItemDialog: false, itemConfig: _.clone(this.itemConfigSchema), selectedItemName: '' });
-                        history.push(`${this.state.baseUrl}`);
+                        history.push(`${this.baseUrl}`);
                     }}
                 />,
                 <FlatButton
@@ -378,6 +444,7 @@ export default class AppRoleAuthBackend extends React.Component {
         let renderEditDialog = () => {
             let validateAndSubmit = () => {
                 this.createUpdateItem();
+                this.updateRoleId();
             }
 
             const actions = [
@@ -385,7 +452,7 @@ export default class AppRoleAuthBackend extends React.Component {
                     label='Cancel'
                     onTouchTap={() => {
                         this.setState({ openEditItemDialog: false, itemConfig: _.clone(this.itemConfigSchema), selectedItemName: '' });
-                        history.push(`${this.state.baseUrl}`);
+                        history.push(`${this.baseUrl}`);
                     }}
                 />,
                 <FlatButton
@@ -416,7 +483,7 @@ export default class AppRoleAuthBackend extends React.Component {
                 let action = (
                     <IconButton
                         tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/role/${item}` })}
+                        onTouchTap={() => this.setState({ deleteUserPath: `${this.baseVaultPath}/role/${item}` })}
                     >
                         {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                     </IconButton>
@@ -431,8 +498,8 @@ export default class AppRoleAuthBackend extends React.Component {
                         rightIconButton={action}
                         onTouchTap={() => {
                             this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
-                            tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${item}`).then(() => {
-                                history.push(`${this.state.baseUrl}role/${item}`);
+                            tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {
+                                history.push(`${this.baseUrl}role/${item}`);
                             }).catch(() => {
                                 snackBarMessage(new Error('Access denied'));
                             })
@@ -459,7 +526,7 @@ export default class AppRoleAuthBackend extends React.Component {
                 />
                 <Tabs
                     onChange={(e) => {
-                        history.push(`${this.state.baseUrl}${e}/`);
+                        history.push(`${this.baseUrl}${e}/`);
                         this.setState({ itemConfig: _.clone(this.state.itemConfig) });
                     }}
                     value={this.state.selectedTab}
