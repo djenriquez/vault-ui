@@ -113,6 +113,32 @@ export default class Login extends React.Component {
             return this.getDefaultBackendPathForMethod(this.getVaultAuthMethod())
     }
 
+    pressEnter(e) {
+        if (e.keyCode === 13)
+            this.clickLogin();
+    }
+
+    clickLogin() {
+        let isValid = false;
+        switch (this.state.loginMethodType) {
+            case "GITHUB":
+                isValid = this.validateAuthToken();
+                break;
+            case "TOKEN":
+                isValid = this.validateToken();
+                break;
+            case "LDAP":
+            case "USERNAMEPASSWORD":
+            case "OKTA":
+                isValid = this.validateUsernamePassword();
+                break;
+        }
+        if (isValid) {
+            console.log("Valid!")
+            this.login();
+        }
+    }
+
     login() {
         let method = '';
         let uri = '';
@@ -171,47 +197,45 @@ export default class Login extends React.Component {
     }
 
     validateUsernamePassword() {
-
         if (!this.getVaultUrl()) {
             this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
-            return;
+            return false;
         }
+
         if (!this.state.username) {
             this.setState({ errorMessage: "No username provided." });
-            return;
+            return false;
         }
 
         if (!this.state.password) {
             this.setState({ errorMessage: "No password provided." });
-            return;
+            return false;
         }
-
-        this.login();
+        return true;
     }
 
     validateToken() {
         if (!this.getVaultUrl()) {
             this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
-            return;
+            return false;
         }
         if (!this.state.authToken) {
             this.setState({ errorMessage: "No auth token provided." });
-            return;
+            return false;
         }
-        this.login();
+        return true;
     }
 
     validateAuthToken() {
         if (!this.getVaultUrl()) {
             this.setState({ errorMessage: "No Vault URL specified.  Click the gear to edit your Vault URL." });
-            return;
+            return false;
         }
         if (!this.state.authToken) {
             this.setState({ errorMessage: "No auth token provided." });
-            return;
+            return false;
         }
-
-        this.login();
+        return true;
     }
 
     setAccessToken(resp) {
@@ -326,27 +350,6 @@ export default class Login extends React.Component {
                 <div className={styles.error}>{this.state.errorMessage}</div>
             </Dialog>
         )
-    }
-
-    pressEnter(e) {
-        if (e.keyCode === 13)
-            this.clickLogin();
-    }
-
-    clickLogin() {
-        switch (this.state.loginMethodType) {
-            case "GITHUB":
-                this.validateAuthToken();
-                break;
-            case "TOKEN":
-                this.validateToken();
-                break;
-            case "LDAP":
-            case "USERNAMEPASSWORD":
-            case "OKTA":
-                this.validateUsernamePassword();
-                break;
-        }
     }
 
     renderSelectedLoginOption() {
@@ -466,7 +469,7 @@ export default class Login extends React.Component {
                     <div style={{ margin: 30 }}>
                         <RaisedButton
                             label="Login"
-                            onClick={this.login}
+                            onClick={this.clickLogin}
                         />
                     </div>
                 </div>
