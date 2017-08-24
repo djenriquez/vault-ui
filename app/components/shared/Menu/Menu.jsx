@@ -23,7 +23,8 @@ const supported_auth_backend_types = [
     'aws-ec2',
     'userpass',
     'aws',
-    'okta'
+    'okta',
+    'approle'
 ]
 
 function snackBarMessage(message) {

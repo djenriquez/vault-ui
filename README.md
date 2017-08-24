@@ -62,12 +62,13 @@ djenriquez/vault-ui
 ```
 
 Supported environment variables:
-- `CUSTOM_CA_CERT` Pass a self-signed certificate that the system should trust
-- `NODE_TLS_REJECT_UNAUTHORIZED` disable TLS server side validation (ex. vault deployed with self-signed certificate)
-- `VAULT_URL_DEFAULT` will set the default vault endpoint.
-- `VAULT_AUTH_DEFAULT` will set the default authentication method type. See below for supported authentication methods.
-- `VAULT_AUTH_BACKEND_PATH` will set the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
-- `VAULT_SUPPLIED_TOKEN_HEADER` will instruct Vault-UI to attempt authentication using a token provided by the client in the specified HTTP request header.
+- `PORT` Sets the port for Vault-UI to listen on. (Default 8000)
+- `CUSTOM_CA_CERT` Pass a self-signed certificate that the system should trust.
+- `NODE_TLS_REJECT_UNAUTHORIZED` Sisable TLS server side validation. (ex. vault deployed with self-signed certificate)
+- `VAULT_URL_DEFAULT` Sets the default vault endpoint.
+- `VAULT_AUTH_DEFAULT` Sets the default authentication method type. See below for supported authentication methods.
+- `VAULT_AUTH_BACKEND_PATH` Sets the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
+- `VAULT_SUPPLIED_TOKEN_HEADER` Instructs Vault-UI to attempt authentication using a token provided by the client in the specified HTTP request header.
 
 This defaults can be overridden if the user fills out the endpoint and auth method manually.
 
@@ -84,6 +85,7 @@ Current supported management of backend auth methods:
 - [AWS-EC2](https://www.vaultproject.io/docs/auth/aws-ec2.html)
 - [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html)
 - [Token](https://www.vaultproject.io/docs/auth/token.html)
+- [AppRole](https://www.vaultproject.io/docs/auth/approle.html)
 
 In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
 
