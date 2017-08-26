@@ -24,6 +24,7 @@ import update from 'immutability-helper';
 import Avatar from 'material-ui/Avatar';
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import ItemList from '../../shared/ItemList/ItemList.jsx'
 
 function snackBarMessage(message) {
     document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
@@ -64,7 +65,6 @@ export default class AwsEc2AuthBackend extends React.Component {
             baseUrl: `/auth/aws-ec2/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             ec2Roles: [],
-            filteredEc2RoleList: [],
             configObj: this.ec2ConfigSchema,
             newConfigObj: this.ec2ConfigSchema,
             newRoleConfig: this.roleConfigSchema,
@@ -94,13 +94,13 @@ export default class AwsEc2AuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/role`, { list: true }, null)
                     .then((resp) => {
                         let roles = _.get(resp, 'data.data.keys', []);
-                        this.setState({ ec2Roles: _.valuesIn(roles), filteredEc2RoleList: _.valuesIn(roles) });
+                        this.setState({ ec2Roles: _.valuesIn(roles) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ ec2Roles: [], filteredEc2RoleList: [] });
+                            this.setState({ ec2Roles: [] });
                         }
                     });
             })
@@ -224,7 +224,6 @@ export default class AwsEc2AuthBackend extends React.Component {
                 baseUrl: `/auth/aws-ec2/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 ec2Roles: [],
-                filteredEc2RoleList: [],
                 selectedRoleId: '',
                 newConfigObj: this.ec2ConfigSchema,
                 configObj: this.ec2ConfigSchema,
@@ -237,40 +236,6 @@ export default class AwsEc2AuthBackend extends React.Component {
     }
 
     render() {
-        let renderRoleListItems = () => {
-            return _.map(this.state.filteredEc2RoleList, (role) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/role/${role}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let item = (
-                    <ListItem
-                        key={role}
-                        primaryText={role}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
-                                .then(() => {
-                                    this.setState({ selectedRoleId: role });
-                                    history.push(`${this.state.baseUrl}roles/${role}`);
-                                }).catch(() => {
-                                    snackBarMessage(new Error('Access denied'));
-                                })
-
-                        }}
-                    />
-                )
-                return item;
-            });
-        }
 
         let renderNewRoleDialog = () => {
             let validateAndSubmit = () => {
@@ -653,26 +618,22 @@ export default class AwsEc2AuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.ec2Roles, (item) => {
-                                                return item.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredEc2RoleList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderRoleListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.ec2Roles}
+                                itemUri={`${this.state.baseVaultPath}/role`}
+                                maxItemsPerPage={25}
+                                onTouchTap={(role) => {
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
+                                        .then(() => {
+                                            this.setState({ selectedRoleId: role });
+                                            history.push(`${this.state.baseUrl}roles/${role}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error('Access denied'));
+                                        })
+
+                                }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab
