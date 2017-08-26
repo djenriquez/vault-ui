@@ -134,7 +134,6 @@ export default class Login extends React.Component {
                 break;
         }
         if (isValid) {
-            console.log("Valid!")
             this.login();
         }
     }

@@ -23,6 +23,7 @@ import sharedStyles from '../../shared/styles.css';
 import _ from 'lodash';
 import update from 'immutability-helper';
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import ItemList from '../../shared/ItemList/ItemList.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 
@@ -476,41 +477,6 @@ export default class AppRoleAuthBackend extends React.Component {
             );
         };
 
-        let renderListItems = () => {
-            let list = this.state.itemList;
-            return _.map(list, (item) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.baseVaultPath}/role/${item}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let obj = (
-                    <ListItem
-                        key={item}
-                        primaryText={item}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
-                            tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {
-                                history.push(`${this.baseUrl}role/${item}`);
-                            }).catch(() => {
-                                snackBarMessage(new Error('Access denied'));
-                            })
-
-                        }}
-                    />
-                )
-                return obj;
-            });
-        };
-
         return (
             <div>
                 {this.state.openNewItemDialog && renderNewDialog()}
@@ -539,8 +505,8 @@ export default class AppRoleAuthBackend extends React.Component {
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can add, edit or delete AppRoles with this backend
-                    </Paper>
-                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                        </Paper>
+                        <Paper label='toolbar' className={sharedStyles.TabContentSection} zDepth={0}>
                             <Toolbar>
                                 <ToolbarGroup firstChild={true}>
                                     <FlatButton
@@ -555,9 +521,19 @@ export default class AppRoleAuthBackend extends React.Component {
                                     />
                                 </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.itemList}
+                                itemUri={`${this.baseVaultPath}/role`}
+                                maxItemsPerPage={25}
+                                onTouchTap={(item) => {
+                                    this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
+                                    tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {
+                                        history.push(`${this.baseUrl}role/${item}`);
+                                    }).catch(() => {
+                                        snackBarMessage(new Error('Access denied'));
+                                    })
+                                }}
+                            />
                         </Paper>
                     </Tab>
                 </Tabs>
