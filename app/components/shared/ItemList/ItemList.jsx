@@ -56,7 +56,8 @@ export default class ItemList extends React.Component {
             sortDirection: SORT_DIR.ASC,
             currentPage: 1,
             totalPages: 1,
-            deletePath: ''
+            deletePath: '',
+            openDelete: false
         };
 
         _.bindAll(
@@ -73,7 +74,7 @@ export default class ItemList extends React.Component {
             let action = (
                 <IconButton
                     tooltip='Delete'
-                    onTouchTap={() => this.setState({ deletePath: `${this.itemUri}/${item}` })}
+                    onTouchTap={() => this.setState({ deletePath: `${this.itemUri}/${item}`, openDelete: true })}
                 >
                     {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
@@ -153,6 +154,7 @@ export default class ItemList extends React.Component {
             <div>
                 <VaultObjectDeleter
                     path={this.state.deletePath}
+                    modalOpen={this.state.modalOpen}
                     onReceiveResponse={this.props.onDeleteTap.bind(null, this.state.deletePath)}
                     onReceiveError={(err) => snackBarMessage(err)}
                 />

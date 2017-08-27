@@ -34,7 +34,7 @@ export default class VaultObjectDeleter extends Component {
 
     componentWillReceiveProps(nextProps) {
         // Trigger automatically on props change
-        if (nextProps.path && !_.isEqual(nextProps.path, this.state.path)) {
+        if (nextProps.path && !_.isEqual(nextProps.path, this.props.path)) {
             this.setState({ path: nextProps.path })
         }
     }
@@ -52,12 +52,10 @@ export default class VaultObjectDeleter extends Component {
     DeleteObject(fullpath) {
         callVaultApi('delete', fullpath)
             .then((response) => {
-                this.path = '';
                 this.setState({ openDeleteModal: false });
                 this.props.onReceiveResponse(response.data);
             })
             .catch((err) => {
-                this.path = '';
                 this.setState({ openDeleteModal: false });
                 this.props.onReceiveError(err);
             })
@@ -65,7 +63,7 @@ export default class VaultObjectDeleter extends Component {
 
     render() {
         const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => { this.setState({ openDeleteModal: false, path: '' }); this.props.onModalClose(); }} />,
+            <FlatButton label="Cancel" primary={true} onTouchTap={() => { this.setState({ openDeleteModal: false }); this.props.onModalClose(); }} />,
             <FlatButton label="Delete" secondary={true} onTouchTap={() => this.DeleteObject(this.state.path)} />
         ];
 

@@ -81,7 +81,6 @@ export default class UserPassAuthBackend extends React.Component {
     }
 
     displayItem() {
-        console.log(`Displaying item ${this.state.selectedUserId}`);
         tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/users/${this.state.selectedUserId}`)
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/users/${this.state.selectedUserId}`, null, null)

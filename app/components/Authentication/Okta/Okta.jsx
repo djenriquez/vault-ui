@@ -2,29 +2,21 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
-import FontIcon from 'material-ui/FontIcon';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
-import { List, ListItem } from 'material-ui/List';
+import { List } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Avatar from 'material-ui/Avatar';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 // Styles
 import styles from './okta.css';
 import sharedStyles from '../../shared/styles.css';
-import { green500, green400, red500, red300, yellow500, white } from 'material-ui/styles/colors.js';
-import Checkbox from 'material-ui/Checkbox';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
     let ev = new CustomEvent('snackbar', { detail: { message: message } });
@@ -55,9 +47,7 @@ export default class OktaAuthBackend extends React.Component {
             baseUrl: `/auth/okta/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             userList: [],
-            filteredUserList: [],
             groupList: [],
-            filteredGroupList: [],
             openNewItemDialog: false,
             openItemDialog: false,
             itemConfig: this.oktaItemSchema,
@@ -120,9 +110,7 @@ export default class OktaAuthBackend extends React.Component {
                 userList: [],
                 selectedTab: 'users',
                 configObj: this.oktaConfigSchema,
-                itemConfig: this.oktaItemSchema,
-                disableSave: true,
-                disableCreate: true
+                itemConfig: this.oktaItemSchema
             }, () => {
                 history.push(`/auth/okta/${nextProps.params.namespace}/users`);
                 this.getOktaBackendConfig();
@@ -165,13 +153,13 @@ export default class OktaAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/users`, { list: true }, null)
                     .then((resp) => {
                         let users = _.get(resp, 'data.data.keys', []);
-                        this.setState({ userList: _.valuesIn(users), filteredUserList: _.valuesIn(users) });
+                        this.setState({ userList: _.valuesIn(users) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ userList: [], filteredUserList: [] });
+                            this.setState({ userList: [] });
                         }
                     });
             })
@@ -186,13 +174,13 @@ export default class OktaAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/groups`, { list: true }, null)
                     .then((resp) => {
                         let groups = _.get(resp, 'data.data.keys', []);
-                        this.setState({ groupList: _.valuesIn(groups), filteredGroupList: _.valuesIn(groups) });
+                        this.setState({ groupList: _.valuesIn(groups) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ groupList: [], filteredGroupList: [] });
+                            this.setState({ groupList: [] });
                         }
                     });
             })
@@ -309,7 +297,6 @@ export default class OktaAuthBackend extends React.Component {
                     label='Create'
                     primary={true}
                     onTouchTap={validateAndSubmit}
-                    disableCreate={this.state.disableCreate}
                 />
             ];
 
@@ -350,41 +337,7 @@ export default class OktaAuthBackend extends React.Component {
             );
         }
 
-        // this will render the list of users defined
-        let renderListItems = () => {
-            let list = this.state.selectedTab == 'users' ? this.state.userList : this.state.groupList;
-            return _.map(list, (item) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/${this.state.selectedTab}/${item}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
 
-                let obj = (
-                    <ListItem
-                        key={item}
-                        primaryText={item}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            this.setState({ itemConfig: _.clone(this.oktaItemSchema), selectedItemId: `${this.state.selectedTab}/${item}` });
-                            tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${this.state.selectedTab}/${item}`).then(() => {
-                                history.push(`${this.state.baseUrl}${this.state.selectedTab}/${item}`);
-                            }).catch(() => {
-                                snackBarMessage(new Error('Access denied'));
-                            })
-
-                        }}
-                    />
-                )
-                return obj;
-            });
-        }
 
         let renderItemDialog = () => {
             let validateAndSubmit = () => {
@@ -408,7 +361,6 @@ export default class OktaAuthBackend extends React.Component {
                     label='Save'
                     primary={true}
                     onTouchTap={validateAndSubmit}
-                    disableCreate={this.state.disableSave}
                 />
             ];
 
@@ -430,7 +382,7 @@ export default class OktaAuthBackend extends React.Component {
                             type={`okta/${this.state.selectedTab}`}
                             item={`${this.state.selectedTab == 'users' ? 'groups' : 'policies'}`}
                             height='250px'
-                            baseVaultPath={this.state.baseVaultPath}
+                            vaultPath={`${this.state.baseVaultPath}/groups`}
                             selectedPolicies={this.state.selectedTab == 'users' ? this.state.itemConfig.groups : this.state.itemConfig.policies}
                             onSelectedChange={(newItems) => {
                                 this.setState({ itemConfig: update(this.state.itemConfig, { items: { $set: newItems } }) });
@@ -445,16 +397,6 @@ export default class OktaAuthBackend extends React.Component {
             <div>
                 {this.state.openNewItemDialog && renderNewDialog()}
                 {this.state.openItemDialog && renderItemDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        if (this.state.selectedTab === 'users') this.listOktaUsers();
-                        else this.listOktaGroups();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs
                     onChange={(e) => {
                         history.push(`${this.state.baseUrl}${e}/`);
@@ -487,9 +429,23 @@ export default class OktaAuthBackend extends React.Component {
                                     />
                                 </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.userList}
+                                itemUri={`${this.state.baseVaultPath}/users`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Okta user '${deletedItem}' deleted`)
+                                    this.listOktaUsers();
+                                }}
+                                onTouchTap={(item) => {
+                                    this.setState({ itemConfig: _.clone(this.oktaItemSchema), selectedItemId: `users/${item}` });
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/users/${item}`).then(() => {
+                                        history.push(`${this.state.baseUrl}users/${item}`);
+                                    }).catch(() => {
+                                        snackBarMessage(new Error('Access denied'));
+                                    });
+                                }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab label='Manage Groups'
@@ -517,9 +473,23 @@ export default class OktaAuthBackend extends React.Component {
                                     />
                                 </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.groupList}
+                                itemUri={`${this.state.baseVaultPath}/groups`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Okta group '${deletedItem}' deleted`)
+                                    this.listOktaUsers();
+                                }}
+                                onTouchTap={(item) => {
+                                    this.setState({ itemConfig: _.clone(this.oktaItemSchema), selectedItemId: `groups/${item}` });
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/groups/${item}`).then(() => {
+                                        history.push(`${this.state.baseUrl}groups/${item}`);
+                                    }).catch(() => {
+                                        snackBarMessage(new Error('Access denied'));
+                                    });
+                                }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab label='Configure Backend'
@@ -568,14 +538,14 @@ export default class OktaAuthBackend extends React.Component {
                                         primary={true}
                                         label='Save'
                                         onTouchTap={() => {
-                                            if(!this.state.configObj.organization) {
+                                            if (!this.state.configObj.organization) {
                                                 snackBarMessage(new Error(`Must specify an organization`));
                                                 return;
                                             } else {
                                                 console.log(this.state.configObj.organization);
                                             }
                                             this.createUpdateConfig(this.state.configObj);
-                                
+
                                         }}
                                     />
                                 </div>

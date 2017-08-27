@@ -215,7 +215,6 @@ export default class AppRoleAuthBackend extends React.Component {
 
     updateRoleId() {
         if (this.state.itemConfig.role_id) {
-            console.log()
             tokenHasCapabilities(['update'], `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`)
                 .then(() => {
                     callVaultApi('post', `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`, null, { role_id: this.state.itemConfig.role_id })

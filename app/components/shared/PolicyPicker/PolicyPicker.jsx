@@ -7,6 +7,13 @@ import KeyboardArrowRight from 'material-ui/svg-icons/hardware/keyboard-arrow-ri
 import AutoComplete from 'material-ui/AutoComplete';
 import Clear from 'material-ui/svg-icons/content/clear';
 import { Toolbar, ToolbarGroup, ToolbarTitle } from 'material-ui/Toolbar';
+import UltimatePagination from 'react-ultimate-pagination-material-ui'
+import update from 'immutability-helper';
+
+const LIST_TYPE = {
+    SELECTED: 'selected',
+    AVAILABLE: 'available'
+};
 
 class PolicyPicker extends React.Component {
     static propTypes = {
@@ -14,7 +21,6 @@ class PolicyPicker extends React.Component {
         onSelectedChange: PropTypes.func,
         excludePolicies: PropTypes.array,
         selectedPolicies: PropTypes.array,
-        fixedPolicyList: PropTypes.array,
         height: PropTypes.string,
         type: PropTypes.string,
         item: PropTypes.string,
@@ -22,7 +28,6 @@ class PolicyPicker extends React.Component {
     };
 
     static defaultProps = {
-        fixedPolicyList: [],
         selectedPolicies: [],
         onError: (err) => { console.error(err) },
         onSelectedChange: () => { },
@@ -36,23 +41,40 @@ class PolicyPicker extends React.Component {
         super(props);
 
         this.state = {
-            availablePolicies: this.props.fixedPolicyList,
-            displayedAvailPolicies: [],
-            selectedPolicies: this.props.selectedPolicies,
-            manualPolicies: [],
-            policyListAvailable: true,
-            searchText: ''
+            searchText: '',
+            itemsRaw: [],
+            available: {
+                maxItemsPerPage: 7,
+                sortDirection: 'asc',
+                currentPage: 1,
+                totalPages: 1,
+                pageItems: [],
+                parsedItems: [],
+                items: []
+            },
+            selected: {
+                maxItemsPerPage: 7,
+                sortDirection: 'asc',
+                currentPage: 1,
+                totalPages: 1,
+                pageItems: [],
+                parsedItems: [],
+                items: this.props.selectedPolicies
+            }
         };
 
         _.bindAll(
             this,
-            'reloadPolicyList',
+            'loadPolicyList',
             'selectedPolicyAdd',
-            'selectedPolicyRemove'
+            'selectedPolicyRemove',
+            'setPage'
         )
+
+        this.loadPolicyList(this.props.type);
     }
 
-    reloadPolicyList(type) {
+    loadPolicyList(type) {
         let allowed_methods = ['']
         let http_method = ''
         let path = ''
@@ -85,77 +107,124 @@ class PolicyPicker extends React.Component {
                                 return (!_.includes(this.props.excludePolicies, item));
                             })
                         }
-
                         this.setState({
-                            availablePolicies: policyList,
-                            policyListAvailable: true
+                            available: update(this.state.available, {
+                                items: { $set: policyList }
+                            }),
+                            itemsRaw: policyList
                         });
+                        this.setPage(LIST_TYPE.AVAILABLE, 1);
+                        this.setPage(LIST_TYPE.SELECTED, 1);
                     })
                     .catch(this.props.onError)
             })
             .catch(() => {
-                this.setState({ policyListAvailable: false })
+
             });
     }
 
     componentWillReceiveProps(nextProps) {
-        if (!_.isEqual(this.props.selectedPolicies, nextProps.selectedPolicies)) {
-            this.setState({ selectedPolicies: nextProps.selectedPolicies })
+        if (!_.isEqual(this.props.selectedPolicies.sort(), nextProps.selectedPolicies.sort())) {
+            this.setState({
+                selected: update(this.state.selected, {
+                    items: { $set: nextProps.selectedPolicies }
+                })
+            });
         }
     }
 
-    componentDidMount() {
-        if (_.isEmpty(this.props.fixedPolicyList)) {
-            this.reloadPolicyList(this.props.type);
-        }
-    }
+    // componentDidMount() {
+    //     this.setPage(LIST_TYPE.AVAILABLE, 1);
+    // }
 
     componentWillUpdate(nextProps, nextState) {
-        if (!_.isEqual(this.state.selectedPolicies.sort(), nextState.selectedPolicies.sort())) {
-            this.props.onSelectedChange(nextState.selectedPolicies);
+        if (!_.isEqual(this.state.selected.items.sort(), nextState.selected.items.sort())) {
+            this.props.onSelectedChange(nextState.selected.items);
         }
     }
 
-
     componentDidUpdate(prevProps, prevState) {
-        let newAvailPol = _(this.state.availablePolicies).difference(this.state.selectedPolicies).value();
+        let newAvailPol = _(this.state.available.items).difference(this.state.selected.items).value();
 
         if (
-            (!_.isEqual(this.state.selectedPolicies.sort(), prevState.selectedPolicies.sort())) ||
-            (!_.isEqual(this.state.availablePolicies.sort(), prevState.availablePolicies.sort())) ||
+            (!_.isEqual(this.state.selected.items.sort(), prevState.selected.items.sort())) ||
+            (!_.isEqual(this.state.available.items.sort(), prevState.available.items.sort())) ||
             (this.state.searchText !== prevState.searchText)
         ) {
             let newList = _.filter(newAvailPol, (item) => {
                 return _.includes(item, this.state.searchText);
             });
-            this.setState({
-                displayedAvailPolicies: newList
-            });
+            this.setState({ available: update(this.state.available, { items: { $set: newList } }) });
         }
-
-
-
     }
 
 
     selectedPolicyAdd(v) {
         this.setState({
-            selectedPolicies: _(this.state.selectedPolicies).concat(v).value(),
-            displayedAvailPolicies: _(this.state.displayedAvailPolicies).without(v).value(),
-        })
+            selected: update(this.state.selected, {
+                pageItems: { $set: _(this.state.selected.pageItems).concat(v).value() }
+            }),
+            available: update(this.state.available, {
+                pageItems: { $set: _(this.state.available.pageItems).without(v).value() }
+            })
+        });
     }
 
     selectedPolicyRemove(v) {
         this.setState({
-            selectedPolicies: _(this.state.selectedPolicies).without(v).value(),
-            displayedAvailPolicies: _(this.state.displayedAvailPolicies).concat(v).value(),
-        })
+            selected: update(this.state.selected, {
+                pageItems: { $set: _(this.state.selected.pageItems).without(v).value() }
+            }),
+            available: update(this.state.available, {
+                pageItems: { $set: _(this.state.available.pageItems).concat(v).value() }
+            })
+        });
     }
+
+    setPage(listType, page = null, sortDirection = null, maxItemsPerPage = null) {
+        // Defaults
+        let list = listType == LIST_TYPE.SELECTED ? this.state.selected : this.state.available;
+        page = page ? page : list.currentPage;
+        sortDirection = sortDirection ? sortDirection : list.sortDirection;
+        maxItemsPerPage = maxItemsPerPage ? maxItemsPerPage : list.maxItemsPerPage;
+
+        let maxPage = Math.ceil(list.items.length / maxItemsPerPage);
+        // Never allow to set to higher page than max
+        page = page > maxPage ? maxPage : page
+        // Never allow a 0th or negative page
+        page = page <= 0 ? 1 : page;
+
+        let sortedItems = _.orderBy(list.items, _.identity, sortDirection);
+        let parsedItems = _.chunk(sortedItems, maxItemsPerPage);
+
+        if (listType === LIST_TYPE.AVAILABLE) {
+            this.setState(
+                {
+                    available: update(this.state.available, {
+                        currentPage: { $set: page },
+                        totalPages: { $set: Math.ceil(list.items.length / maxItemsPerPage) },
+                        parsedItems: { $set: parsedItems },
+                        pageItems: { $set: parsedItems[page - 1] }
+                    })
+                });
+        } else if (listType === LIST_TYPE.SELECTED) {
+            this.setState(
+                {
+                    selected: update(this.state.selected, {
+                        currentPage: { $set: page },
+                        totalPages: { $set: Math.ceil(sortedItems.length / maxItemsPerPage) },
+                        parsedItems: { $set: parsedItems },
+                        pageItems: { $set: parsedItems[page - 1] }
+                    })
+                });
+        }
+    }
+
 
     render() {
 
         let renderAvailablePoliciesListItems = () => {
-            return _.map(this.state.displayedAvailPolicies, (key) => {
+            return _.map(this.state.available.pageItems, (key) => {
                 return (
                     <ListItem
                         className={styles.ppList}
@@ -169,10 +238,10 @@ class PolicyPicker extends React.Component {
         };
 
         let renderSelectedPoliciesListItems = () => {
-            return _.map(this.state.selectedPolicies, (key) => {
+            return _.map(this.state.selected.pageItems, (key) => {
                 let style = {};
 
-                if (!_(this.state.availablePolicies).includes(key)) {
+                if (!_(this.state.itemsRaw).includes(key)) {
                     style = { color: "#FF7043" }
                 }
                 return (
@@ -196,24 +265,10 @@ class PolicyPicker extends React.Component {
                             <ToolbarTitle text={`Available ${this.props.item}`} />
                         </ToolbarGroup>
                         <ToolbarGroup lastChild={true}>
-                        </ToolbarGroup>
-                    </Toolbar>
-                    <div style={{ height: this.props.height }} className={styles.ppListContainer}>
-                        <List>
-                            {renderAvailablePoliciesListItems()}
-                        </List>
-                    </div>
-                </div>
-                <div style={{ marginLeft: "1%" }} className={styles.ppColumn}>
-                    <Toolbar className={styles.ppToolbar}>
-                        <ToolbarGroup>
-                            <ToolbarTitle text={`Selected ${this.props.item}`} />
-                        </ToolbarGroup>
-                        <ToolbarGroup lastChild={true}>
 
                             <AutoComplete
                                 searchText={this.state.searchText}
-                                dataSource={this.state.displayedAvailPolicies}
+                                dataSource={this.state.available.items}
                                 hintText='Search or add custom'
                                 onUpdateInput={(searchText) => {
                                     this.setState({
@@ -232,6 +287,26 @@ class PolicyPicker extends React.Component {
                                     }
                                 }}
                             />
+                        </ToolbarGroup>
+                    </Toolbar>
+                    <div style={{ height: this.props.height }} className={styles.ppListContainer}>
+                        <List>
+                            {renderAvailablePoliciesListItems()}
+                        </List>
+                    </div>
+                    <UltimatePagination
+                        currentPage={this.state.available.currentPage}
+                        totalPages={this.state.available.totalPages}
+                        onChange={(e) => {
+                            this.setPage(LIST_TYPE.AVAILABLE, e)
+                        }}
+                    />
+                </div>
+
+                <div style={{ marginLeft: "1%" }} className={styles.ppColumn}>
+                    <Toolbar className={styles.ppToolbar}>
+                        <ToolbarGroup>
+                            <ToolbarTitle text={`Selected ${this.props.item}`} />
                         </ToolbarGroup>
                     </Toolbar>
                     <div style={{ height: this.props.height }} className={styles.ppListContainer}>
