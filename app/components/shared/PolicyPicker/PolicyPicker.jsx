@@ -154,6 +154,7 @@ class PolicyPicker extends React.Component {
             let newList = _.filter(newAvailPol, (item) => {
                 return _.includes(item, this.state.searchText);
             });
+
             this.setState({ available: update(this.state.available, { items: { $set: newList } }) });
         }
     }
@@ -162,10 +163,12 @@ class PolicyPicker extends React.Component {
     selectedPolicyAdd(v) {
         this.setState({
             selected: update(this.state.selected, {
-                pageItems: { $set: _(this.state.selected.pageItems).concat(v).value() }
+                pageItems: { $set: _(this.state.selected.pageItems).concat(v).value() },
+                items: { $set: _(this.state.selected.items).concat(v).value() }
             }),
             available: update(this.state.available, {
-                pageItems: { $set: _(this.state.available.pageItems).without(v).value() }
+                pageItems: { $set: _(this.state.available.pageItems).without(v).value() },
+                items: { $set: _(this.state.available.items).without(v).value() }
             })
         });
     }
@@ -173,10 +176,12 @@ class PolicyPicker extends React.Component {
     selectedPolicyRemove(v) {
         this.setState({
             selected: update(this.state.selected, {
-                pageItems: { $set: _(this.state.selected.pageItems).without(v).value() }
+                pageItems: { $set: _(this.state.selected.pageItems).without(v).value() },
+                items: { $set: _(this.state.selected.items).without(v).value() }
             }),
             available: update(this.state.available, {
-                pageItems: { $set: _(this.state.available.pageItems).concat(v).value() }
+                pageItems: { $set: _(this.state.available.pageItems).concat(v).value() },
+                items: { $set: _(this.state.available.items).concat(v).value() }
             })
         });
     }
@@ -204,7 +209,7 @@ class PolicyPicker extends React.Component {
                         currentPage: { $set: page },
                         totalPages: { $set: Math.ceil(list.items.length / maxItemsPerPage) },
                         parsedItems: { $set: parsedItems },
-                        pageItems: { $set: parsedItems[page - 1] }
+                        pageItems: { $set: parsedItems[page - 1] ? parsedItems[page - 1].filter(Boolean) : [] }
                     })
                 });
         } else if (listType === LIST_TYPE.SELECTED) {
@@ -214,7 +219,7 @@ class PolicyPicker extends React.Component {
                         currentPage: { $set: page },
                         totalPages: { $set: Math.ceil(sortedItems.length / maxItemsPerPage) },
                         parsedItems: { $set: parsedItems },
-                        pageItems: { $set: parsedItems[page - 1] }
+                        pageItems: { $set: parsedItems[page - 1] ? parsedItems[page - 1].filter(Boolean) : [] }
                     })
                 });
         }
