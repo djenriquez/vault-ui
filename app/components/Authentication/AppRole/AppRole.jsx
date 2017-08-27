@@ -2,19 +2,13 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
-import { List, ListItem } from 'material-ui/List';
+import { List } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Avatar from 'material-ui/Avatar';
 import Toggle from 'material-ui/Toggle';
-import { red500 } from 'material-ui/styles/colors.js';
 
 // Styles
 import styles from './approle.css';
@@ -24,7 +18,6 @@ import _ from 'lodash';
 import update from 'immutability-helper';
 import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
 import ItemList from '../../shared/ItemList/ItemList.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 
 function snackBarMessage(message) {
@@ -481,15 +474,6 @@ export default class AppRoleAuthBackend extends React.Component {
             <div>
                 {this.state.openNewItemDialog && renderNewDialog()}
                 {this.state.openEditItemDialog && renderEditDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.listAppRoles();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs
                     onChange={(e) => {
                         history.push(`${this.baseUrl}${e}/`);
@@ -525,6 +509,10 @@ export default class AppRoleAuthBackend extends React.Component {
                                 itemList={this.state.itemList}
                                 itemUri={`${this.baseVaultPath}/role`}
                                 maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Object '${deletedItem}' deleted`)
+                                    this.listAppRoles();
+                                }}
                                 onTouchTap={(item) => {
                                     this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
                                     tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {

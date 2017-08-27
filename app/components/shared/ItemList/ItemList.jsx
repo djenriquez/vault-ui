@@ -8,11 +8,12 @@ import IconButton from 'material-ui/IconButton';
 
 import { List, ListItem } from 'material-ui/List';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
-import TextField from 'material-ui/TextField';  
+import TextField from 'material-ui/TextField';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 
 import sharedStyles from '../../shared/styles.css';
+import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 import UltimatePagination from 'react-ultimate-pagination-material-ui'
 
 import { red500 } from 'material-ui/styles/colors.js';
@@ -33,7 +34,8 @@ export default class ItemList extends React.Component {
         itemList: PropTypes.array.isRequired,
         itemUri: PropTypes.string.isRequired,
         maxItemsPerPage: PropTypes.number.isRequired,
-        onTouchTap: PropTypes.func.isRequired
+        onTouchTap: PropTypes.func.isRequired,
+        onDeleteTap: PropTypes.func.isRequired
     };
 
     constructor(props) {
@@ -53,6 +55,7 @@ export default class ItemList extends React.Component {
             sortDirection: SORT_DIR.ASC,
             currentPage: 1,
             totalPages: 1,
+            deletePath: ''
         };
 
         _.bindAll(
@@ -69,7 +72,7 @@ export default class ItemList extends React.Component {
             let action = (
                 <IconButton
                     tooltip='Delete'
-                    onTouchTap={() => this.setState({ deleteUserPath: `${this.itemUri}/${item}` })}
+                    onTouchTap={() => this.setState({ deletePath: `${this.itemUri}/${item}` })}
                 >
                     {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
@@ -137,6 +140,11 @@ export default class ItemList extends React.Component {
     render() {
         return (
             <div>
+                <VaultObjectDeleter
+                    path={this.state.deletePath}
+                    onReceiveResponse={this.props.onDeleteTap.bind(null, this.state.deletePath)}
+                    onReceiveError={(err) => snackBarMessage(err)}
+                />
                 <Toolbar>
                     <ToolbarGroup lastChild={true}>
                         <TextField
