@@ -33,7 +33,7 @@ export default class ItemList extends React.Component {
     static propTypes = {
         itemList: PropTypes.array.isRequired,
         itemUri: PropTypes.string.isRequired,
-        maxItemsPerPage: PropTypes.number.isRequired,
+        maxItemsPerPage: PropTypes.number,
         onTouchTap: PropTypes.func.isRequired,
         onDeleteTap: PropTypes.func.isRequired
     };
@@ -42,13 +42,14 @@ export default class ItemList extends React.Component {
         super(props);
 
         this.itemUri = this.props.itemUri;
-        this.maxItemsPerPage = this.props.maxItemsPerPage;
         this.itemListFull = [];
         this.filteredItemList = [];
+        this.lastMaxItemsPerPage = 25;
 
         this.state = {
             // itemListFull: this.props.itemList,
             // filteredItemList: this.props.itemList,
+            maxItemsPerPage: this.props.maxItemsPerPage ? this.props.maxItemsPerPage : 25,
             pageItems: [],
             parsedItems: [],
             filterString: '',
@@ -101,20 +102,23 @@ export default class ItemList extends React.Component {
         }
     }
 
-    setPage(page, sortDirection) {
-        let maxPage = Math.ceil(this.filteredItemList.length / this.state.maxItemsPerPage);
+    setPage(page, sortDirection = null, maxItemsPerPage = null) {
+        // Defaults
+        sortDirection = sortDirection ? sortDirection : this.state.sortDirection;
+        maxItemsPerPage = maxItemsPerPage ? maxItemsPerPage : this.state.maxItemsPerPage;
+
+        let maxPage = Math.ceil(this.filteredItemList.length / maxItemsPerPage);
         // Never allow to set to higher page than max
         page = page > maxPage ? maxPage : page
         // Never allow a 0th or negative page
         page = page <= 0 ? 1 : page;
 
-        sortDirection = sortDirection ? sortDirection : this.state.secretSortDir;
         let sortedItems = _.orderBy(this.filteredItemList, _.identity, sortDirection);
-        let parsedItems = _.chunk(sortedItems, this.maxItemsPerPage);
+        let parsedItems = _.chunk(sortedItems, maxItemsPerPage);
         this.setState(
             {
                 currentPage: page,
-                totalPages: Math.ceil(sortedItems.length / this.maxItemsPerPage),
+                totalPages: Math.ceil(sortedItems.length / maxItemsPerPage),
                 parsedItems: parsedItems,
                 pageItems: parsedItems[page - 1]
             });
@@ -131,11 +135,19 @@ export default class ItemList extends React.Component {
         this.setPage(1, 'Ascending');
     }
 
+    componentWillUpdate(nextProps, nextState) {
+        if (!nextProps.maxItemsPerPage) {
+            this.lastMaxItemsPerPage = this.state.maxItemsPerPage;
+        }
+    }
+
     componentWillReceiveProps(nextProps) {
         this.itemListFull = nextProps.itemList;
         this.filterItems(this.state.filterString);
         this.setPage(1, 'Ascending');
     }
+
+    com
 
     render() {
         return (
@@ -156,6 +168,21 @@ export default class ItemList extends React.Component {
                                 this.setState({ filterString: v });
                                 this.filterItems(v);
                                 this.setPage(this.state.currentPage, this.state.sortDirection)
+                            }}
+                        />
+                        <TextField
+                            floatingLabelFixed={true}
+                            floatingLabelText="Max Items"
+                            hintText="Max Items"
+                            value={this.state.maxItemsPerPage}
+                            onBlur={() => {
+                                if (!this.state.maxItemsPerPage) {
+                                    this.setState({ maxItemsPerPage: this.lastMaxItemsPerPage });
+                                }
+                            }}
+                            onChange={(e, v) => {
+                                this.setState({ maxItemsPerPage: v });
+                                this.setPage(this.state.currentPage, this.state.sortDirection, v)
                             }}
                         />
                         <SelectField
