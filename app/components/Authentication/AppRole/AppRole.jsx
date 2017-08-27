@@ -16,8 +16,8 @@ import sharedStyles from '../../shared/styles.css';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import ItemList from '../../shared/ItemList/ItemList.jsx'
+import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx';
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 
 function snackBarMessage(message) {

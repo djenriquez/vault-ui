@@ -2,31 +2,24 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import Toggle from 'material-ui/Toggle';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 // Styles
 import styles from './aws.css';
 import sharedStyles from '../../shared/styles.css';
-import { red500 } from 'material-ui/styles/colors.js';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import Avatar from 'material-ui/Avatar';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
-import ItemList from '../../shared/ItemList/ItemList.jsx'
+import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx';
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
     document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
@@ -90,7 +83,6 @@ export default class AwsAuthBackend extends React.Component {
             newSecretBtnDisabled: false,
             openNewRoleDialog: false,
             openEditRoleDialog: false,
-            deleteUserPath: '',
             selectedTab: 'roles',
             isBackendConfigured: false
         };
@@ -689,15 +681,6 @@ export default class AwsAuthBackend extends React.Component {
             <div>
                 {this.state.openEditRoleDialog && renderEditRoleDialog()}
                 {this.state.openNewRoleDialog && renderNewRoleDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.listEc2Roles();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs
                     onChange={(e) => {
                         history.push(`${this.state.baseUrl}${e}/`);
@@ -734,6 +717,10 @@ export default class AwsAuthBackend extends React.Component {
                                 itemList={this.state.ec2Roles}
                                 itemUri={`${this.state.baseVaultPath}/role`}
                                 maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Role '${deletedItem}' deleted`)
+                                    this.listEc2Roles();
+                                }}
                                 onTouchTap={(role) => {
                                     tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
                                         .then(() => {
