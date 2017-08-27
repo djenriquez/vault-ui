@@ -17,7 +17,7 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import { red500 } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx'
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 import update from 'immutability-helper';
 
@@ -267,7 +267,7 @@ class RadiusAuthBackend extends React.Component {
                 >
                     <List>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             type="Radius"
                             height="250px"
                             selectedPolicies={this.state.selectedUserObject.policies}
@@ -334,7 +334,7 @@ class RadiusAuthBackend extends React.Component {
                             }}
                         />
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height="200px"
                             selectedPolicies={this.state.newUserObject.policies}
                             onSelectedChange={(policies) => {
@@ -476,7 +476,7 @@ class RadiusAuthBackend extends React.Component {
                                     }}
                                 />
                                 <Subheader>Unregistered Users Policies</Subheader>
-                                <PolicyPicker
+                                <ItemPicker
                                     height="250px"
                                     selectedPolicies={this.state.newConfigObj.unregistered_user_policies}
                                     onSelectedChange={(policies) => {

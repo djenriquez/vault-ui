@@ -21,7 +21,7 @@ import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultU
 import _ from 'lodash';
 import update from 'immutability-helper';
 import Avatar from 'material-ui/Avatar';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
 import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 
 function snackBarMessage(message) {
@@ -227,7 +227,7 @@ export default class UserPassAuthBackend extends React.Component {
                 >
                     <List>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.config.policies}
                             onSelectedChange={(newPolicies) => {
@@ -307,7 +307,7 @@ export default class UserPassAuthBackend extends React.Component {
                             }}
                         /><br />
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.config.policies}
                             onSelectedChange={(newPolicies) => {

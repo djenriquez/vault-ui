@@ -15,7 +15,7 @@ import sharedStyles from '../../shared/styles.css';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 import ItemList from '../../shared/ItemList/ItemList.jsx';
 
@@ -280,7 +280,7 @@ export default class GithubAuthBackend extends React.Component {
                 >
                     <List>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.itemConfig.policies}
                             onSelectedChange={(newPolicies) => {
@@ -335,7 +335,7 @@ export default class GithubAuthBackend extends React.Component {
                             }}
                         />
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.itemConfig.policies}
                             onSelectedChange={(newPolicies) => {

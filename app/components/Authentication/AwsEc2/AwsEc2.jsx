@@ -16,7 +16,7 @@ import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultU
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx';
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx';
 import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
@@ -394,7 +394,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                             />
                         </ListItem>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='200px'
                             selectedPolicies={this.state.newRoleConfig.policies}
                             onSelectedChange={(newPolicies) => {
@@ -554,7 +554,7 @@ export default class AwsEc2AuthBackend extends React.Component {
                             />
                         </ListItem>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.newRoleConfig.policies}
                             onSelectedChange={(newPolicies) => {

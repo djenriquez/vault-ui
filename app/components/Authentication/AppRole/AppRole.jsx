@@ -16,7 +16,7 @@ import sharedStyles from '../../shared/styles.css';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx';
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx';
 import ItemList from '../../shared/ItemList/ItemList.jsx';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 
@@ -381,7 +381,7 @@ export default class AppRoleAuthBackend extends React.Component {
                     {this.state.openEditItemDialog && renderEditFields()}
                     {renderConstantFields()}
                     <Subheader>Assigned Groups</Subheader>
-                    <PolicyPicker
+                    <ItemPicker
                         key='policies'
                         type={`approle`}
                         item={`policies`}

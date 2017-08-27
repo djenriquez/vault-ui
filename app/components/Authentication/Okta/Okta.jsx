@@ -12,7 +12,7 @@ import Subheader from 'material-ui/Subheader';
 import styles from './okta.css';
 import sharedStyles from '../../shared/styles.css';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
@@ -322,7 +322,7 @@ export default class OktaAuthBackend extends React.Component {
                             }}
                         />
                         <Subheader>Assigned Groups</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             type={`okta/${this.state.selectedTab}`}
                             item={`${this.state.selectedTab == 'users' ? 'groups' : 'policies'}`}
                             vaultPath={`${this.state.baseVaultPath}/groups`}
@@ -378,7 +378,7 @@ export default class OktaAuthBackend extends React.Component {
                 >
                     <List>
                         <Subheader>Assigned Items</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             type={`okta/${this.state.selectedTab}`}
                             item={`${this.state.selectedTab == 'users' ? 'groups' : 'policies'}`}
                             height='250px'
