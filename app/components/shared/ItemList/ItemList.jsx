@@ -102,8 +102,9 @@ export default class ItemList extends React.Component {
         }
     }
 
-    setPage(page, sortDirection = null, maxItemsPerPage = null) {
+    setPage(page = null, sortDirection = null, maxItemsPerPage = null) {
         // Defaults
+        page = page ? page : this.state.currentPage;
         sortDirection = sortDirection ? sortDirection : this.state.sortDirection;
         maxItemsPerPage = maxItemsPerPage ? maxItemsPerPage : this.state.maxItemsPerPage;
 
@@ -132,7 +133,7 @@ export default class ItemList extends React.Component {
 
     // Events
     componentDidMount() {
-        this.setPage(1, 'Ascending');
+        this.setPage(1);
     }
 
     componentWillUpdate(nextProps, nextState) {
@@ -144,10 +145,8 @@ export default class ItemList extends React.Component {
     componentWillReceiveProps(nextProps) {
         this.itemListFull = nextProps.itemList;
         this.filterItems(this.state.filterString);
-        this.setPage(1, 'Ascending');
+        this.setPage();
     }
-
-    com
 
     render() {
         return (
