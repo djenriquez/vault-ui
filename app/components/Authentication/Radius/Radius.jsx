@@ -3,39 +3,31 @@ import { Tabs, Tab } from 'material-ui/Tabs';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
 import Paper from 'material-ui/Paper';
-import Avatar from 'material-ui/Avatar';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import IconButton from 'material-ui/IconButton';
-import { List, ListItem } from 'material-ui/List';
+import { List } from 'material-ui/List';
 import sharedStyles from '../../shared/styles.css';
 import styles from './radius.css';
 import _ from 'lodash';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
-import { red500 } from 'material-ui/styles/colors.js'
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx'
 import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
 import update from 'immutability-helper';
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
     document.dispatchEvent(ev);
 }
 
-class RadiusAuthBackend extends React.Component {
+export default class RadiusAuthBackend extends React.Component {
     static propTypes = {
         params: PropTypes.object.isRequired,
         location: PropTypes.object.isRequired
     };
 
     radiusUserSchema = {
-        policies: [
-            'default'
-        ]
+        policies: []
     }
 
     radiusConfigSchema = {
@@ -55,12 +47,10 @@ class RadiusAuthBackend extends React.Component {
             baseUrl: `/auth/radius/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             userList: [],
-            filteredUserList: [],
             newUserId: '',
             newUserObject: {},
             selectedUserId: '',
             selectedUserObject: {},
-            deleteUserPath: '',
             configObj: this.radiusConfigSchema,
             newConfigObj: this.radiusConfigSchema,
             openNewUserDialog: false,
@@ -82,10 +72,8 @@ class RadiusAuthBackend extends React.Component {
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/users`, { list: true }, null, null)
                     .then((resp) => {
-                        let userlist = _.map(resp.data.data.keys, (userid) => {
-                            return { id: userid, path: `${this.state.baseVaultPath}/users/${userid}` };
-                        })
-                        this.setState({ userList: userlist, filteredUserList: userlist });
+                        let userlist = _.get(resp, 'data.data.keys', []);
+                        this.setState({ userList: userlist });
                     })
                     .catch((err) => {
                         // 404 is expected when no users are registered
@@ -94,7 +82,7 @@ class RadiusAuthBackend extends React.Component {
                     })
             })
             .catch(() => {
-                this.setState({ userList: [], filteredUserList: [] })
+                this.setState({ userList: [] })
                 snackBarMessage(new Error(`No permissions to list users`));
             })
     }
@@ -148,7 +136,6 @@ class RadiusAuthBackend extends React.Component {
                 baseUrl: `/auth/radius/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 userList: [],
-                filteredUserList: [],
                 selectedUserId: '',
                 newConfigObj: this.radiusConfigSchema,
                 configObj: this.radiusConfigSchema
@@ -203,40 +190,6 @@ class RadiusAuthBackend extends React.Component {
     }
 
     render() {
-        let renderUserListItems = () => {
-            return _.map(this.state.filteredUserList, (userobj) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip="Delete"
-                        onTouchTap={() => this.setState({ deleteUserPath: userobj.path })}
-                    >
-                        {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let item = (
-                    <ListItem
-                        key={userobj.id}
-                        primaryText={userobj.id}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            this.setState({ newUserId: '' });
-                            tokenHasCapabilities(['read'], userobj.path).then(() => {
-                                this.setState({ selectedUserId: userobj.id });
-                                history.push(`${this.state.baseUrl}${userobj.id}`);
-                            }).catch(() => {
-                                snackBarMessage(new Error("Access denied"));
-                            })
-
-                        }}
-                    />
-                )
-                return item;
-            });
-        }
 
         let renderEditUserDialog = () => {
             const actions = [
@@ -289,7 +242,7 @@ class RadiusAuthBackend extends React.Component {
                     return;
                 }
 
-                if (!_.every(this.state.userList, (k) => { return k.id != this.state.newUserId })) {
+                if (!_.every(this.state.userList, (k) => { return k != this.state.newUserId })) {
                     snackBarMessage(new Error("User already exists"));
                     return;
                 }
@@ -352,15 +305,6 @@ class RadiusAuthBackend extends React.Component {
             <div>
                 {this.state.openEditUserDialog && renderEditUserDialog()}
                 {this.state.openNewUserDialog && renderNewUserDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.loadUserList();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs>
                     <Tab label="Manage users" >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
@@ -382,26 +326,27 @@ class RadiusAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.userList, (item) => {
-                                                return item.id.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredUserList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderUserListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.userList}
+                                itemUri={`${this.state.baseVaultPath}/users`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`User '${deletedItem}' deleted`)
+                                    this.loadUserList();
+                                }}
+                                onTouchTap={
+                                    (item) => {
+                                        this.setState({ newUserId: '' });
+                                        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/users/${item}`).then(() => {
+                                            this.setState({ selectedUserId: item });
+                                            history.push(`${this.state.baseUrl}${item}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error("Access denied"));
+                                        })
+
+                                    }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab label="Configure Backend" >
@@ -500,5 +445,3 @@ class RadiusAuthBackend extends React.Component {
         )
     }
 }
-
-export default RadiusAuthBackend;
