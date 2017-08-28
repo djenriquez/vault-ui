@@ -464,7 +464,7 @@ export default class AppRoleAuthBackend extends React.Component {
 
             return (
                 <Dialog
-                    title={`Editting ${this.state.selectedItemName}`}
+                    title={`Editing ${this.state.selectedItemName}`}
                     modal={false}
                     actions={actions}
                     open={this.state.openEditItemDialog}
