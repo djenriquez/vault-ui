@@ -1,10 +1,12 @@
 import React, { PropTypes } from 'react';
 import Avatar from 'material-ui/Avatar';
 
+import FileFolder from 'material-ui/svg-icons/file/folder';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
 import IconButton from 'material-ui/IconButton';
+import Divider from 'material-ui/Divider';
 
 import { List, ListItem } from 'material-ui/List';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
@@ -34,8 +36,9 @@ export default class ItemList extends React.Component {
         itemList: PropTypes.array.isRequired,
         itemUri: PropTypes.string.isRequired,
         maxItemsPerPage: PropTypes.number,
-        onTouchTap: PropTypes.func.isRequired,
-        onDeleteTap: PropTypes.func.isRequired
+        onTouchTap: PropTypes.func,
+        onDeleteTap: PropTypes.func.isRequired,
+        onCustomListRender: PropTypes.func
     };
 
     constructor(props) {
@@ -69,9 +72,12 @@ export default class ItemList extends React.Component {
 
 
     renderItemList() {
-        return _.map(this.state.pageItems, (item) => {
-            let avatar = (<Avatar icon={<ActionAccountBox />} />);
-            let action = (
+        var isFolder = true;
+        return _.map(_.sortBy(this.state.pageItems, (item) => {
+            if (this.isPathDirectory(item)) return 0;
+        }), (item) => {
+            var avatar = this.isPathDirectory(item) ? (<Avatar icon={<FileFolder />} />) : (<Avatar icon={<ActionAccountBox />} />);
+            var action = this.isPathDirectory(item) ? (<IconButton />) : (
                 <IconButton
                     tooltip='Delete'
                     onTouchTap={() => this.setState({ deletePath: `${this.itemUri}/${item}`, openDelete: true })}
@@ -80,17 +86,35 @@ export default class ItemList extends React.Component {
                 </IconButton>
             );
 
-            return (
+            if (!this.isPathDirectory(item) && isFolder) {
+                isFolder = false;
+                return ([
+                    <Divider inset={true} />,
+                    <ListItem
+                        key={item}
+                        primaryText={item}
+                        insetChildren={true}
+                        leftAvatar={avatar}
+                        rightIconButton={action}
+                        onTouchTap={this.props.onTouchTap && this.props.onTouchTap.bind(null, item)}
+                    />
+                ])
+            } else return (
                 <ListItem
                     key={item}
                     primaryText={item}
                     insetChildren={true}
                     leftAvatar={avatar}
                     rightIconButton={action}
-                    onTouchTap={this.props.onTouchTap.bind(null, item)}
+                    onTouchTap={this.props.onTouchTap && this.props.onTouchTap.bind(null, item)}
                 />
             )
         });
+    }
+
+    isPathDirectory(key) {
+        if (!key) key = '/';
+        return (key[key.length - 1] === '/');
     }
 
     filterItems(filter) {
@@ -159,11 +183,12 @@ export default class ItemList extends React.Component {
                     onReceiveError={(err) => snackBarMessage(err)}
                 />
                 <Toolbar>
-                    <ToolbarGroup lastChild={true}>
+                    <ToolbarGroup lastChild={true} className="col-xs-12 col-xs-1 col-xs-1">
                         <TextField
                             floatingLabelFixed={true}
                             floatingLabelText="Filter"
                             hintText="Filter items"
+                            className="col-xs-8"
                             value={this.state.filterString}
                             onChange={(e, v) => {
                                 this.setState({ filterString: v });
@@ -175,6 +200,7 @@ export default class ItemList extends React.Component {
                             floatingLabelFixed={true}
                             floatingLabelText="Max Items"
                             hintText="Max Items"
+                            className="col-xs-1"
                             value={this.state.maxItemsPerPage}
                             onBlur={() => {
                                 if (!this.state.maxItemsPerPage) {
@@ -187,11 +213,11 @@ export default class ItemList extends React.Component {
                             }}
                         />
                         <SelectField
-                            style={{ width: 150 }}
                             autoWidth={true}
                             floatingLabelText="Sort Items"
                             floatingLabelFixed={true}
                             value={this.state.sortDirection}
+                            className="col-xs-2"
                             onChange={(e, i, v) => {
                                 this.setPage(this.state.currentPage, v);
                             }}
@@ -202,7 +228,7 @@ export default class ItemList extends React.Component {
                     </ToolbarGroup>
                 </Toolbar>
                 <List className={sharedStyles.listStyle}>
-                    {this.renderItemList()}
+                    {(this.props.onCustomListRender && this.props.onCustomListRender()) || this.renderItemList()}
                 </List>
                 <div className={sharedStyles.centered}>
                     <UltimatePagination
