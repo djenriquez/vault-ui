@@ -327,8 +327,19 @@ export default class GenericSecretBackend extends React.Component {
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can browse, edit, create and delete secrets.
                         </Paper>
-                        <Paper style={{ padding: '3px', height: 10 }} zDepth={0}>
+                        <Paper zDepth={0}>
                             <Toolbar style={{ alignItems: 'flex-start' }}>
+                                <ToolbarGroup>
+                                    <Subheader inset={false}>
+                                        <Stepper
+                                            style={{ justifyContent: 'flex-start', textTransform: 'lowercase', fontWeight: 600 }}
+                                            linear={false}
+                                            connector={<span>/</span>}
+                                        >
+                                            {renderBreadcrumb()}
+                                        </Stepper>
+                                    </Subheader>
+                                </ToolbarGroup>
                                 <ToolbarGroup firstChild={true}>
                                     <FlatButton
                                         primary={true}
@@ -346,17 +357,7 @@ export default class GenericSecretBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup>
-                                    <Subheader inset={false}>
-                                        <Stepper
-                                            style={{ justifyContent: 'flex-start', textTransform: 'lowercase', fontWeight: 600 }}
-                                            linear={false}
-                                            connector={<span>/</span>}
-                                        >
-                                            {renderBreadcrumb()}
-                                        </Stepper>
-                                    </Subheader>
-                                </ToolbarGroup>
+
                             </Toolbar>
                             <ItemList
                                 itemList={this.state.secretList}
