@@ -44,7 +44,6 @@ export default class ItemList extends React.Component {
     constructor(props) {
         super(props);
 
-        this.itemUri = this.props.itemUri;
         this.itemListFull = [];
         this.filteredItemList = [];
         this.lastMaxItemsPerPage = 25;
@@ -84,7 +83,7 @@ export default class ItemList extends React.Component {
             var action = this.isPathDirectory(item) ? (<IconButton />) : (
                 <IconButton
                     tooltip='Delete'
-                    onTouchTap={() => this.setState({ deletePath: `${this.itemUri}/${item}`, openDelete: true })}
+                    onTouchTap={() => this.setState({ deletePath: `${this.props.itemUri}/${item}`, openDelete: true })}
                 >
                     {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
@@ -172,9 +171,6 @@ export default class ItemList extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(!_.isEqual(this.itemUri, nextProps.itemUri)) {
-            this.itemUri = nextProps.itemUri;
-        }
         this.itemListFull = nextProps.itemList;
         this.filterItems(this.state.filterString);
         this.setPage();
