@@ -332,7 +332,7 @@ export default class GenericSecretBackend extends React.Component {
                                 <ToolbarGroup>
                                     <Subheader inset={false}>
                                         <Stepper
-                                            style={{ justifyContent: 'flex-start', textTransform: 'lowercase', fontWeight: 600 }}
+                                            style={{ justifyContent: 'flex-start', fontWeight: 600 }}
                                             linear={false}
                                             connector={<span>/</span>}
                                         >
