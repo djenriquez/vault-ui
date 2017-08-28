@@ -64,7 +64,7 @@ djenriquez/vault-ui
 Supported environment variables:
 - `PORT` Sets the port for Vault-UI to listen on. (Default 8000)
 - `CUSTOM_CA_CERT` Pass a self-signed certificate that the system should trust.
-- `NODE_TLS_REJECT_UNAUTHORIZED` Sisable TLS server side validation. (ex. vault deployed with self-signed certificate)
+- `NODE_TLS_REJECT_UNAUTHORIZED` Disable TLS server side validation. (ex. vault deployed with self-signed certificate). Set to `0` to disable.
 - `VAULT_URL_DEFAULT` Sets the default vault endpoint.
 - `VAULT_AUTH_DEFAULT` Sets the default authentication method type. See below for supported authentication methods.
 - `VAULT_AUTH_BACKEND_PATH` Sets the default backend path. Useful when multiple backends of the same type are mounted on the vault file system.
