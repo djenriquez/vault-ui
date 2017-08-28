@@ -72,7 +72,11 @@ export default class ItemList extends React.Component {
 
 
     renderItemList() {
-        var isFolder = true;
+        let directories = _.filter(this.state.pageItems, (item) => {
+            return this.isPathDirectory(item);
+        });
+        var isFolder = directories.length > 0 ? true : false;
+
         return _.map(_.sortBy(this.state.pageItems, (item) => {
             if (this.isPathDirectory(item)) return 0;
         }), (item) => {
@@ -200,7 +204,7 @@ export default class ItemList extends React.Component {
                             floatingLabelFixed={true}
                             floatingLabelText="Max Items"
                             hintText="Max Items"
-                            className="col-xs-1"
+                            className="col-xs-2"
                             value={this.state.maxItemsPerPage}
                             onBlur={() => {
                                 if (!this.state.maxItemsPerPage) {
