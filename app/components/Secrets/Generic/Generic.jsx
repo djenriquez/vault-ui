@@ -31,21 +31,20 @@ export default class GenericSecretBackend extends React.Component {
     constructor(props) {
         super(props);
 
+        this.baseUrl = `/secrets/generic/${this.props.params.namespace}/`;
+        this.baseVaultPath = `${this.props.params.namespace}`;
+
         this.state = {
             newSecretBtnDisabled: true,
             secretContent: {},
             newSecretName: '',
-            currentLogicalPath: '',
+            currentLogicalPath: `${this.props.params.namespace}/${this.props.params.splat}`,
             disableSubmit: true,
             openNewObjectModal: false,
             openEditObjectModal: false,
-            openDeleteModal: false,
-            deletingKey: '',
-            wrapPath: null,
             useRootKey: window.localStorage.getItem("useRootKey") === 'true' || false,
             rootKey: window.localStorage.getItem("secretsRootKey") || '',
             secretList: [],
-            clickedSecret: ""
         }
 
         _.bindAll(
@@ -92,6 +91,9 @@ export default class GenericSecretBackend extends React.Component {
                         // 404 is expected when no secrets are present
                         if (!_.has(err, 'response') || err.response.status != 404)
                             snackBarMessage(err)
+                        else {
+                            this.setState({ secretList: [] });
+                        }
                     })
             })
             .catch(() => {
@@ -116,10 +118,6 @@ export default class GenericSecretBackend extends React.Component {
             })
     }
 
-    componentWillMount() {
-        this.setState({ currentLogicalPath: `${this.props.params.namespace}/${this.props.params.splat}` })
-    }
-
     componentDidMount() {
         if (this.isPathDirectory(this.props.params.splat)) {
             this.loadSecretsList();
@@ -129,17 +127,18 @@ export default class GenericSecretBackend extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        this.setState({ currentLogicalPath: `${nextProps.params.namespace}/${nextProps.params.splat}` })
+        if (!_.isEqual(`${nextProps.params.namespace}/${nextProps.params.splat}`, this.state.currentLogicalPath)) {
+            this.setState({ currentLogicalPath: `${nextProps.params.namespace}/${nextProps.params.splat}` })
+        }
         if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             // Reset
             this.setState({
-                secretList: [],
-                clickedSecret: ''
+                secretList: []
             })
         }
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
         if (!_.isEqual(this.props.params, prevProps.params)) {
             if (this.isPathDirectory(this.props.params.splat)) {
                 this.loadSecretsList(prevProps);
@@ -367,18 +366,21 @@ export default class GenericSecretBackend extends React.Component {
                                     let secrets = _.clone(this.state.secretList);
                                     let secretToDelete = _.find(secrets, (secretToDelete) => { return secretToDelete == deletedItem; });
                                     secrets = _.pull(secrets, secretToDelete);
+                                    console.log(secrets);
                                     this.setState({
-                                        secretList: secrets,
+                                        secretList: secrets
                                     });
+                                    this.loadSecretsList();
                                     snackBarMessage(`Secret ${deletedItem} deleted`);
                                 }}
                                 onTouchTap={(key) => {
-                                    this.setState({ newSecretName: '', clickedSecret: key });
-                                    tokenHasCapabilities([this.isPathDirectory(key) ? 'list' : 'read'], this.state.currentLogicalPath + key).then(() => {
-                                        history.push(`/secrets/generic/${this.state.currentLogicalPath}${key}`);
-                                    }).catch(() => {
-                                        snackBarMessage(new Error("Access denied"));
-                                    })
+                                    this.setState({ newSecretName: '', currentLogicalPath: `${this.state.currentLogicalPath}${key}` });
+                                    tokenHasCapabilities([this.isPathDirectory(key) ? 'list' : 'read'], `${this.state.currentLogicalPath}${key}`)
+                                        .then(() => {
+                                            history.push(`/secrets/generic/${this.state.currentLogicalPath}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error("Access denied"));
+                                        })
 
                                 }}
                             />

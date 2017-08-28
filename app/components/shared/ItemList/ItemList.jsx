@@ -172,6 +172,9 @@ export default class ItemList extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        if(!_.isEqual(this.itemUri, nextProps.itemUri)) {
+            this.itemUri = nextProps.itemUri;
+        }
         this.itemListFull = nextProps.itemList;
         this.filterItems(this.state.filterString);
         this.setPage();
