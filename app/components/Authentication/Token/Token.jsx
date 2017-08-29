@@ -30,7 +30,7 @@ import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import ContentContentCopy from 'material-ui/svg-icons/content/content-copy';
 import NavigationMenu from 'material-ui/svg-icons/navigation/menu';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -597,7 +597,7 @@ export default class TokenAuthBackend extends React.Component {
                     </List>
                     <List>
                         <Subheader>Allowed Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height="120px"
                             selectedPolicies={this.state.roleAttributes.allowed_policies}
                             onSelectedChange={(policies) => {
@@ -731,7 +731,7 @@ export default class TokenAuthBackend extends React.Component {
                     </List>
                     <List>
                         <Subheader>Assign Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height="120px"
                             selectedPolicies={this.state.newTokenSelectedPolicies}
                             onSelectedChange={(policies) => {

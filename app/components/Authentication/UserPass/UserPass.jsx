@@ -2,27 +2,21 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
-import { List, ListItem } from 'material-ui/List';
+import { List } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 // Styles
 import styles from './userpass.css';
 import sharedStyles from '../../shared/styles.css';
-import { red500 } from 'material-ui/styles/colors.js';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import Avatar from 'material-ui/Avatar';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
     document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
@@ -38,7 +32,7 @@ export default class UserPassAuthBackend extends React.Component {
         id: undefined,
         max_ttl: undefined,
         ttl: undefined,
-        policies: []
+        policies: undefined
     };
 
     constructor(props) {
@@ -47,7 +41,6 @@ export default class UserPassAuthBackend extends React.Component {
             baseUrl: `/auth/userpass/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             users: [],
-            filteredUserList: [],
             config: this.userPassConfigSchema,
             selectedUserId: '',
             newUserId: '',
@@ -55,7 +48,6 @@ export default class UserPassAuthBackend extends React.Component {
             newUserPassword2: '',
             openItemDialog: false,
             openNewItemDialog: false,
-            deleteUserPath: ''
         }
     }
 
@@ -65,13 +57,13 @@ export default class UserPassAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/users`, { list: true }, null)
                     .then((resp) => {
                         let users = _.get(resp, 'data.data.keys', []);
-                        this.setState({ users: _.valuesIn(users), filteredUserList: _.valuesIn(users) });
+                        this.setState({ users: _.valuesIn(users) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ users: [], filteredUserList: [] });
+                            this.setState({ users: [] });
                         }
                     });
             })
@@ -81,7 +73,6 @@ export default class UserPassAuthBackend extends React.Component {
     }
 
     displayItem() {
-        console.log(`Displaying item ${this.state.selectedUserId}`);
         tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/users/${this.state.selectedUserId}`)
             .then(() => {
                 callVaultApi('get', `${this.state.baseVaultPath}/users/${this.state.selectedUserId}`, null, null)
@@ -146,13 +137,11 @@ export default class UserPassAuthBackend extends React.Component {
                 baseUrl: `/auth/userpass/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 users: [],
-                filteredUserList: [],
                 config: this.userPassConfigSchema,
                 selectedUserId: '',
                 newUserId: '',
                 openItemDialog: false,
                 openNewItemDialog: false,
-                deleteUserPath: ''
             }, () => {
                 this.listUsers();
             });
@@ -160,42 +149,6 @@ export default class UserPassAuthBackend extends React.Component {
     }
 
     render() {
-        let renderListItems = () => {
-            let items = this.state.filteredUserList;
-            return _.map(items, (item) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/users/${item}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let obj = (
-                    <ListItem
-                        key={item}
-                        primaryText={item}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${item}`)
-                                .then(() => {
-                                    this.setState({ selectedUserId: `${item}` });
-                                    history.push(`${this.state.baseUrl}${item}`);
-                                }).catch(() => {
-                                    snackBarMessage(new Error('Access denied'));
-                                })
-
-                        }}
-                    />
-                )
-                return obj;
-            });
-        };
-
         let renderPolicyDialog = () => {
             const actions = [
                 <FlatButton
@@ -228,7 +181,7 @@ export default class UserPassAuthBackend extends React.Component {
                 >
                     <List>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.config.policies}
                             onSelectedChange={(newPolicies) => {
@@ -308,7 +261,7 @@ export default class UserPassAuthBackend extends React.Component {
                             }}
                         /><br />
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.config.policies}
                             onSelectedChange={(newPolicies) => {
@@ -323,15 +276,6 @@ export default class UserPassAuthBackend extends React.Component {
             <div>
                 {this.state.openItemDialog && renderPolicyDialog()}
                 {this.state.openNewItemDialog && renderNewPolicyDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`User '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.listUsers();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs>
                     <Tab
                         label='Manage Users'
@@ -355,26 +299,26 @@ export default class UserPassAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.users, (item) => {
-                                                return item.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredUserList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.users}
+                                itemUri={`${this.state.baseVaultPath}/users`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`User '${deletedItem}' deleted`)
+                                    this.listUsers();
+                                }}
+                                onTouchTap={(item) => {
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${item}`)
+                                        .then(() => {
+                                            this.setState({ selectedUserId: `${item}` });
+                                            history.push(`${this.state.baseUrl}${item}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error('Access denied'));
+                                        })
+        
+                                }}
+                            />
                         </Paper>
                     </Tab>
                 </Tabs>

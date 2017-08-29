@@ -2,30 +2,24 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
 import { List, ListItem } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import Toggle from 'material-ui/Toggle';
 import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 // Styles
 import styles from './aws.css';
 import sharedStyles from '../../shared/styles.css';
-import { red500 } from 'material-ui/styles/colors.js';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import Avatar from 'material-ui/Avatar';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx';
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
     document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
@@ -82,7 +76,6 @@ export default class AwsAuthBackend extends React.Component {
             baseUrl: `/auth/aws/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             ec2Roles: [],
-            filteredEc2RoleList: [],
             configObj: this.ec2ConfigSchema,
             newConfigObj: this.ec2ConfigSchema,
             newRoleConfig: this.roleConfigSchema,
@@ -90,7 +83,6 @@ export default class AwsAuthBackend extends React.Component {
             newSecretBtnDisabled: false,
             openNewRoleDialog: false,
             openEditRoleDialog: false,
-            deleteUserPath: '',
             selectedTab: 'roles',
             isBackendConfigured: false
         };
@@ -112,13 +104,13 @@ export default class AwsAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/role`, { list: true }, null)
                     .then((resp) => {
                         let roles = _.get(resp, 'data.data.keys', []);
-                        this.setState({ ec2Roles: _.valuesIn(roles), filteredEc2RoleList: _.valuesIn(roles) });
+                        this.setState({ ec2Roles: _.valuesIn(roles) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ ec2Roles: [], filteredEc2RoleList: [] });
+                            this.setState({ ec2Roles: [] });
                         }
                     });
             })
@@ -270,7 +262,6 @@ export default class AwsAuthBackend extends React.Component {
                 baseUrl: `/auth/aws/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 ec2Roles: [],
-                filteredEc2RoleList: [],
                 selectedRoleId: '',
                 newConfigObj: this.roleConfigSchema,
                 configObj: this.ec2ConfigSchema,
@@ -283,7 +274,7 @@ export default class AwsAuthBackend extends React.Component {
     }
 
     render() {
-        
+
         let renderFields = () => {
             let renderAuthTypes = () => {
                 return this.authTypes.map((authType) => (
@@ -335,7 +326,7 @@ export default class AwsAuthBackend extends React.Component {
                 return (
                     [
                         <Subheader>Assigned Policies</Subheader>,
-                        <PolicyPicker
+                        <ItemPicker
                             height='200px'
                             selectedPolicies={this.state.newRoleConfig.policies}
                             onSelectedChange={(newPolicies) => {
@@ -606,41 +597,6 @@ export default class AwsAuthBackend extends React.Component {
             )
         }
 
-        let renderRoleListItems = () => {
-            return _.map(this.state.filteredEc2RoleList, (role) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/role/${role}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let item = (
-                    <ListItem
-                        key={role}
-                        primaryText={role}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
-                                .then(() => {
-                                    this.setState({ selectedRoleId: role });
-                                    history.push(`${this.state.baseUrl}roles/${role}`);
-                                }).catch(() => {
-                                    snackBarMessage(new Error('Access denied'));
-                                })
-
-                        }}
-                    />
-                )
-                return item;
-            });
-        }
-
         let renderNewRoleDialog = () => {
             let validateAndSubmit = () => {
                 if (this.state.selectedRoleId === '') {
@@ -725,15 +681,6 @@ export default class AwsAuthBackend extends React.Component {
             <div>
                 {this.state.openEditRoleDialog && renderEditRoleDialog()}
                 {this.state.openNewRoleDialog && renderNewRoleDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.listEc2Roles();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs
                     onChange={(e) => {
                         history.push(`${this.state.baseUrl}${e}/`);
@@ -765,26 +712,26 @@ export default class AwsAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.ec2Roles, (item) => {
-                                                return item.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredEc2RoleList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderRoleListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.ec2Roles}
+                                itemUri={`${this.state.baseVaultPath}/role`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Role '${deletedItem}' deleted`)
+                                    this.listEc2Roles();
+                                }}
+                                onTouchTap={(role) => {
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/role/${role}`)
+                                        .then(() => {
+                                            this.setState({ selectedRoleId: role });
+                                            history.push(`${this.state.baseUrl}roles/${role}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error('Access denied'));
+                                        })
+
+                                }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab

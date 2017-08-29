@@ -2,18 +2,12 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
-import { List, ListItem } from 'material-ui/List';
+import { List } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Avatar from 'material-ui/Avatar';
-import { red500 } from 'material-ui/styles/colors.js';
 
 // Styles
 import styles from './github.css';
@@ -21,9 +15,9 @@ import sharedStyles from '../../shared/styles.css';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx'
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 
 function snackBarMessage(message) {
     document.dispatchEvent(new CustomEvent('snackbar', { detail: { message: message } }));
@@ -53,9 +47,7 @@ export default class GithubAuthBackend extends React.Component {
             baseUrl: `/auth/github/${this.props.params.namespace}/`,
             baseVaultPath: `auth/${this.props.params.namespace}`,
             teams: [],
-            filteredTeamList: [],
             users: [],
-            filteredUserList: [],
             config: this.backendConfigSchema,
             newConfig: this.backendConfigSchema,
             itemConfig: this.teamConfigSchema,
@@ -82,13 +74,13 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/teams`, { list: true }, null)
                     .then((resp) => {
                         let teams = _.get(resp, 'data.data.keys', []);
-                        this.setState({ teams: _.valuesIn(teams), filteredTeamList: _.valuesIn(teams) });
+                        this.setState({ teams: _.valuesIn(teams) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ teams: [], filteredTeamList: [] });
+                            this.setState({ teams: [] });
                         }
                     });
             })
@@ -103,13 +95,13 @@ export default class GithubAuthBackend extends React.Component {
                 callVaultApi('get', `${this.state.baseVaultPath}/map/users`, { list: true }, null)
                     .then((resp) => {
                         let users = _.get(resp, 'data.data.keys', []);
-                        this.setState({ users: _.valuesIn(users), filteredUserList: _.valuesIn(users) });
+                        this.setState({ users: _.valuesIn(users) });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
                             snackBarMessage(error);
                         } else {
-                            this.setState({ users: [], filteredUserList: [] });
+                            this.setState({ users: [] });
                         }
                     });
             })
@@ -240,9 +232,7 @@ export default class GithubAuthBackend extends React.Component {
                 baseUrl: `/auth/github/${nextProps.params.namespace}/`,
                 baseVaultPath: `auth/${nextProps.params.namespace}`,
                 users: [],
-                filteredUserList: [],
                 teams: [],
-                filteredTeamList: [],
                 selectedItemId: '',
                 newConfig: this.backendConfigSchema,
                 config: this.backendConfigSchema,
@@ -258,42 +248,6 @@ export default class GithubAuthBackend extends React.Component {
     }
 
     render() {
-        let renderListItems = () => {
-            let items = this.state.selectedTab === 'teams' ? this.state.filteredTeamList : this.state.filteredUserList;
-            return _.map(items, (item) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.state.baseVaultPath}/map/${this.state.selectedTab}/${item}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let obj = (
-                    <ListItem
-                        key={item}
-                        primaryText={item}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/${this.state.selectedTab}/${item}`)
-                                .then(() => {
-                                    this.setState({ selectedItemId: `${this.state.selectedTab}/${item}` });
-                                    history.push(`${this.state.baseUrl}${this.state.selectedTab}/${item}`);
-                                }).catch(() => {
-                                    snackBarMessage(new Error('Access denied'));
-                                })
-
-                        }}
-                    />
-                )
-                return obj;
-            });
-        }
-
         let renderPolicyDialog = () => {
             const actions = [
                 <FlatButton
@@ -326,7 +280,7 @@ export default class GithubAuthBackend extends React.Component {
                 >
                     <List>
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.itemConfig.policies}
                             onSelectedChange={(newPolicies) => {
@@ -381,7 +335,7 @@ export default class GithubAuthBackend extends React.Component {
                             }}
                         />
                         <Subheader>Assigned Policies</Subheader>
-                        <PolicyPicker
+                        <ItemPicker
                             height='250px'
                             selectedPolicies={this.state.itemConfig.policies}
                             onSelectedChange={(newPolicies) => {
@@ -397,16 +351,6 @@ export default class GithubAuthBackend extends React.Component {
             <div>
                 {this.state.openItemDialog && renderPolicyDialog()}
                 {this.state.openNewItemDialog && renderNewPolicyDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`GitHub ${this.state.selectedTab.substring(0, this.state.selectedTab.length - 1)} '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.listGithubTeams();
-                        this.listGithubUsers();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs
                     onChange={(e) => {
                         history.push(`${this.state.baseUrl}${e}/`);
@@ -440,26 +384,25 @@ export default class GithubAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.teams, (item) => {
-                                                return item.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredTeamList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.teams}
+                                itemUri={`${this.state.baseVaultPath}/map/teams`}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`GitHub team '${deletedItem}' deleted`);
+                                    this.listGithubTeams();
+                                }}
+                                onTouchTap={(item) => {
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/teams/${item}`)
+                                        .then(() => {
+                                            this.setState({ selectedItemId: `teams/${item}` });
+                                            history.push(`${this.state.baseUrl}teams/${item}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error('Access denied'));
+                                        });
+
+                                }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab
@@ -488,26 +431,25 @@ export default class GithubAuthBackend extends React.Component {
                                         }}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.users, (item) => {
-                                                return item.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredUserList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.users}
+                                itemUri={`${this.state.baseVaultPath}/map/users`}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`GitHub user '${deletedItem}' deleted`);
+                                    this.listGithubUsers();
+                                }}
+                                onTouchTap={(item) => {
+                                    tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/users/${item}`)
+                                        .then(() => {
+                                            this.setState({ selectedItemId: `users/${item}` });
+                                            history.push(`${this.state.baseUrl}users/${item}`);
+                                        }).catch(() => {
+                                            snackBarMessage(new Error('Access denied'));
+                                        });
+
+                                }}
+                            />
                         </Paper>
                     </Tab>
                     <Tab

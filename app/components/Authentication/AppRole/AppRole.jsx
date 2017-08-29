@@ -2,19 +2,13 @@ import React, { PropTypes } from 'react';
 // Material UI
 import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
-import IconButton from 'material-ui/IconButton';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
-import { List, ListItem } from 'material-ui/List';
+import { List } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import ActionAccountBox from 'material-ui/svg-icons/action/account-box';
-import ActionDelete from 'material-ui/svg-icons/action/delete';
-import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import Avatar from 'material-ui/Avatar';
 import Toggle from 'material-ui/Toggle';
-import { red500 } from 'material-ui/styles/colors.js';
 
 // Styles
 import styles from './approle.css';
@@ -22,8 +16,8 @@ import sharedStyles from '../../shared/styles.css';
 // Misc
 import _ from 'lodash';
 import update from 'immutability-helper';
-import PolicyPicker from '../../shared/PolicyPicker/PolicyPicker.jsx'
-import VaultObjectDeleter from '../../shared/DeleteObject/DeleteObject.jsx'
+import ItemPicker from '../../shared/ItemPicker/ItemPicker.jsx';
+import ItemList from '../../shared/ItemList/ItemList.jsx';
 import { callVaultApi, tokenHasCapabilities, history } from '../../shared/VaultUtils.jsx';
 
 function snackBarMessage(message) {
@@ -221,7 +215,6 @@ export default class AppRoleAuthBackend extends React.Component {
 
     updateRoleId() {
         if (this.state.itemConfig.role_id) {
-            console.log()
             tokenHasCapabilities(['update'], `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`)
                 .then(() => {
                     callVaultApi('post', `${this.baseVaultPath}/role/${this.state.selectedItemName}/role-id`, null, { role_id: this.state.itemConfig.role_id })
@@ -388,7 +381,7 @@ export default class AppRoleAuthBackend extends React.Component {
                     {this.state.openEditItemDialog && renderEditFields()}
                     {renderConstantFields()}
                     <Subheader>Assigned Groups</Subheader>
-                    <PolicyPicker
+                    <ItemPicker
                         key='policies'
                         type={`approle`}
                         item={`policies`}
@@ -476,54 +469,10 @@ export default class AppRoleAuthBackend extends React.Component {
             );
         };
 
-        let renderListItems = () => {
-            let list = this.state.itemList;
-            return _.map(list, (item) => {
-                let avatar = (<Avatar icon={<ActionAccountBox />} />);
-                let action = (
-                    <IconButton
-                        tooltip='Delete'
-                        onTouchTap={() => this.setState({ deleteUserPath: `${this.baseVaultPath}/role/${item}` })}
-                    >
-                        {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-                    </IconButton>
-                );
-
-                let obj = (
-                    <ListItem
-                        key={item}
-                        primaryText={item}
-                        insetChildren={true}
-                        leftAvatar={avatar}
-                        rightIconButton={action}
-                        onTouchTap={() => {
-                            this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
-                            tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {
-                                history.push(`${this.baseUrl}role/${item}`);
-                            }).catch(() => {
-                                snackBarMessage(new Error('Access denied'));
-                            })
-
-                        }}
-                    />
-                )
-                return obj;
-            });
-        };
-
         return (
             <div>
                 {this.state.openNewItemDialog && renderNewDialog()}
                 {this.state.openEditItemDialog && renderEditDialog()}
-                <VaultObjectDeleter
-                    path={this.state.deleteUserPath}
-                    onReceiveResponse={() => {
-                        snackBarMessage(`Object '${this.state.deleteUserPath}' deleted`)
-                        this.setState({ deleteUserPath: '' })
-                        this.listAppRoles();
-                    }}
-                    onReceiveError={(err) => snackBarMessage(err)}
-                />
                 <Tabs
                     onChange={(e) => {
                         history.push(`${this.baseUrl}${e}/`);
@@ -539,8 +488,8 @@ export default class AppRoleAuthBackend extends React.Component {
                     >
                         <Paper className={sharedStyles.TabInfoSection} zDepth={0}>
                             Here you can add, edit or delete AppRoles with this backend
-                    </Paper>
-                        <Paper className={sharedStyles.TabContentSection} zDepth={0}>
+                        </Paper>
+                        <Paper label='toolbar' className={sharedStyles.TabContentSection} zDepth={0}>
                             <Toolbar>
                                 <ToolbarGroup firstChild={true}>
                                     <FlatButton
@@ -555,9 +504,23 @@ export default class AppRoleAuthBackend extends React.Component {
                                     />
                                 </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {renderListItems()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.itemList}
+                                itemUri={`${this.baseVaultPath}/role`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Object '${deletedItem}' deleted`)
+                                    this.listAppRoles();
+                                }}
+                                onTouchTap={(item) => {
+                                    this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
+                                    tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {
+                                        history.push(`${this.baseUrl}role/${item}`);
+                                    }).catch(() => {
+                                        snackBarMessage(new Error('Access denied'));
+                                    })
+                                }}
+                            />
                         </Paper>
                     </Tab>
                 </Tabs>
