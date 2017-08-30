@@ -16,6 +16,9 @@ import JsonEditor from '../../shared/JsonEditor.jsx';
 import SecretWrapper from '../../shared/Wrapping/Wrapper.jsx'
 import { Link } from 'react-router'
 import ItemList from '../../shared/ItemList/ItemList.jsx';
+import copy from 'copy-to-clipboard';
+import ContentContentCopy from 'material-ui/svg-icons/content/content-copy';
+import IconButton from 'material-ui/IconButton';
 
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
@@ -312,7 +315,15 @@ export default class GenericSecretBackend extends React.Component {
             let components = _.initial(this.getBaseDir(this.state.currentLogicalPath).split('/'));
             return _.map(components, (dir, index) => {
                 var relativelink = [].concat(components).slice(0, index + 1).join('/') + '/';
-                return (<Step key={index}><StepLabel style={{ paddingLeft: '5px', paddingRight: '5px' }} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                if (index === 0) {
+                    // no left padding for first item
+                    var stepLabelStyle = { paddingLeft: '0'}
+                    var iconContainerStyle = { padding: '0' }
+                } else {
+                    var stepLabelStyle = { paddingLeft: '10px'}
+                    var iconContainerStyle = {}
+                }
+                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '17px'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
             });
         }
 
@@ -329,6 +340,11 @@ export default class GenericSecretBackend extends React.Component {
                         <Paper zDepth={0}>
                             <Toolbar style={{ alignItems: 'flex-start' }}>
                                 <ToolbarGroup>
+                                    <Subheader inset={false}>
+                                        <IconButton style={{paddingTop: "16px"}} tooltip="Copy Path" onTouchTap={() => { copy(this.state.currentLogicalPath) }} >
+                                            <ContentContentCopy />
+                                        </IconButton>
+                                    </Subheader>
                                     <Subheader inset={false}>
                                         <Stepper
                                             style={{ justifyContent: 'flex-start', fontWeight: 600 }}
