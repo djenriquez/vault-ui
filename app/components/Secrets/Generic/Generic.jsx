@@ -323,7 +323,7 @@ export default class GenericSecretBackend extends React.Component {
                     var stepLabelStyle = { paddingLeft: '10px'}
                     var iconContainerStyle = {}
                 }
-                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '17px'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '16px'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
             });
         }
 
@@ -340,12 +340,12 @@ export default class GenericSecretBackend extends React.Component {
                         <Paper zDepth={0}>
                             <Toolbar style={{ alignItems: 'flex-start' }}>
                                 <ToolbarGroup>
-                                    <Subheader inset={false}>
-                                        <IconButton style={{paddingTop: "16px"}} tooltip="Copy Path" onTouchTap={() => { copy(this.state.currentLogicalPath) }} >
+                                    <Subheader style={{ paddingLeft: "0" }} inset={false}>
+                                        <IconButton style={{paddingTop: "20px"}} tooltip="Copy Path" onTouchTap={() => { copy(this.state.currentLogicalPath) }} >
                                             <ContentContentCopy />
                                         </IconButton>
                                     </Subheader>
-                                    <Subheader inset={false}>
+                                    <Subheader style={{ paddingLeft: "10px" }} inset={false}>
                                         <Stepper
                                             style={{ justifyContent: 'flex-start', fontWeight: 600 }}
                                             linear={false}
