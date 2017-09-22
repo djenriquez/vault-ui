@@ -323,7 +323,7 @@ export default class GenericSecretBackend extends React.Component {
                     var stepLabelStyle = { paddingLeft: '10px'}
                     var iconContainerStyle = {}
                 }
-                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '16px'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '16px'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir.replace("-",'\u2011')}</Link></StepLabel></Step>)
             });
         }
 
