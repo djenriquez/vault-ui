@@ -3,8 +3,9 @@
          title="Vault-UI" width="64px" align="right" />
 </a>
 
-[![](https://images.microbadger.com/badges/image/djenriquez/vault-ui.svg)](https://microbadger.com/images/djenriquez/vault-ui)
 [![Run Status](https://api.shippable.com/projects/581e7826fbc68c0f00deb0ca/badge?branch=master)](https://app.shippable.com/projects/581e7826fbc68c0f00deb0ca)
+[![](https://images.microbadger.com/badges/image/djenriquez/vault-ui.svg)](https://microbadger.com/images/djenriquez/vault-ui)
+[![Join the chat at https://gitter.im/vault-ui/Lobby](https://badges.gitter.im/vault-ui/Lobby.svg)](https://gitter.im/vault-ui/Lobby)
 
 # Vault-UI
 
