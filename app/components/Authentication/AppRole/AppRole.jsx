@@ -506,7 +506,7 @@ export default class AppRoleAuthBackend extends React.Component {
                             </Toolbar>
                             <ItemList
                                 itemList={this.state.itemList}
-                                itemUri={`${this.baseVaultPath}/role`}
+                                itemUri={`${this.baseVaultPath}`}
                                 maxItemsPerPage={25}
                                 onDeleteTap={(deletedItem) => {
                                     snackBarMessage(`Object '${deletedItem}' deleted`)
@@ -514,7 +514,7 @@ export default class AppRoleAuthBackend extends React.Component {
                                 }}
                                 onTouchTap={(item) => {
                                     this.setState({ itemConfig: _.clone(this.itemConfigSchema), selectedItemName: `${item}` });
-                                    tokenHasCapabilities(['read'], `${this.baseVaultPath}/role/${item}`).then(() => {
+                                    tokenHasCapabilities(['read'], `${this.baseVaultPath}/${item}`).then(() => {
                                         history.push(`${this.baseUrl}role/${item}`);
                                     }).catch(() => {
                                         snackBarMessage(new Error('Access denied'));

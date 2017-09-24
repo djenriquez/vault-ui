@@ -20,6 +20,8 @@ import HardwareSecurity from 'material-ui/svg-icons/hardware/security';
 import ActionDeleteForever from 'material-ui/svg-icons/action/delete-forever';
 import ActionDelete from 'material-ui/svg-icons/action/delete';
 
+import ItemList from '../shared/ItemList/ItemList.jsx';
+
 function snackBarMessage(message) {
     let ev = new CustomEvent("snackbar", { detail: { message: message } });
     document.dispatchEvent(ev);
@@ -32,6 +34,10 @@ export default class PolicyManager extends React.Component {
 
     constructor(props) {
         super(props);
+
+        this.baseUrl = `/sys/policies/`;
+        this.baseVaultPath = `sys/policy`;
+
         this.state = {
             openEditModal: false,
             openNewPolicyModal: false,
@@ -41,7 +47,6 @@ export default class PolicyManager extends React.Component {
             focusPolicy: -1,
             deletingPolicy: '',
             policies: [],
-            filteredPolicyList: [],
             currentPolicy: '',
             disableSubmit: false,
             forbidden: false,
@@ -55,11 +60,7 @@ export default class PolicyManager extends React.Component {
             'listPolicies',
             'policyChangeSetState',
             'renderEditDialog',
-            'renderNewPolicyDialog',
-            'renderDeleteConfirmationDialog',
-            'showDelete',
-            'renderPolicies',
-            'deletePolicy'
+            'renderNewPolicyDialog'
         )
     }
 
@@ -96,7 +97,7 @@ export default class PolicyManager extends React.Component {
                 primary={true}
                 onTouchTap={() => {
                     this.setState({ openEditModal: false })
-                    history.push('/sys/policies');
+                    history.push(this.baseUrl);
                 }}
             />,
             <FlatButton
@@ -105,7 +106,7 @@ export default class PolicyManager extends React.Component {
                 primary={true}
                 onTouchTap={() => {
                     this.updatePolicy(this.state.focusPolicy, false)
-                    history.push('/sys/policies');
+                    history.push(this.baseUrl);
                 }}
             />
         ];
@@ -195,30 +196,9 @@ export default class PolicyManager extends React.Component {
         );
     }
 
-    renderDeleteConfirmationDialog() {
-        const actions = [
-            <FlatButton label="Cancel" primary={true} onTouchTap={() => this.setState({ openDeleteModal: false, deletingPolicy: '' })} />,
-            <FlatButton label="Delete" style={{ color: white }} hoverColor={red300} backgroundColor={red500} primary={true} onTouchTap={() => this.deletePolicy(this.state.deletingPolicy)} />
-        ];
-
-        return (
-            <Dialog
-                title={`Delete Confirmation`}
-                modal={false}
-                actions={actions}
-                open={this.state.openDeleteModal}
-                onRequestClose={() => this.setState({ openDeleteModal: false, newPolicyErrorMessage: '' })}
-            >
-
-                <p>You are about to permanently delete {this.state.deletingPolicy}.  Are you sure?</p>
-                <em>To disable this prompt, visit the settings page.</em>
-            </Dialog>
-        )
-    }
-
     updatePolicy(policyName, isNewPolicy) {
         let stringifiedPolicy = JSON.stringify(this.state.currentPolicy);
-        callVaultApi('put', `sys/policy/${policyName}`, null, { rules: stringifiedPolicy }, null)
+        callVaultApi('put', `${this.baseVaultPath}/${policyName}`, null, { rules: stringifiedPolicy }, null)
             .then(() => {
                 if (isNewPolicy) {
                     let policies = this.state.policies;
@@ -240,11 +220,10 @@ export default class PolicyManager extends React.Component {
     }
 
     listPolicies() {
-        callVaultApi('get', `sys/policy`, null, null, null)
+        callVaultApi('get', this.baseVaultPath, null, null, null)
             .then((resp) => {
                 this.setState({
                     policies: resp.data.policies,
-                    filteredPolicyList: resp.data.policies,
                     buttonColor: green500
                 });
             })
@@ -255,18 +234,17 @@ export default class PolicyManager extends React.Component {
     }
 
     displayPolicy() {
-        callVaultApi('get', `sys/policy/${this.props.params.splat}`, null, null, null)
+        callVaultApi('get', `${this.baseVaultPath}/${this.props.params.splat}`, null, null, null)
             .then((resp) => {
                 let rules = _.get(resp, 'data.data.rules', _.get(resp, 'data.rules', {}));
                 let rules_obj;
                 // Attempt to parse into JSON incase a stringified JSON was sent
                 try {
                     rules_obj = JSON.parse(rules);
-                } catch (e) { console.log(e) }
-
-                if (!rules_obj) {
-                    // Previous parse failed, attempt HCL to JSON conversion
-                    rules_obj = ghcl.parse(rules);
+                } 
+                // Previous parse failed, attempt HCL to JSON conversion
+                catch (e) { 
+                    rules_obj = ghcl.parse(rules); 
                 }
 
                 if (rules_obj) {
@@ -279,65 +257,6 @@ export default class PolicyManager extends React.Component {
                 }
             })
             .catch(snackBarMessage);
-    }
-
-    deletePolicy(policyName) {
-        callVaultApi('delete', `sys/policy/${policyName}`, null, null, null)
-            .then(() => {
-                let policies = this.state.policies;
-                let policyToDelete = _.find(policies, (policyToDelete) => { return policyToDelete === policyName });
-                policies = _.pull(policies, policyToDelete);
-                this.setState({
-                    policies: policies,
-                });
-                snackBarMessage(`Policy '${policyName}' deleted`);
-            })
-            .catch((err) => {
-                console.error(err.stack);
-                snackBarMessage(err);
-            });
-
-        this.setState({
-            deletingPolicy: '',
-            openDeleteModal: false
-        });
-    }
-
-    showDelete(policyName) {
-        return (
-            <IconButton
-                tooltip="Delete"
-                onTouchTap={() => {
-                    if (window.localStorage.getItem("showDeleteModal") === 'false') {
-                        this.deletePolicy(policyName);
-                    } else {
-                        this.setState({ deletingPolicy: policyName, openDeleteModal: true })
-                    }
-                }}
-            >
-                {window.localStorage.getItem("showDeleteModal") === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
-
-            </IconButton>);
-    }
-
-    renderPolicies() {
-        return _.map(this.state.filteredPolicyList, (policy) => {
-            return (
-                <ListItem
-                    key={policy}
-                    leftAvatar={<Avatar icon={<HardwareSecurity />} />}
-                    onTouchTap={() => {
-                        tokenHasCapabilities(['read'], 'sys/policy/' + policy).then(() => {
-                            history.push(`/sys/policies/` + policy);
-                        }).catch(() => {
-                            snackBarMessage(new Error("Access denied"));
-                        })
-                    }}
-                    primaryText={<div className={policy}>{policy}</div>}
-                    rightIconButton={this.showDelete(policy)}>
-                </ListItem>
-            );
-        });
     }
 
     render() {
@@ -370,26 +289,23 @@ export default class PolicyManager extends React.Component {
                                         })}
                                     />
                                 </ToolbarGroup>
-                                <ToolbarGroup lastChild={true}>
-                                    <TextField
-                                        floatingLabelFixed={true}
-                                        floatingLabelText="Filter"
-                                        hintText="Filter list items"
-                                        onChange={(e, v) => {
-                                            let filtered = _.filter(this.state.policies, (item) => {
-                                                return item.toLowerCase().includes(v.toLowerCase());
-                                            });
-                                            if (filtered.length > 0)
-                                                this.setState({
-                                                    filteredPolicyList: filtered
-                                                });
-                                        }}
-                                    />
-                                </ToolbarGroup>
                             </Toolbar>
-                            <List className={sharedStyles.listStyle}>
-                                {this.renderPolicies()}
-                            </List>
+                            <ItemList
+                                itemList={this.state.policies}
+                                itemUri={`${this.baseVaultPath}`}
+                                maxItemsPerPage={25}
+                                onDeleteTap={(deletedItem) => {
+                                    snackBarMessage(`Object '${deletedItem}' deleted`)
+                                    this.listPolicies();
+                                }}
+                                onTouchTap={(item) => {
+                                    tokenHasCapabilities(['read'], `${this.baseVaultPath}/${item}`).then(() => {
+                                        history.push(`${this.baseUrl}${item}`);
+                                    }).catch(() => {
+                                        snackBarMessage(new Error("Access denied"));
+                                    })
+                                }}
+                            />
                         </Paper>
                     </Tab>
                 </Tabs>
