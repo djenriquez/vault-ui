@@ -1,6 +1,6 @@
-FROM node:8.4.0-alpine
+FROM node:8.5-alpine
 
-MAINTAINER Vault-UI Contributors
+LABEL maintainer="Vault-UI Contributors"
 
 WORKDIR /app
 COPY . .
