@@ -13,7 +13,8 @@ import { tokenHasCapabilities, callVaultApi, history } from '../VaultUtils.jsx'
 const SelectableList = makeSelectable(List);
 
 const supported_secret_backend_types = [
-    'generic'
+    'generic',
+    'kv'
 ]
 
 const supported_auth_backend_types = [

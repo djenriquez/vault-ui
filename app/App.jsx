@@ -79,7 +79,7 @@ ReactDOM.render((
             <Route path="/login" component={Login} onEnter={checkVaultUiServer} />
             <Route path="/unwrap" component={SecretUnwrapper} />
             <Route path="/" component={App} onEnter={checkAccessToken}>
-                <Route path="/secrets/generic/:namespace(/**)" component={SecretsGeneric} />
+                <Route path="/secrets/:namespace(/**)" component={SecretsGeneric} />
                 <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
                 <Route path="/auth/aws/:namespace(/**)" component={AwsAuthBackend} />
                 <Route path="/auth/aws-ec2/:namespace(/**)" component={AwsEc2AuthBackend} />

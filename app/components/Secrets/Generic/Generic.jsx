@@ -34,14 +34,14 @@ export default class GenericSecretBackend extends React.Component {
     constructor(props) {
         super(props);
 
-        this.baseUrl = `/secrets/generic/${this.props.params.namespace}/`;
-        this.baseVaultPath = `${this.props.params.namespace}`;
+        this.baseUrl = `/secrets/${this.props.params.namespace}/`;
+        this.baseVaultPath = `${this.props.params.splat}`;
 
         this.state = {
             newSecretBtnDisabled: true,
             secretContent: {},
             newSecretName: '',
-            currentLogicalPath: `${this.props.params.namespace}/${this.props.params.splat}`,
+            currentLogicalPath: `${this.props.params.splat}`,
             disableSubmit: true,
             openNewObjectModal: false,
             openEditObjectModal: false,
@@ -130,10 +130,13 @@ export default class GenericSecretBackend extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (!_.isEqual(`${nextProps.params.namespace}/${nextProps.params.splat}`, this.state.currentLogicalPath)) {
-            this.setState({ currentLogicalPath: `${nextProps.params.namespace}/${nextProps.params.splat}` })
+        if (!_.isEqual(`${nextProps.params.splat}`, this.state.currentLogicalPath)) {
+            this.setState({ currentLogicalPath: `${nextProps.params.splat}` })
         }
-        if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
+        if(!_.isEqual(this.props.params.namespace, nextProps.params.namespace)){
+            this.baseUrl = `/secrets/${nextProps.params.namespace}/`;
+        }
+        if (!_.isEqual(this.props.params.splat, nextProps.params.splat)) {
             // Reset
             this.setState({
                 secretList: []
@@ -323,7 +326,7 @@ export default class GenericSecretBackend extends React.Component {
                     var stepLabelStyle = { paddingLeft: '10px'}
                     var iconContainerStyle = {}
                 }
-                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '16px', whiteSpace: 'nowrap'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`/secrets/generic/${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '16px', whiteSpace: 'nowrap'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`${this.baseUrl}${relativelink}`}>{dir}</Link></StepLabel></Step>)
             });
         }
 
@@ -393,7 +396,8 @@ export default class GenericSecretBackend extends React.Component {
                                     this.setState({ newSecretName: '', currentLogicalPath: `${this.state.currentLogicalPath}${key}` });
                                     tokenHasCapabilities([this.isPathDirectory(key) ? 'list' : 'read'], `${this.state.currentLogicalPath}${key}`)
                                         .then(() => {
-                                            history.push(`/secrets/generic/${this.state.currentLogicalPath}`);
+                                            console.log(`${this.baseUrl}${this.state.currentLogicalPath}`);
+                                            history.push(`${this.baseUrl}${this.state.currentLogicalPath}`);
                                         }).catch(() => {
                                             snackBarMessage(new Error("Access denied"));
                                         })
