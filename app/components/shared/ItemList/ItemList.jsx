@@ -83,7 +83,7 @@ export default class ItemList extends React.Component {
             var action = this.isPathDirectory(item) ? (<IconButton />) : (
                 <IconButton
                     tooltip='Delete'
-                    onTouchTap={() => this.setState({ deletePath: `${this.props.itemUri}/${item}`, openDelete: true })}
+                    onTouchTap={(e) => { e.stopPropagation(); this.setState({ deletePath: `${this.props.itemUri}/${item}`, openDelete: true }); } }
                 >
                     {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
