@@ -18,7 +18,7 @@ module.exports = function (env) {
         },
         output: {
             path: path.resolve(__dirname, './dist'),
-            publicPath: '/dist/',
+            publicPath: env.target == 'electron' ? 'dist/' : '/dist/',
             filename: buildfor + '-bundle.js'
         },
         module: {
