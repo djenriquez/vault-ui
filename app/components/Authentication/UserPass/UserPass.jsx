@@ -81,7 +81,6 @@ export default class UserPassAuthBackend extends React.Component {
                         let user = _.get(resp, 'data.data', {});
 
                         let policies = _.get(user, 'policies', undefined);
-                        user.policies = policies ? policies.split(',') : [];
 
                         this.setState({ config: user, openItemDialog: true });
                     })
