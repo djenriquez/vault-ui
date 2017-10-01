@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { callVaultApi, tokenHasCapabilities } from '../VaultUtils.jsx'
 import _ from 'lodash';
 import { List, ListItem } from 'material-ui/List';

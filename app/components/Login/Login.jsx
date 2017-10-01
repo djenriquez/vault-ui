@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types';
 import styles from './login.css';
 import TextField from 'material-ui/TextField';
 import IconButton from 'material-ui/IconButton';
