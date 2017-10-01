@@ -1,6 +1,6 @@
 {
-  "name": "Vault-UI",
-  "version": "2.3.0",
+  "name": "vault-ui",
+  "version": "2.4.0-rc1",
   "description": "Graphical interface for Hashicorp Vault",
   "main": "main.js",
   "browserslist": [
