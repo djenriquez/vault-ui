@@ -1,6 +1,7 @@
 // Based on https://raw.githubusercontent.com/rogermarkussen/react.timer/master/src/countdown.js
 
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 class CountDown extends Component {
 

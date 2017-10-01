@@ -1,6 +1,7 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import _ from 'lodash';
-import { callVaultApi } from '../VaultUtils.jsx'
+import { callVaultApi } from '../VaultUtils.jsx';
 import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 

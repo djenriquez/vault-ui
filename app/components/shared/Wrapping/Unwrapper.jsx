@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types';
 import { callVaultApi } from '../VaultUtils.jsx'
 import JsonEditor from '../JsonEditor.jsx';
 import styles from './wrapping.css';

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import Avatar from 'material-ui/Avatar';
 
 import FileFolder from 'material-ui/svg-icons/file/folder';
@@ -83,7 +84,7 @@ export default class ItemList extends React.Component {
             var action = this.isPathDirectory(item) ? (<IconButton />) : (
                 <IconButton
                     tooltip='Delete'
-                    onTouchTap={() => this.setState({ deletePath: `${this.props.itemUri}/${item}`, openDelete: true })}
+                    onTouchTap={(e) => { e.stopPropagation(); this.setState({ deletePath: `${this.props.itemUri}/${item}`, openDelete: true }); } }
                 >
                     {window.localStorage.getItem('showDeleteModal') === 'false' ? <ActionDeleteForever color={red500} /> : <ActionDelete color={red500} />}
                 </IconButton>
@@ -144,10 +145,11 @@ export default class ItemList extends React.Component {
 
         let sortedItems = _.orderBy(this.filteredItemList, _.identity, sortDirection);
         let parsedItems = _.chunk(sortedItems, maxItemsPerPage);
+        let totalPages = Math.ceil(sortedItems.length / maxItemsPerPage);
         this.setState(
             {
                 currentPage: page,
-                totalPages: Math.ceil(sortedItems.length / maxItemsPerPage),
+                totalPages: 1 > totalPages ? 1 : totalPages,
                 parsedItems: parsedItems,
                 pageItems: parsedItems[page - 1]
             });
@@ -155,7 +157,8 @@ export default class ItemList extends React.Component {
 
     resetPage() {
         this.setState({
-            currentPage: 1
+            currentPage: 1,
+            totalPages: 1
         });
     }
 

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import JSONEditor from 'jsoneditor';
 import JsonDiffReact from 'jsondiffpatch-for-react';
 import Checkbox from 'material-ui/Checkbox';
