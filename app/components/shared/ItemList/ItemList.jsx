@@ -144,10 +144,11 @@ export default class ItemList extends React.Component {
 
         let sortedItems = _.orderBy(this.filteredItemList, _.identity, sortDirection);
         let parsedItems = _.chunk(sortedItems, maxItemsPerPage);
+        let totalPages = Math.ceil(sortedItems.length / maxItemsPerPage);
         this.setState(
             {
                 currentPage: page,
-                totalPages: Math.ceil(sortedItems.length / maxItemsPerPage),
+                totalPages: 1 > totalPages ? 1 : totalPages,
                 parsedItems: parsedItems,
                 pageItems: parsedItems[page - 1]
             });
@@ -155,7 +156,8 @@ export default class ItemList extends React.Component {
 
     resetPage() {
         this.setState({
-            currentPage: 1
+            currentPage: 1,
+            totalPages: 1
         });
     }
 
