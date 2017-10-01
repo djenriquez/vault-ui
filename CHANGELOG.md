@@ -1,6 +1,19 @@
-# 2.3.0 (Unreleased)
-- Allow naming tokens generated from roles
-- Add backend mount description field - https://github.com/djenriquez/vault-ui/pull/105
+# 2.4.0 (unreleased)
+# Features
+- Add KV compatibility #198 
+- Upgrade dependencies #200 
+
+# Bug fixes
+- Fix desktop client icons #199 - #157 
+- Fix issue with favicon #188 
+
+# 2.3.0
+## Features:
+- Refactor PolicyPicker to ItemPicker for general use - #175 
+- Refactor item listing to use a centralized class /w filtering, pagination and sorting by default - #175 + #187 
+- Add backend mount description field - #105
+- Allow self-signed CA certifications - #140
+- Support Okta Authentication Backend - #156 
 
 # 2.2.0
 ## Features
