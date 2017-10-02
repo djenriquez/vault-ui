@@ -1,9 +1,9 @@
 #content {
     padding-left: 30px;
-    width: calc(100vw - 305px);
+    width: calc(100vw - 275px);
     display: inline-block;
-    margin-left: 250px;
-    margin-top: 80px;
+    margin-left: 235px;
+    margin-top: 70px;
 }
 
 .snackbar {
