@@ -137,12 +137,6 @@ export default class GenericSecretBackend extends React.Component {
         if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             this.baseUrl = `/secrets/${nextProps.params.namespace}/`;
         }
-        if (!_.isEqual(this.props.params.splat, nextProps.params.splat)) {
-            // Reset
-            this.setState({
-                secretList: []
-            })
-        }
     }
 
     componentDidUpdate(prevProps, prevState) {
