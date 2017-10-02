@@ -134,7 +134,7 @@ export default class GenericSecretBackend extends React.Component {
         if (!_.isEqual(`${nextProps.params.splat}`, this.state.currentLogicalPath)) {
             this.setState({ currentLogicalPath: `${nextProps.params.splat}` })
         }
-        if(!_.isEqual(this.props.params.namespace, nextProps.params.namespace)){
+        if (!_.isEqual(this.props.params.namespace, nextProps.params.namespace)) {
             this.baseUrl = `/secrets/${nextProps.params.namespace}/`;
         }
     }
@@ -315,13 +315,13 @@ export default class GenericSecretBackend extends React.Component {
                 var relativelink = [].concat(components).slice(0, index + 1).join('/') + '/';
                 if (index === 0) {
                     // no left padding for first item
-                    var stepLabelStyle = { paddingLeft: '0'}
+                    var stepLabelStyle = { paddingLeft: '0' }
                     var iconContainerStyle = { padding: '0' }
                 } else {
-                    var stepLabelStyle = { paddingLeft: '10px'}
+                    var stepLabelStyle = { paddingLeft: '10px' }
                     var iconContainerStyle = {}
                 }
-                return (<Step key={index}><StepLabel style={Object.assign({paddingRight: '10px', fontSize: '16px', whiteSpace: 'nowrap'}, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`${this.baseUrl}${relativelink}`}>{dir}</Link></StepLabel></Step>)
+                return (<Step key={index}><StepLabel style={Object.assign({ paddingRight: '10px', fontSize: '16px', whiteSpace: 'nowrap' }, stepLabelStyle)} iconContainerStyle={iconContainerStyle} icon={<span />}><Link to={`${this.baseUrl}${relativelink}`}>{dir}</Link></StepLabel></Step>)
             });
         }
 
@@ -339,7 +339,7 @@ export default class GenericSecretBackend extends React.Component {
                             <Toolbar style={{ alignItems: 'flex-start' }}>
                                 <ToolbarGroup>
                                     <Subheader style={{ paddingLeft: "0" }} inset={false}>
-                                        <IconButton style={{paddingTop: "20px"}} tooltip="Copy Path" onTouchTap={() => { copy(this.state.currentLogicalPath) }} >
+                                        <IconButton style={{ paddingTop: "20px" }} tooltip="Copy Path" onTouchTap={() => { copy(this.state.currentLogicalPath) }} >
                                             <ContentContentCopy />
                                         </IconButton>
                                     </Subheader>
@@ -388,14 +388,13 @@ export default class GenericSecretBackend extends React.Component {
                                     snackBarMessage(`Secret ${deletedItem} deleted`);
                                 }}
                                 onTouchTap={(key) => {
-                                    this.setState({ newSecretName: '', currentLogicalPath: `${this.state.currentLogicalPath}${key}` });
                                     tokenHasCapabilities([this.isPathDirectory(key) ? 'list' : 'read'], `${this.state.currentLogicalPath}${key}`)
                                         .then(() => {
+                                            this.setState({ newSecretName: '', currentLogicalPath: `${this.state.currentLogicalPath}${key}` });
                                             history.push(`${this.baseUrl}${this.state.currentLogicalPath}`);
                                         }).catch(() => {
                                             snackBarMessage(new Error("Access denied"));
                                         })
-
                                 }}
                             />
                         </Paper>
