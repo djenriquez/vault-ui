@@ -66,19 +66,18 @@ export default class Login extends React.Component {
             });
         } else {
             this.setState({ show: true });
-            if (!this.state.vaultUrl) {
+            if (!this.state.vaultUrl || !this.state.vaultUrl.match('^http[s]*:\/\/')) {
                 this.setState({
                     openSettings: true
                 });
+                if (!this.state.vaultUrl.match('^http[s]*:\/\/'))
+                    this.setState({ errorMessage: 'Vault URL must contain a REST protocol scheme (http:// or https://)' });
             }
         }
     }
 
     getVaultUrl() {
-        if (window.localStorage.getItem("vaultUrl"))
-            return window.localStorage.getItem("vaultUrl");
-        else
-            return window.defaultVaultUrl;
+        return window.localStorage.getItem("vaultUrl") ? window.localStorage.getItem("vaultUrl") : window.defaultVaultUrl;
     }
 
     getVaultAuthMethod() {
@@ -259,6 +258,9 @@ export default class Login extends React.Component {
         if (this.state.settingsChanged) {
             if (!this.state.tmpVaultUrl) {
                 this.setState({ errorMessage: 'Please enter a Vault URL' });
+            }
+            else if (!this.state.tmpVaultUrl.match('^http[s]*:\/\/')) {
+                this.setState({ errorMessage: 'Vault URL must contain a REST protocol scheme (http:// or https://)' });
             }
             else if (!this.state.tmpLoginMethodType) {
                 this.setState({ errorMessage: 'Please select an authentication backend' });
