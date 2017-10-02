@@ -394,16 +394,13 @@ export default class GenericSecretBackend extends React.Component {
                                     snackBarMessage(`Secret ${deletedItem} deleted`);
                                 }}
                                 onTouchTap={(key) => {
-                                    let oldPath = this.state.currentLogicalPath;
-                                    this.setState({ newSecretName: '', currentLogicalPath: `${this.state.currentLogicalPath}${key}` });
                                     tokenHasCapabilities([this.isPathDirectory(key) ? 'list' : 'read'], `${this.state.currentLogicalPath}${key}`)
                                         .then(() => {
+                                            this.setState({ newSecretName: '', currentLogicalPath: `${this.state.currentLogicalPath}${key}` });
                                             history.push(`${this.baseUrl}${this.state.currentLogicalPath}`);
                                         }).catch(() => {
-                                            this.setState({ currentLogicalPath: oldPath });
                                             snackBarMessage(new Error("Access denied"));
                                         })
-
                                 }}
                             />
                         </Paper>
