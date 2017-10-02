@@ -347,13 +347,13 @@ export default class TokenAuthBackend extends React.Component {
                         // User doesnt have sudo, use user assigned policies
                         let p1 = callVaultApi('get', 'auth/token/lookup-self').then((resp) => {
                             this.setState({ newTokenAvailablePolicies: resp.data.data.policies });
-                        }).catch(); // <- This shouldnt have failed
+                        }).catch(() => {}); // <- This shouldnt have failed
 
                         // Altough sudo was not granted, we could still create orphans using a different endpoint
                         let p2 = tokenHasCapabilities(['update'], 'auth/token/create-orphan').then(() => {
                             // Turns out we can
                             this.setState({ 'canCreateOrphan': 'create_orphan' });
-                        }).catch(); // <- Nothing we can really do at this point
+                        }).catch(() => {}); // <- Nothing we can really do at this point
 
                         return Promise.all([p1, p2]);
                     });
