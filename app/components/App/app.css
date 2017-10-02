@@ -1,9 +1,11 @@
 #content {
     padding-left: 30px;
     width: calc(100vw - 275px);
-    display: inline-block;
     margin-left: 235px;
     margin-top: 70px;
+    height: calc(100% - 70px);
+    overflow-y: scroll;
+    position: fixed;
 }
 
 .snackbar {
