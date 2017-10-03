@@ -248,7 +248,7 @@ export default class Login extends React.Component {
             if (this.props.location.query.returnto && this.props.location.query.returnto.indexOf('/') === 0)
                 history.push(this.props.location.query.returnto);
             else
-                history.push('/');
+                history.push(`${window.docRoot}/`);
         } else {
             this.setState({ errorMessage: "Unable to obtain access token." })
         }

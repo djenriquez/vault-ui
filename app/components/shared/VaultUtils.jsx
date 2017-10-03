@@ -4,6 +4,11 @@ import { browserHistory, hashHistory } from 'react-router'
 
 var history;
 if(WEBPACK_DEF_TARGET_WEB) {
+    var originalPush = browserHistory.push;
+    browserHistory.push = function(str) {
+        str = `${window.docRoot}${str}`
+        return originalPush(str);
+    }
     history = browserHistory;
 } else {
     history = hashHistory;
@@ -45,7 +50,7 @@ function callVaultApi(method, path, query = {}, data, headers = {}, vaultToken =
 
     if(WEBPACK_DEF_TARGET_WEB) {
         instance = axios.create({
-            baseURL: '/v1/',
+            baseURL: `${window.docRoot}/v1/`,
             params: { "vaultaddr": normVaultAddr },
             headers: { "X-Vault-Token": vaultToken || window.localStorage.getItem("vaultAccessToken") }
         });

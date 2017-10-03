@@ -63,7 +63,7 @@ const checkVaultUiServer = (nextState, replace, callback) => {
 const checkAccessToken = (nextState, replace, callback) => {
     let vaultAuthToken = window.localStorage.getItem('vaultAccessToken');
     if (!vaultAuthToken) {
-        replace(`/login?returnto=${encodeURI(nextState.location.pathname)}`)
+        replace(`${window.docRoot}/login?returnto=${encodeURI(nextState.location.pathname)}`)
     }
 
     callback();
@@ -73,25 +73,36 @@ const muiTheme = getMuiTheme({
     fontFamily: 'Source Sans Pro, sans-serif',
 });
 
-ReactDOM.render((
-    <MuiThemeProvider muiTheme={muiTheme}>
-        <Router history={history}>
-            <Route path="/login" component={Login} onEnter={checkVaultUiServer} />
-            <Route path="/unwrap" component={SecretUnwrapper} />
-            <Route path="/" component={App} onEnter={checkAccessToken}>
-                <Route path="/secrets/:namespace(/**)" component={SecretsGeneric} />
-                <Route path="/auth/token/:namespace" component={TokenAuthBackend} />
-                <Route path="/auth/aws/:namespace(/**)" component={AwsAuthBackend} />
-                <Route path="/auth/aws-ec2/:namespace(/**)" component={AwsEc2AuthBackend} />
-                <Route path="/auth/github/:namespace(/**)" component={GithubAuthBackend} />
-                <Route path="/auth/radius/:namespace(/**)" component={RadiusAuthBackend} />
-                <Route path="/auth/okta/:namespace(/**)" component={OktaAuthBackend} />
-                <Route path="/auth/userpass/:namespace(/**)" component={UserPassAuthBackend} />
-                <Route path="/auth/approle/:namespace(/**)" component={AppRoleAuthBackend} />
-                <Route path="/settings" component={Settings} />
-                <Route path="/responsewrapper" component={ResponseWrapper} />
-                <Route path="/sys/policies(/**)" component={PolicyManager} />
-            </Route>
-        </Router>
-    </MuiThemeProvider>
-), document.getElementById('app'))
+function renderApp(VAULT_UI_DOC_ROOT) {
+    ReactDOM.render((
+        <MuiThemeProvider muiTheme={muiTheme}>
+            <Router history={history}>
+                <Route path={`${VAULT_UI_DOC_ROOT}/login`} component={Login} onEnter={checkVaultUiServer} />
+                <Route path={`${VAULT_UI_DOC_ROOT}/unwrap`} component={SecretUnwrapper} />
+                <Route path={`${VAULT_UI_DOC_ROOT}/`} component={App} onEnter={checkAccessToken}>
+                    <Route path={`${VAULT_UI_DOC_ROOT}/secrets/:namespace(/**)`} component={SecretsGeneric} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/token/:namespace`} component={TokenAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/aws/:namespace(/**)`} component={AwsAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/aws-ec2/:namespace(/**)`} component={AwsEc2AuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/github/:namespace(/**)`} component={GithubAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/radius/:namespace(/**)`} component={RadiusAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/okta/:namespace(/**)`} component={OktaAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/userpass/:namespace(/**)`} component={UserPassAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/auth/approle/:namespace(/**)`} component={AppRoleAuthBackend} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/settings`} component={Settings} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/responsewrapper`} component={ResponseWrapper} />
+                    <Route path={`${VAULT_UI_DOC_ROOT}/sys/policies(/**)`} component={PolicyManager} />
+                </Route>
+            </Router>
+        </MuiThemeProvider>
+    ), document.getElementById('app'));
+}
+
+if (WEBPACK_DEF_TARGET_WEB) {
+    axios.get('/docroot').then((resp) => {
+        window.docRoot = resp.data.defaultDocRoot;
+        renderApp(window.docRoot);
+    }).catch((e) => console.log(e));
+} else {
+    renderApp('/');
+}

@@ -6,6 +6,7 @@ var vaultui = require('./vaultui');
 module.exports = (function () {
     return {
         vaultapi: vaultapi.callMethod,
-        vaultuiHello: vaultui.vaultuiHello
+        vaultuiHello: vaultui.vaultuiHello,
+        vaultuiDocRoot: vaultui.vaultuiDocRoot
     };
 })();

@@ -7,17 +7,30 @@ var VAULT_AUTH_DEFAULT_FORCE = process.env.VAULT_AUTH_DEFAULT_FORCE ? true : fal
 var VAULT_AUTH_BACKEND_PATH = process.env.VAULT_AUTH_BACKEND_PATH
 var VAULT_AUTH_BACKEND_PATH_FORCE = process.env.VAULT_AUTH_BACKEND_PATH_FORCE ? true : false;
 var VAULT_SUPPLIED_TOKEN_HEADER = process.env.VAULT_SUPPLIED_TOKEN_HEADER
+var VAULT_UI_DOC_ROOT = process.env.VAULT_UI_DOC_ROOT || "";
 
 exports.vaultuiHello = function (req, res) {
-    let response = {
-        defaultVaultUrl: VAULT_URL_DEFAULT,
-        defaultVaultUrlForce: VAULT_URL_DEFAULT_FORCE,
-        defaultAuthMethod: VAULT_AUTH_DEFAULT,
-        defaultAuthMethodForce: VAULT_AUTH_DEFAULT_FORCE,
-        suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER,
-        defaultBackendPath: VAULT_AUTH_BACKEND_PATH,
-        defaultBackendPathForce: VAULT_AUTH_BACKEND_PATH_FORCE
-    }
 
-    res.status(200).send(response);
+  let response = {
+    defaultVaultUrl: VAULT_URL_DEFAULT,
+    defaultVaultUrlForce: VAULT_URL_DEFAULT_FORCE,
+    defaultAuthMethod: VAULT_AUTH_DEFAULT,
+    defaultAuthMethodForce: VAULT_AUTH_DEFAULT_FORCE,
+    suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER,
+    defaultBackendPath: VAULT_AUTH_BACKEND_PATH,
+    defaultBackendPathForce: VAULT_AUTH_BACKEND_PATH_FORCE
+  }
+
+  res.status(200).send(response);
 };
+
+exports.vaultuiDocRoot = function (req, res) {
+  if (VAULT_UI_DOC_ROOT && !VAULT_UI_DOC_ROOT.includes('/'))
+    VAULT_UI_DOC_ROOT = `/${VAULT_UI_DOC_ROOT}`;
+
+  let response = {
+    defaultDocRoot: VAULT_UI_DOC_ROOT
+  }
+
+  res.status(200).send(response);
+}
