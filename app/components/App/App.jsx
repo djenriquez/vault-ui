@@ -273,24 +273,26 @@ export default class App extends React.Component {
                 </Tabs>
             </div>
         );
-        return <div>
-            <Snackbar
-                className={styles.snackbar}
-                bodyStyle={this.state.snackbarStyle}
-                open={this.state.snackbarMessage != ''}
-                message={this.state.snackbarMessage}
-                autoHideDuration={3000}
-                onRequestClose={() => this.setState({ snackbarMessage: '' })}
-                onActionTouchTap={() => this.setState({ snackbarMessage: '' })}
-            />
-            {this.state.logoutOpen && this.renderSessionExpDialog()}
-            <Header tokenIdentity={this.state.identity} />
-            <Menu pathname={this.props.location.pathname} />
-            <div id={styles.content}>
-                <Paper zDepth={1}>
-                    {this.props.children || welcome}
-                </Paper>
+        return (
+            <div>
+                <Snackbar
+                    className={styles.snackbar}
+                    bodyStyle={this.state.snackbarStyle}
+                    open={this.state.snackbarMessage != ''}
+                    message={this.state.snackbarMessage}
+                    autoHideDuration={3000}
+                    onRequestClose={() => this.setState({ snackbarMessage: '' })}
+                    onActionTouchTap={() => this.setState({ snackbarMessage: '' })}
+                />
+                {this.state.logoutOpen && this.renderSessionExpDialog()}
+                <Header tokenIdentity={this.state.identity} />
+                <Menu pathname={this.props.location.pathname} />
+                <div id={styles.content}>
+                    <Paper zDepth={1} style={{ 'border-right-style': 'inset' }}>
+                        {this.props.children || welcome}
+                    </Paper>
+                </div>
             </div>
-        </div>
+        )
     }
 }
