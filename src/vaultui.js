@@ -9,15 +9,15 @@ var VAULT_AUTH_BACKEND_PATH_FORCE = process.env.VAULT_AUTH_BACKEND_PATH_FORCE ? 
 var VAULT_SUPPLIED_TOKEN_HEADER = process.env.VAULT_SUPPLIED_TOKEN_HEADER
 
 exports.vaultuiHello = function (req, res) {
-    let response = {
-        defaultVaultUrl: VAULT_URL_DEFAULT,
-        defaultVaultUrlForce: VAULT_URL_DEFAULT_FORCE,
-        defaultAuthMethod: VAULT_AUTH_DEFAULT,
-        defaultAuthMethodForce: VAULT_AUTH_DEFAULT_FORCE,
-        suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER,
-        defaultBackendPath: VAULT_AUTH_BACKEND_PATH,
-        defaultBackendPathForce: VAULT_AUTH_BACKEND_PATH_FORCE
-    }
+  let response = {
+    defaultVaultUrl: VAULT_URL_DEFAULT,
+    defaultVaultUrlForce: VAULT_URL_DEFAULT_FORCE,
+    defaultAuthMethod: VAULT_AUTH_DEFAULT,
+    defaultAuthMethodForce: VAULT_AUTH_DEFAULT_FORCE,
+    suppliedAuthToken: VAULT_SUPPLIED_TOKEN_HEADER ? req.header(VAULT_SUPPLIED_TOKEN_HEADER) : VAULT_SUPPLIED_TOKEN_HEADER,
+    defaultBackendPath: VAULT_AUTH_BACKEND_PATH,
+    defaultBackendPathForce: VAULT_AUTH_BACKEND_PATH_FORCE
+  }
 
-    res.status(200).send(response);
+  res.status(200).send(response);
 };
