@@ -1,50 +1,112 @@
 {
-    "type": "object",
-    "required": [ "path" ],
-    "properties": {
-        "path": {
-            "type": "object",
-            "minProperties": 1,
-            "additionalProperties": false,
-            "patternProperties": {
-                "^[^\/].*$": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "anyOf": [
-                            {"required": ["capabilities"]},
-                            {"required": ["policy"]}
-                    ],
-                    "properties": {
-                        "capabilities" : {
-                            "type": "array",
-                            "minItems": 1,
-                            "uniqueItems": true,
-                            "items": {
-                                "type": "string",
-                                "enum": [
-                                    "create",
-                                    "read",
-                                    "update",
-                                    "delete",
-                                    "list",
-                                    "sudo",
-                                    "deny"
-                                ]
-                            }
-                        },
-                        "policy" : {
-                            "type": "string",
-                            "enum": [
-                                "read",
-                                "write",
-                                "sudo",
-                                "deny"
-                            ]
-                        }
-                    }
-                    
-                }
+  "type": "object",
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[^\/].*$": {
+          "type": "object",
+          "additionalProperties": false,
+          "anyOf": [
+            {
+              "required": [
+                "capabilities"
+              ]
+            },
+            {
+              "required": [
+                "policy"
+              ]
+            },
+            {
+              "optional": [
+                "required_parameters"
+              ]
+            },
+            {
+              "optional": [
+                "allowed_parameters"
+              ]
+            },
+            {
+              "optional": [
+                "denied_parameters"
+              ]
             }
+          ],
+          "properties": {
+            "capabilities": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": [
+                  "create",
+                  "read",
+                  "update",
+                  "delete",
+                  "list",
+                  "sudo",
+                  "deny"
+                ]
+              }
+            },
+            "required_parameters": {
+              "type": "array",
+              "minItems": 0,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowed_parameters": {
+              "type": "object",
+              "minProperties": 0,
+              "additionalProperties": true,
+              "patternProperties": {
+                "^[^\/].*$": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "denied_parameters": {
+              "type": "object",
+              "minProperties": 0,
+              "additionalProperties": true,
+              "patternProperties": {
+                "^[^\/].*$": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "policy": {
+              "type": "string",
+              "enum": [
+                "read",
+                "write",
+                "sudo",
+                "deny"
+              ]
+            }
+          }
         }
+      }
     }
+  }
 }
