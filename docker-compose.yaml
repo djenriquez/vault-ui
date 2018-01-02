@@ -25,6 +25,7 @@ services:
       NODE_TLS_REJECT_UNAUTHORIZED: 0
       VAULT_URL_DEFAULT: http://vault:8200
       VAULT_AUTH_DEFAULT: USERNAMEPASSWORD
+    command: ["dev"]
 #      VAULT_SUPPLIED_TOKEN_HEADER: 'X-Remote-User'
 
   webpack:
