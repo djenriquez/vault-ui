@@ -7,6 +7,8 @@ fi
 
 if [ "$1" = 'start_app' ]; then
   exec yarn run serve "$@"
+elif [ "$1" = 'dev' ]; then
+  exec yarn run dev "$@"
 fi
 
 exec "$@"
