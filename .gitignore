@@ -45,3 +45,7 @@ dist/*
 
 # OSX
 .DS_Store
+
+# Intellij
+.idea/*
+*.iml

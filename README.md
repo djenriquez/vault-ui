@@ -87,6 +87,7 @@ Current supported management of backend auth methods:
 - [Username & Password](https://www.vaultproject.io/docs/auth/userpass.html)
 - [Token](https://www.vaultproject.io/docs/auth/token.html)
 - [AppRole](https://www.vaultproject.io/docs/auth/approle.html)
+- [Kubernetes](https://www.vaultproject.io/docs/auth/kubernetes.html)
 
 In some cases, users might want to use middleware to authenticate into Vault-UI for purposes like SSO. In this case, the `VAULT_SUPPLIED_TOKEN_HEADER` may be populated with the name of the header that contains a token to be used for authentication.
 
