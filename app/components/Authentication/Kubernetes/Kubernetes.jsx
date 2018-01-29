@@ -8,7 +8,6 @@ import Paper from 'material-ui/Paper';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
-import Toggle from 'material-ui/Toggle';
 // Styles
 import styles from './kubernetes.css';
 import sharedStyles from '../../shared/styles.css';

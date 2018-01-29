@@ -15,7 +15,7 @@ import ResponseWrapper from './components/ResponseWrapper/ResponseWrapper.jsx';
 import TokenAuthBackend from './components/Authentication/Token/Token.jsx';
 import AwsEc2AuthBackend from './components/Authentication/AwsEc2/AwsEc2.jsx';
 import AwsAuthBackend from './components/Authentication/Aws/Aws.jsx';
-import KubernetesBackend from './components/Authentication/Kubernetes/Kubernetes.jsx';
+import KubernetesAuthBackend from './components/Authentication/Kubernetes/Kubernetes.jsx';
 import GithubAuthBackend from './components/Authentication/Github/Github.jsx';
 import RadiusAuthBackend from './components/Authentication/Radius/Radius.jsx';
 import UserPassAuthBackend from './components/Authentication/UserPass/UserPass.jsx';
