@@ -5,6 +5,7 @@ import Dialog from 'material-ui/Dialog';
 import TextField from 'material-ui/TextField';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Paper from 'material-ui/Paper';
+import { List } from 'material-ui/List';
 import FlatButton from 'material-ui/FlatButton';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import Subheader from 'material-ui/Subheader';
@@ -93,9 +94,9 @@ export default class KubernetesAuthBackend extends React.Component {
     }
 
     getKubernetesAuthConfig() {
-        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/config/client`)
+        tokenHasCapabilities(['read'], `${this.state.baseVaultPath}/config`)
             .then(() => {
-                callVaultApi('get', `${this.state.baseVaultPath}/config/client`, null, null)
+                callVaultApi('get', `${this.state.baseVaultPath}/config`, null, null)
                     .then((resp) => {
                         let config = _.get(resp, 'data.data', this.kubernetesConfigSchema);
                         this.setState({
@@ -121,9 +122,9 @@ export default class KubernetesAuthBackend extends React.Component {
     }
 
     createUpdateConfig() {
-        tokenHasCapabilities(['update'], `${this.state.baseVaultPath}/config/client`)
+        tokenHasCapabilities(['update'], `${this.state.baseVaultPath}/config`)
             .then(() => {
-                callVaultApi('post', `${this.state.baseVaultPath}/config/client`, null, this.state.newConfigObj)
+                callVaultApi('post', `${this.state.baseVaultPath}/config`, null, this.state.newConfigObj)
                     .then(() => {
                         snackBarMessage(`Backend ${this.state.baseVaultPath}/config has been updated`);
                         this.setState({ isBackendConfigured: true, configObj: this.state.newConfigObj });
@@ -135,7 +136,7 @@ export default class KubernetesAuthBackend extends React.Component {
             });
     }
 
-    createUpdateRole() {
+    createUpdateRole(roleId) {
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/role/${roleId}`)
             .then(() => {
                 let updateObj = _.clone(this.state.newRoleConfig);
@@ -272,7 +273,7 @@ export default class KubernetesAuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='optional'
+                            hintText='* for all'
                             floatingLabelFixed={true}
                             floatingLabelText='ServiceAccount Name'
                             fullWidth={false}
@@ -283,7 +284,7 @@ export default class KubernetesAuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='optional'
+                            hintText='* for all'
                             floatingLabelFixed={true}
                             floatingLabelText='Kubernetes Namespace'
                             fullWidth={false}
@@ -513,7 +514,7 @@ export default class KubernetesAuthBackend extends React.Component {
                         <Paper className={sharedStyles.TabContentSection} zDepth={0}>
                             <List>
                                 <TextField
-                                    hintText='https://host:port'
+                                    hintText='https://192.168.99.100:8443'
                                     floatingLabelText='Kubernetes API Server URL'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
@@ -523,8 +524,8 @@ export default class KubernetesAuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJiMDhmODZhZi0zNWRhLTQ4ZjItOGZhYi1jZWYzOTA0NjYwYmQifQ.-xN_h82PHVTCMA9vdoHrcZxH-x5mb11y1537t3rGzcM'
-                                    floatingLabelText='Service Account JWT'
+                                    hintText='optional'
+                                    floatingLabelText='Service Account JWT (aaa.bbb.ccc)'
                                     fullWidth={true}
                                     type='password'
                                     floatingLabelFixed={true}
@@ -534,8 +535,8 @@ export default class KubernetesAuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText='PEM Encoded Cert'
-                                    floatingLabelText='CA Certificate Kubernetes API'
+                                    hintText='-----BEGIN CERTIFICATE-----.....-----END CERTIFICATE-----'
+                                    floatingLabelText='CA Certificate Kubernetes API (without newlines)'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfigObj.kubernetes_ca_cert}
@@ -544,8 +545,8 @@ export default class KubernetesAuthBackend extends React.Component {
                                     }}
                                 />
                                 <TextField
-                                    hintText='PEM Encoded Cert'
-                                    floatingLabelText='Certificates Signatures of Kubernetes ServiceAccount JWTs'
+                                    hintText='optional'
+                                    floatingLabelText='PEM Key(s) to verify the JWT signatures (without newlines)'
                                     fullWidth={true}
                                     floatingLabelFixed={true}
                                     value={this.state.newConfigObj.pem_keys}
