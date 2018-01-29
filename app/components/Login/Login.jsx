@@ -361,6 +361,7 @@ export default class Login extends React.Component {
                     <TextField
                         fullWidth={true}
                         className="col-xs-12"
+                        type="password"
                         errorText={this.state.errorMessage}
                         hintText="Enter Github token"
                         onKeyDown={this.pressEnter}
@@ -372,6 +373,7 @@ export default class Login extends React.Component {
                     <TextField
                         fullWidth={true}
                         className="col-xs-12"
+                        type="password"
                         errorText={this.state.errorMessage}
                         hintText="Enter token"
                         onKeyDown={this.pressEnter}
