@@ -273,7 +273,7 @@ export default class KubernetesAuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='optional'
+                            hintText='* for all'
                             floatingLabelFixed={true}
                             floatingLabelText='ServiceAccount Name'
                             fullWidth={false}
@@ -284,7 +284,7 @@ export default class KubernetesAuthBackend extends React.Component {
                         />
                         <TextField
                             className={styles.textFieldStyle}
-                            hintText='optional'
+                            hintText='* for all'
                             floatingLabelFixed={true}
                             floatingLabelText='Kubernetes Namespace'
                             fullWidth={false}
