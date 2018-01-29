@@ -136,7 +136,7 @@ export default class KubernetesAuthBackend extends React.Component {
             });
     }
 
-    createUpdateRole() {
+    createUpdateRole(roleId) {
         tokenHasCapabilities(['create', 'update'], `${this.state.baseVaultPath}/role/${roleId}`)
             .then(() => {
                 let updateObj = _.clone(this.state.newRoleConfig);
