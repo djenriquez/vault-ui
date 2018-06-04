@@ -117,7 +117,7 @@ export default class AppRoleAuthBackend extends React.Component {
                 callVaultApi('get', `${this.baseVaultPath}/role/${this.state.selectedItemName}`, null, null)
                     .then((resp) => {
                         let appRole = _.get(resp, 'data.data', {});
-                        this.setState({ itemConfig: appRole, openEditItemDialog: true });
+                        this.setState({ itemConfig: _.omit(appRole, "local_secret_ids"), openEditItemDialog: true });
                     })
                     .catch((error) => {
                         if (error.response.status !== 404) {
@@ -427,7 +427,7 @@ export default class AppRoleAuthBackend extends React.Component {
                     modal={false}
                     actions={actions}
                     open={this.state.openNewItemDialog}
-                    onRequestClose={() => this.setState({ openNewItemDialog: false, itemConfig: _.clone(this.itemConfigSchema) })}
+                    onRequestClose={() => this.setState({ openNewItemDialog: false, itemConfig: _.clone(this.itemConfigSchema), selectedItemName: undefined })}
                     autoScrollBodyContent={true}
                 >
                     {renderFields()}
